@@ -1,19 +1,19 @@
 <template>
 	<div>
-		<span>
+		<p>
 			<label class='labelTag' :for='"stat"+stat'>{{stat}}:</label>
 			<button @click="$emit('changeStat', stat, 0)">-</button>
 			<span class='labelValue' :id='"stat" + stat'>{{value}}{{total_modifier}}</span>
 			<button @click="$emit('changeStat', stat, 1)">+</button>
 			<span class='roller' @click="$emit('rollStat', stat)" v-if='add_roll'>🎲</span>
-		</span>
+		</p>
 	</div>
 </template>
 
 <script>
 export default {
 	name: 'DDA_Stat',
-	props: ['stat', 'value', 'total_stat', 'roll'],
+	props: ['stat', 'value', 'total_stat', 'roll', 'width'],
 	data: function () {
 		return {}
 	},

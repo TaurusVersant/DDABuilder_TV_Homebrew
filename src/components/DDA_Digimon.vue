@@ -11,7 +11,7 @@
 <script>
 export default {
 	name: 'DDA_Digimon',
-	props: ['character'],
+	props: ['data'],
 	data: function () {
 		return {
 			characterTypes: {
@@ -26,12 +26,17 @@ export default {
 				digimonMega: 'Mega',
 				digimonBurst: 'Burst',
 			},
+			character: {
+				name: null,
+			}
 		}
 	},
 	computed: {},
 	watch: {},
 	methods: {},
-	created: function () {},
+	created: function () {
+		this.character = Object.assign(this.character, this.data);
+	},
 	components: {},
 }
 </script>

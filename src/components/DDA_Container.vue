@@ -23,22 +23,26 @@
 						<option value='digimonBurst'>Add Burst Digimon</option>
 					</optgroup>
 				</select>
+				<button class='saveButton' @click='loadFile'>Load Character</button>
+				<button @click='saveCharacters'>Save All Characters</button>
+				<button @click='saveCharacter'>Save Character</button>
+				<input class='hidden' type='file' id='openCharacterInput' @change='loadCharacters'/>
 			</div>
 		<hr><br>
 		<div class='middle'>
 			<div class='characterList'>
 				<div class='characterBlock' v-for='(character, index) in characters' v-bind:key='index'>
-					<span class='characterTile' @click='switchToCharacter(index)'>
-						{{character.name}}
-					</span>
-					<span class='deleteCharacterButton' @click='deleteCharacter(index)'>X</span>
+					<span class='deleteButton' @click='deleteCharacter(index)'>X</span>
+					<span class='characterTile' @click='switchToCharacter(index)'>{{character.name}}</span>
 				</div>
 			</div>
 			<div class='pane'>
-				<div class='paneFields' v-if='Number.isInteger(currentCharacter)'>
-					<dda_digimon :character='characters[currentCharacter]' v-if='characters[currentCharacter].characterClass === "Digimon"'/>
-					<dda_human :character='characters[currentCharacter]' v-else-if='characters[currentCharacter].characterClass === "Human"'/>
+				<span v-for='(character, index) in characters' v-bind:key='index'>
+				<div class='paneFields' v-show='index === currentCharacter'>
+					<dda_digimon :data='character' v-if='character.characterClass === "Digimon"'/>
+					<dda_human :data='character' v-else-if='character.characterClass === "Human"' @updateCharacter='updateCharacter($event, index)'/>
 				</div>
+				</span>
 			</div>
 		</div>
 		<div class='footer'>
@@ -65,7 +69,6 @@ export default {
 	props: [],
 	data: function () {
 		return {
-			msg: 'And so we begin... I hope it goes',
 			characters: [],
 			characterSelect: null,
 			currentCharacter: null,
@@ -81,48 +84,6 @@ export default {
 				digimonMega: { type: 'Mega', points: 70 },
 				digimonBurst: { type: 'Burst', points: 85 },
 			},
-			humanTemplate: {
-				name: null,
-				creationComplete: false,
-				bonusPoints: 0,
-				bonusTotal: 0,
-				Agility: 0,
-				Body: 0,
-				Charisma: 0,
-				Intelligence: 0,
-				Willpower: 0,
-				attributeTotal: 0,
-				Dodge: 0,
-				Fight: 0,
-				Stealth: 0,
-				Athletics: 0,
-				Endurance: 0,
-				'Feats of Strength': 0,
-				Manipulate: 0,
-				Perform: 0,
-				Persuade: 0,
-				Computer: 0,
-				Survival: 0,
-				Knowledge: 0,
-				Perception: 0,
-				'Decipher Intent': 0,
-				Bravery: 0,
-				skillTotal: 0,
-				'Sanity Drain': 0,
-				Inspiration: 1,
-				aspect: {
-					Major: null,
-					Minor: null,
-				},
-				torments: {
-					Minor: [],
-					Major: [],
-					Terrible: [],
-				},
-				notes: null,
-				image: null,
-			},
-			digimonTemplate: {},
 		}
 	},
 	computed: {},
@@ -133,8 +94,8 @@ export default {
 				this.characters.push(Object.assign({
 						characterClass: characterClass,
 						stage: this.characterSelect,
+						name: null,
 					},
-					characterClass === 'Human' ? this.humanTemplate : this.digimonTemplate,
 					this.characterTypes[this.characterSelect]
 				));
 				this.characterSelect = null;
@@ -149,10 +110,170 @@ export default {
 		},
 		deleteCharacter: function (index) {
 			this.currentCharacter = null;
-			this.$delete(this.characters, index);
+			// this.$delete(this.characters, index);
+			let newCharactersArray = [];
+			for (let i in this.characters) {
+				if (Number.parseInt(i) !== index) {
+					newCharactersArray.push(this.characters[i]);
+				}
+			}
+
+			this.$set(this, 'characters', newCharactersArray);
+		},
+		updateCharacter: function (character, index) {
+			this.$set(this.characters, index, character);
+		},
+		saveCharacter: function () {
+			if (Number.isInteger(this.currentCharacter)) {
+				let currentCharacter = this.characters[this.currentCharacter];
+				currentCharacter.tvHomebrew = true;
+				let characterBlob = new Blob([JSON.stringify(currentCharacter)], {type: 'text/plain;charset=utf-8'});
+				this.FileSaver.saveAs(characterBlob, currentCharacter.name + '.json');
+			}
+		},
+		saveCharacters: function () {
+			let characterArray = [];
+
+			for (let index in this.characters) {
+				let character = this.characters[index];
+				character.tvHomebrew = true;
+				characterArray.push(JSON.stringify(character));
+			}
+
+			let characterBlob = new Blob([characterArray.join('\n')], {type: 'text/plain;charset=utf-8'});
+			this.FileSaver.saveAs(characterBlob, 'characters.json');
+		},
+		loadFile: function () {
+			let openCharacterInput = document.getElementById('openCharacterInput');
+			openCharacterInput.click();
+		},
+		loadCharacters (event) {
+			let file = event.target.files[0];
+			event.target.value = null;
+			if (!file) { return; }
+
+			let self = this;
+			let reader = new FileReader();
+			reader.onload = (function (app) {
+				return function (event) {
+					try {
+						let contents = event.target.result.split(/[\r\n]+/);
+						for (let index in contents) {
+							let characterObject = JSON.parse(contents[index]);
+							if (characterObject.tvHomebrew) {
+								characterObject.loadCharacter = true;
+								self.characters.push(characterObject);
+							} else {
+								self.characters.push(self.convertHuman(characterObject));
+							}
+						}
+						event.target.files = null;
+					} catch (event) {
+					alert(event);
+					}
+				};
+			})(this);
+
+			reader.readAsText(file);
+		},
+		convertHuman: function (previousStructure) {
+			let attributeTotal = 0;
+			for (let i in previousStructure.attributes) {
+				attributeTotal += previousStructure.attributes[i];
+			}
+
+			let skillTotal = 0;
+			for (let i in previousStructure.skills) {
+				skillTotal += previousStructure.skills[i];
+			}
+
+			let characterType = 'human' + previousStructure.age;
+			let characterTemplate = this.characterTypes[characterType];
+			let bonusTotal = previousStructure.totalCreationPoints - characterTemplate.startingPoints;
+			let bonusPoints = previousStructure.creationPoints - characterTemplate.startingPoints;
+
+			let torments = [];
+			let tormentLookup = {
+				terribleTorments: {
+					type: 'Terrible',
+					total: 10,
+					startingCap: 4,
+				},
+				majorTorments: {
+					type: 'Major',
+					total: 7,
+					startingCap: 3,
+				},
+				minorTorments: {
+					type: 'Minor',
+					total: 5,
+					startingCap: 2,
+				},
+			};
+			for (let i in tormentLookup) {
+				for (let j in previousStructure[i]) {
+					torments.push({
+						type: tormentLookup[i].type,
+						marked: previousStructure[i][j].checked,
+						total: tormentLookup[i].total,
+						text: previousStructure[i][j].id,
+						startingCap: tormentLookup[i].startingCap,
+					});
+				}
+			}
+
+			return Object.assign(characterTemplate, {
+				'name': previousStructure.name,
+				'creationComplete': previousStructure.flags['creationComplete'],
+				'currentPoints': previousStructure.creationPoints,
+				'bonusPoints': bonusPoints > 0 ? bonusPoints : 0,
+				'bonusTotal': bonusTotal,
+				'attributes': {
+					'Agility': previousStructure.attributes['Agility'],
+					'Body': previousStructure.attributes['Body'],
+					'Charisma': previousStructure.attributes['Charisma'],
+					'Intelligence': previousStructure.attributes['Intelligence'],
+					'Willpower': previousStructure.attributes['Willpower'],
+				},
+				'attributeTotal': attributeTotal,
+				'skills': {
+					'Evade': previousStructure.skills['Dodge'],
+					'Fight': previousStructure.skills['Fight'],
+					'Stealth': previousStructure.skills['Stealth'],
+					'Athletics': previousStructure.skills['Athletics'],
+					'Endurance': previousStructure.skills['Endurance'],
+					'Feats of Strength': previousStructure.skills['Feats of Strength'],
+					'Manipulate': previousStructure.skills['Manipulate'],
+					'Perform': previousStructure.skills['Perform'],
+					'Persuade': previousStructure.skills['Persuade'],
+					'Computer': previousStructure.skills['Computer'],
+					'Survival': previousStructure.skills['Survival'],
+					'Knowledge': previousStructure.skills['Knowledge'],
+					'Perception': previousStructure.skills['Perception'],
+					'Decipher Intent': previousStructure.skills['Decipher Intent'],
+					'Bravery': previousStructure.skills['Bravery'],
+				},
+				'skillTotal': skillTotal,
+				'Wound Boxes': previousStructure.woundBoxes,
+				'Sanity Drain': previousStructure.sanityDrain,
+				'Inspiration': previousStructure.inspiration,
+				'majorAspect': previousStructure.majorAspects[0],
+				'majorUses': 0,
+				'minorAspect': previousStructure.minorAspects[0],
+				'minorUses': 0,
+				'torments': torments,
+				'notes': previousStructure.details,
+				'image': previousStructure.humanImage,
+				'characterClass': previousStructure.class,
+				'stage': characterType,
+				'type': previousStructure.age,
+				'tvHomebrew': true,
+				'loadCharacter': true,
+			});
 		},
 	},
 	created: function () {
+		this.FileSaver = require('file-saver');
 		/*
 		this.characters.push({
 			characterClass: 'GM',
@@ -243,8 +364,16 @@ export default {
 		color: white;
 	}
 
-	span.deleteCharacterButton {
+	span.deleteButton {
 		color: red;
 		cursor: pointer;
+	}
+
+	button.saveButton {
+		margin-left: 643px;
+	}
+
+	.hidden {
+		display: none;
 	}
 </style>
