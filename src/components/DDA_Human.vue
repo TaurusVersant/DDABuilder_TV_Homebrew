@@ -1,7 +1,3 @@
-/**
- * TODO: Temporary Wound Boxes, GM Page
- * on character delete, wound boxes, names, etc are behaving inconsistently
- */
 <template>
 	<div>
 		<h1 id='characterTitle'>{{character.name}}</h1>
@@ -14,7 +10,8 @@
 				<dda_checkbox :textProperty='character.creationComplete' inputName='Creation Complete' @change='updateProperty($event, "creationComplete")'/>
 				<dda_stat v-if='character.creationComplete' stat='XP' :value='character.bonusPoints' :total_stat='character.bonusTotal' @changeStat='changeBonus'/><br>
 				<dda_span :textProperty='character["Wound Boxes"] + "/" + derivedWoundBoxes' inputName='Wound Boxes'/>
-				<dda_woundbox :current='character["Wound Boxes"]' :total='derivedWoundBoxes' @changeHealth='changeHealth'/>
+				<button :disabled='character.temporary > 0' @click='addTemporary'>Add Temporary Wound Boxes</button>
+				<dda_woundbox :current='character["Wound Boxes"]' :total='derivedWoundBoxes' :temporary='character.temporary' @changeHealth='changeHealth' @markTemporary='markTemporary'/>
 			</div>
 			<div className='secondColumn'>
 				<p><u>Human Picture</u></p>
@@ -111,6 +108,7 @@ export default {
 				},
 				skillTotal: 0,
 				'Wound Boxes': 2,
+				temporary: 0,
 				'Sanity Drain': 0,
 				'Inspiration': 1,
 				majorAspect: null,
@@ -361,6 +359,15 @@ export default {
 		},
 		changeHealth: function (index) {
 			this.character['Wound Boxes'] += index <= this.character['Wound Boxes'] ? -1 : 1;
+		},
+		addTemporary: function () {
+			let input = Number.parseInt(prompt('Add X Temporary Wound Boxes:', 0));
+			if (Number.isInteger(input) && input < 50) {
+				this.$set(this.character, 'temporary', input);
+			}
+		},
+		markTemporary: function () {
+			this.character.temporary -= 1;
 		},
 		updateProperty: function (value, property) {
 			this.$set(this.character, property, value);

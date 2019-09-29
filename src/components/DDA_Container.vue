@@ -31,14 +31,20 @@
 		<hr><br>
 		<div class='middle'>
 			<div class='characterList'>
-				<div class='characterBlock' v-for='(character, index) in characters' v-bind:key='index'>
+				<div class='characterBlock'>
+					<span class='characterTile gmTile' @click='switchToGM'><b>GM Screen</b></span>
+				</div>
+				<div class='characterBlock' v-for='(character, index) in characters' draggable='true' @dragstart='drag($event, index)' @drop="drop($event, index)" @dragover='$event.preventDefault()' v-bind:key='index'>
 					<span class='deleteButton' @click='deleteCharacter(index)'>X</span>
 					<span class='characterTile' @click='switchToCharacter(index)'>{{character.name}}</span>
 				</div>
 			</div>
 			<div class='pane'>
+				<div class='paneFields' v-if='currentCharacter === null'>
+					<dda_gm :characters='characters'/>
+				</div>
 				<span v-for='(character, index) in characters' v-bind:key='index'>
-				<div class='paneFields' v-show='index === currentCharacter'>
+				<div class='paneFields' v-if='index === currentCharacter'>
 					<dda_digimon :data='character' v-if='character.characterClass === "Digimon"'/>
 					<dda_human :data='character' v-else-if='character.characterClass === "Human"' @updateCharacter='updateCharacter($event, index)'/>
 				</div>
@@ -64,6 +70,7 @@
 <script>
 import DDA_Digimon from './DDA_Digimon';
 import DDA_Human from './DDA_Human';
+import DDA_GM from './DDA_GM';
 export default {
 	name: 'DDA_Container',
 	props: [],
@@ -105,6 +112,9 @@ export default {
 		},
 	},
 	methods: {
+		switchToGM: function () {
+			this.currentCharacter = null;
+		},
 		switchToCharacter: function (index) {
 			this.currentCharacter = index;
 		},
@@ -118,6 +128,26 @@ export default {
 				}
 			}
 
+			this.$set(this, 'characters', newCharactersArray);
+		},
+		drag: function (event, index) {
+			event.dataTransfer.setData('index', index);
+		},
+		drop: function (event, moveTo) {
+			this.currentCharacter = null;
+			event.preventDefault();
+			let moveFrom = Number.parseInt(event.dataTransfer.getData('index'));
+			let newCharactersArray = [];
+			for (let i in this.characters) {
+				let index = Number.parseInt(i);
+				if (index === moveTo) {
+					newCharactersArray.push(this.characters[moveFrom]);
+				}
+
+				if (index !== moveFrom) {
+					newCharactersArray.push(this.characters[i]);
+				}
+			}
 			this.$set(this, 'characters', newCharactersArray);
 		},
 		updateCharacter: function (character, index) {
@@ -164,7 +194,9 @@ export default {
 								characterObject.loadCharacter = true;
 								self.characters.push(characterObject);
 							} else {
-								self.characters.push(self.convertHuman(characterObject));
+								if (characterObject.class === 'Human') {
+									self.characters.push(self.convertHuman(characterObject));
+								}
 							}
 						}
 						event.target.files = null;
@@ -222,7 +254,7 @@ export default {
 				}
 			}
 
-			return Object.assign(characterTemplate, {
+			return Object.assign({}, characterTemplate, {
 				'name': previousStructure.name,
 				'creationComplete': previousStructure.flags['creationComplete'],
 				'currentPoints': previousStructure.creationPoints,
@@ -284,6 +316,7 @@ export default {
 	components: {
 		dda_digimon: DDA_Digimon,
 		dda_human: DDA_Human,
+		dda_gm: DDA_GM,
 	},
 }
 </script>
@@ -362,6 +395,10 @@ export default {
 	span.characterTile:hover {
 		background-color: #222;
 		color: white;
+	}
+
+	span.gmTile {
+		margin-left: 15px;
 	}
 
 	span.deleteButton {
