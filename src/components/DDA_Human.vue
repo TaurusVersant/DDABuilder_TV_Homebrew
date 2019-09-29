@@ -8,7 +8,10 @@
 				<dda_input :textProperty='character.type' inputName='Age Group' :disableFlag='true'/>
 				<dda_span :textProperty='character.currentPoints + "/" + character.startingPoints' inputName='Creation Points'/>
 				<dda_checkbox :textProperty='character.creationComplete' inputName='Creation Complete' @change='updateProperty($event, "creationComplete")'/>
-				<dda_stat v-if='character.creationComplete' stat='XP' :value='character.bonusPoints' :total_stat='character.bonusTotal' @changeStat='changeBonus'/><br>
+				<span v-if='character.creationComplete'>
+					<dda_stat stat='XP' :value='character.bonusPoints' :total_stat='character.bonusTotal' @changeStat='changeBonus'/>
+					<dda_stat stat='Cap' :value='character.finalCap' @changeStat='changeFinalCap'/>
+				</span>
 				<dda_span :textProperty='character["Wound Boxes"] + "/" + derivedWoundBoxes' inputName='Wound Boxes'/>
 				<button :disabled='character.temporary > 0' @click='addTemporary'>Add Temporary Wound Boxes</button>
 				<dda_woundbox :current='character["Wound Boxes"]' :total='derivedWoundBoxes' :temporary='character.temporary' @changeHealth='changeHealth' @markTemporary='markTemporary'/>
@@ -81,6 +84,7 @@ export default {
 				creationComplete: false,
 				bonusPoints: 0,
 				bonusTotal: 0,
+				finalCap: 0,
 				attributes: {
 					'Agility': 0,
 					'Body': 0,
@@ -281,6 +285,9 @@ export default {
 				this.character.bonusTotal--;
 			}
 		},
+		changeFinalCap: function (cap, modifier) {
+			this.character.finalCap += modifier ? 1 : -1;
+		},
 		changeAttribute: function (attribute, modifier) {
 			if (this.character.creationComplete) {
 				let cost = 2 * (this.character.attributes[attribute] + modifier);
@@ -291,7 +298,7 @@ export default {
 				) {
 					this.character.attributes[attribute]++;
 					this.character.bonusPoints -= cost;
-				} else if (!modifier && this.character[attribute] > 0) {
+				} else if (!modifier && this.character.attributes[attribute] > 0) {
 					this.character.attributes[attribute]--;
 					this.character.bonusPoints += cost;
 				}

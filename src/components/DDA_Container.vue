@@ -1,3 +1,10 @@
+/*
+ * Digivice Builder
+ * Item Builder
+ * Effect Applier
+ * Attack Rolls
+ * FAQ
+ */
 <template>
 	<div>
 		<div class='header'>
@@ -34,7 +41,7 @@
 				<div class='characterBlock'>
 					<span class='characterTile gmTile' @click='switchToGM'><b>GM Screen</b></span>
 				</div>
-				<div class='characterBlock' v-for='(character, index) in characters' draggable='true' @dragstart='drag($event, index)' @drop="drop($event, index)" @dragover='$event.preventDefault()' v-bind:key='index'>
+				<div class='characterBlock' v-for='(character, index) in characters' draggable='true' @dragstart='drag($event, index)' @drop='drop($event, index)' @dragover='$event.preventDefault()' v-bind:key='index'>
 					<span class='deleteButton' @click='deleteCharacter(index)'>X</span>
 					<span class='characterTile' @click='switchToCharacter(index)'>{{character.name}}</span>
 				</div>
@@ -45,7 +52,7 @@
 				</div>
 				<span v-for='(character, index) in characters' v-bind:key='index'>
 				<div class='paneFields' v-if='index === currentCharacter'>
-					<dda_digimon :data='character' v-if='character.characterClass === "Digimon"'/>
+					<dda_digimon :data='character' v-if='character.characterClass === "Digimon"' @updateCharacter='updateCharacter($event, index)'/>
 					<dda_human :data='character' v-else-if='character.characterClass === "Human"' @updateCharacter='updateCharacter($event, index)'/>
 				</div>
 				</span>
@@ -83,13 +90,13 @@ export default {
 				humanChild: { type: 'Child', currentPoints: 30, startingPoints: 30, startingCap: 3, finalCap: 5, areaCap: 20 },
 				humanTeen: { type: 'Teenager', currentPoints: 40, startingPoints: 40, startingCap: 5, finalCap: 7, areaCap: 20 },
 				humanAdult: { type: 'Adult', currentPoints: 50, startingPoints: 50, startingCap: 7, finalCap: 10, areaCap: 25 },
-				digimonFresh: { type: 'Fresh', points: 5 },
-				digimonInTraining: { type: 'In-Training', points: 15 },
-				digimonRookie: { type: 'Rookie', points: 25 },
-				digimonChampion: { type: 'Champion', points: 40 },
-				digimonUltimate: { type: 'Ultimate', points: 55 },
-				digimonMega: { type: 'Mega', points: 70 },
-				digimonBurst: { type: 'Burst', points: 85 },
+				digimonFresh: { type: 'Fresh', currentPoints: 5, startingPoints: 5, baseMovement: 2, startingWoundBoxes: 0, brainsMod: 0, attacks: 1, specMod: 0 },
+				digimonInTraining: { type: 'In-Training', currentPoints: 15, startingPoints: 15, baseMovement: 4, startingWoundBoxes: 1, brainsMod: 1, attacks: 2, specMod: 0 },
+				digimonRookie: { type: 'Rookie', currentPoints: 25, startingPoints: 25, baseMovement: 6, startingWoundBoxes: 2, brainsMod: 3, attacks: 2, specMod: 1 },
+				digimonChampion: { type: 'Champion', currentPoints: 40, startingPoints: 40, baseMovement: 8, startingWoundBoxes: 5, brainsMod: 5, attacks: 3, specMod: 2 },
+				digimonUltimate: { type: 'Ultimate', currentPoints: 55, startingPoints: 55, baseMovement: 10, startingWoundBoxes: 7, brainsMod: 7, attacks: 4, specMod: 3 },
+				digimonMega: { type: 'Mega', currentPoints: 70, startingPoints: 70, baseMovement: 12, startingWoundBoxes: 10, brainsMod: 10, attacks: 5, specMod: 4 },
+				digimonBurst: { type: 'Burst', currentPoints: 85, startingPoints: 85, baseMovement: 14, startingWoundBoxes: 14, brainsMod: 13, attacks: 5, specMod: 5 },
 			},
 		}
 	},
@@ -107,7 +114,6 @@ export default {
 				));
 				this.characterSelect = null;
 				this.currentCharacter = this.characters.length - 1;
-				// document.getElementById('characterName').focus();
 			}
 		},
 	},
@@ -120,7 +126,6 @@ export default {
 		},
 		deleteCharacter: function (index) {
 			this.currentCharacter = null;
-			// this.$delete(this.characters, index);
 			let newCharactersArray = [];
 			for (let i in this.characters) {
 				if (Number.parseInt(i) !== index) {
@@ -196,6 +201,8 @@ export default {
 							} else {
 								if (characterObject.class === 'Human') {
 									self.characters.push(self.convertHuman(characterObject));
+								} else {
+									self.characters.push(self.convertDigimon(characterObject));
 								}
 							}
 						}
@@ -303,15 +310,51 @@ export default {
 				'loadCharacter': true,
 			});
 		},
+		convertDigimon: function (previousStructure) {
+			let characterType = 'digimon' + previousStructure.stage;
+			let characterTemplate = this.characterTypes[characterType];
+			let bonusTotal = previousStructure.totalDigiPoints - characterTemplate.startingPoints;
+			let bonusPoints = previousStructure.digiPoints - characterTemplate.startingPoints;
+			let sizes = ['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Gigantic'];
+			let attributes = ['None', 'Vaccine', 'Virus', 'Data'];
+
+			let statTotal = 0;
+			for (let i in previousStructure.stats) {
+				statTotal += previousStructure.stats[i];
+			}
+			let qualityRefund = previousStructure.totalDigiPoints - statTotal;
+
+			return Object.assign({}, characterTemplate, {
+				'name': previousStructure.name,
+				'creationComplete': bonusTotal > 0,
+				'bonusPoints': bonusPoints > 0 ? bonusPoints : 0,
+				'bonusTotal': bonusTotal,
+				'size': sizes[previousStructure.sizeIndex],
+				'attribute': attributes[previousStructure.attributeIndex],
+				'family': previousStructure.digimonFamilies[0],
+				'digimonType': previousStructure.digimonTypes[0],
+				'stats': {
+					'Health': previousStructure.stats['Health'],
+					'Accuracy': previousStructure.stats['Accuracy'],
+					'Damage': previousStructure.stats['Damage'],
+					'Dodge': previousStructure.stats['Dodge'],
+					'Armor': previousStructure.stats['Armor'],
+				},
+				'Wound Boxes': previousStructure.woundBoxes,
+				'temporary': 0,
+				'notes': previousStructure.details,
+				'image': previousStructure.digimonImage,
+				'type': previousStructure.stage,
+				'characterClass': previousStructure.class,
+				'stage': previousStructure.characterType,
+				'currentPoints': previousStructure.digiPoints + qualityRefund,
+				'tvHomebrew': true,
+				'loadCharacter': true,
+			})
+		},
 	},
 	created: function () {
 		this.FileSaver = require('file-saver');
-		/*
-		this.characters.push({
-			characterClass: 'GM',
-			name: 'GM Screen',
-		});
-		*/
 	},
 	components: {
 		dda_digimon: DDA_Digimon,
