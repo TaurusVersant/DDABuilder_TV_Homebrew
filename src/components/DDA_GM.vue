@@ -12,11 +12,13 @@
 						<div><u>{{torment.type}} Torment</u>: {{torment.text}}</div><br>
 					</span>
 				</div>
+				<p><u>Notes</u></p>
 				<dda_textarea :textProperty='character.gmNotes' widthProperty='91' @change='updateProperty($event, "gmNotes", index)'/>
 			</section>
 			<section v-if='character.characterClass === "Digimon"'>
 				<h3><u>{{character.name}}</u>: {{character['Wound Boxes']}}/{{digimonWoundBoxes(index)}}</h3>
 				<div><u>Stage</u>: {{character.type}} | <u>Attribute</u>: {{character.attribute}} | <u>Family</u>: {{character.family}} | <u>Type</u>: {{character.digimonType}}</div>
+				<p><u>Notes</u></p>
 				<dda_textarea :textProperty='character.gmNotes' widthProperty='91' @change='updateProperty($event, "gmNotes", index)'/>
 			</section>
 			<hr>
@@ -40,7 +42,7 @@ export default {
 			return woundBoxTotal;
 		},
 		digimonWoundBoxes: function (index) {
-			return this.characters[index].startingWoundBoxes + this.characters[index].stats['Health'];
+			return this.characters[index].startingWoundBoxes + this.characters[index].stats['Health'] + (this.characters[index].burstModifier * 4);
 		},
 		updateProperty: function (value, property, index) {
 			this.$set(this.characters[index], property, value);

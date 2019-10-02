@@ -27,11 +27,12 @@
 				<p><u>Attributes</u><span v-if='!character.creationComplete'> | {{character.attributeTotal}}/{{character.areaCap}}</span></p>
 				<dda_stat v-for='(value, attribute) in character.attributes' v-bind:key='attribute' :stat='attribute' :value='character.attributes[attribute]' :roll='true' @changeStat='changeAttribute' @rollStat='rollAttribute'/>
 				<p><u>Derived Stats</u></p>
-				<span v-for='(name, stat) in derivedStats' v-bind:key='name'>
-					<dda_span :textProperty='getDerivedStat(stat)' :inputName='name'/>
-					<span v-if='["derivedWoundBoxes","derivedAccuracy","derivedDodge"].includes(stat)' class='roller' @click='poolCheck(stat, name)'>🎲</span>
-					<br>
-				</span>
+				<dda_span :textProperty='derivedWoundBoxes' inputName='Wound Boxes' :roll='true' @rollStat='poolCheck("derivedWoundBoxes")'/>
+				<dda_span :textProperty='derivedMovement' inputName='Movement'/>
+				<dda_span :textProperty='derivedAccuracy' inputName='Accuracy' :modifier='character.modifiers.derivedAccuracy' :roll='true' @rollStat='poolCheck("derivedAccuracy")'/>
+				<dda_span :textProperty='derivedDamage' inputName='Damage'/>
+				<dda_span :textProperty='derivedDodge' inputName='Dodge' :roll='true' @rollStat='poolCheck("derivedDodge")'/>
+				<dda_span :textProperty='derivedArmor' inputName='Armor'/>
 				<p><u>Special Stats</u></p>
 				<dda_stat stat='Sanity Drain' :value='character["Sanity Drain"]' :total_stat='sanityCap' :roll='true' @changeStat='changeSanity' @rollStat='rollSanity'/>
 				<dda_stat stat='Inspiration' :value='character.Inspiration' :total_stat='inspirationCap' @changeStat='changeInspiration'/>
@@ -91,6 +92,9 @@ export default {
 					'Charisma': 0,
 					'Intelligence': 0,
 					'Willpower': 0,
+				},
+				modifiers: {
+					derivedAccuracy: 0,
 				},
 				attributeTotal: 0,
 				skills: {
@@ -254,15 +258,13 @@ export default {
 		/**
 		* Getters
 		*/
-		getDerivedStat: function (stat) {
-			return this[stat];
-		},
 		rollAttribute: function (attribute) {
-			this.$refs.modal.activateModal(attribute + ' Roll: 3d6+' + this.character.attributes[attribute]);
+			let modifier = this.character.attributes[attribute];
+			this.$refs.modal.activateModal(attribute + ' Roll: 3d6' + (modifier > 0 ? '+' + modifier : '-1'));
 		},
 		rollSkill: function (skill) {
 			let modifier = this.character.skills[skill] + this.character.attributes[this.skillMap[skill]]
-			this.$refs.modal.activateModal(skill + ' Roll: 3d6+' + modifier);
+			this.$refs.modal.activateModal(skill + ' Roll: 3d6' + (modifier > 0 ? '+' + modifier : '-1'));
 		},
 		rollSanity: function () {
 			let modifier = this.character.skills['Bravery'] + this.character.attributes['Willpower'];
@@ -270,8 +272,8 @@ export default {
 
 			this.$refs.modal.activateModal('Sanity Roll: 3d6+' + modifier + ', Sanity TN: ' + targetNumber);
 		},
-		poolCheck: function (stat, name) {
-			this.$refs.modal.activateModal(name + ' Pool Check: ' + this[stat] + 'd6, [Roll20: ' + this[stat] + 'd6>5]');
+		poolCheck: function (stat) {
+			this.$refs.modal.activateModal(this.derivedStats[stat] + ' Pool Check: ' + this[stat] + 'd6, [Roll20: ' + this[stat] + 'd6>5]');
 		},
 		/**
 		* Changers

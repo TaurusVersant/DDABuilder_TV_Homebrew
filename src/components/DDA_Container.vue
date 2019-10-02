@@ -90,13 +90,13 @@ export default {
 				humanChild: { type: 'Child', currentPoints: 30, startingPoints: 30, startingCap: 3, finalCap: 5, areaCap: 20 },
 				humanTeen: { type: 'Teenager', currentPoints: 40, startingPoints: 40, startingCap: 5, finalCap: 7, areaCap: 20 },
 				humanAdult: { type: 'Adult', currentPoints: 50, startingPoints: 50, startingCap: 7, finalCap: 10, areaCap: 25 },
-				digimonFresh: { type: 'Fresh', currentPoints: 5, startingPoints: 5, baseMovement: 2, startingWoundBoxes: 0, brainsMod: 0, attacks: 1, specMod: 0 },
-				digimonInTraining: { type: 'In-Training', currentPoints: 15, startingPoints: 15, baseMovement: 4, startingWoundBoxes: 1, brainsMod: 1, attacks: 2, specMod: 0 },
-				digimonRookie: { type: 'Rookie', currentPoints: 25, startingPoints: 25, baseMovement: 6, startingWoundBoxes: 2, brainsMod: 3, attacks: 2, specMod: 1 },
-				digimonChampion: { type: 'Champion', currentPoints: 40, startingPoints: 40, baseMovement: 8, startingWoundBoxes: 5, brainsMod: 5, attacks: 3, specMod: 2 },
-				digimonUltimate: { type: 'Ultimate', currentPoints: 55, startingPoints: 55, baseMovement: 10, startingWoundBoxes: 7, brainsMod: 7, attacks: 4, specMod: 3 },
-				digimonMega: { type: 'Mega', currentPoints: 70, startingPoints: 70, baseMovement: 12, startingWoundBoxes: 10, brainsMod: 10, attacks: 5, specMod: 4 },
-				digimonBurst: { type: 'Burst', currentPoints: 85, startingPoints: 85, baseMovement: 14, startingWoundBoxes: 14, brainsMod: 13, attacks: 5, specMod: 5 },
+				digimonFresh: { type: 'Fresh', currentPoints: 0, startingPoints: 5, baseMovement: 2, startingWoundBoxes: 0, brainsMod: 0, attackCount: 1, specMod: 0 },
+				digimonInTraining: { type: 'In-Training', currentPoints: 10, startingPoints: 15, baseMovement: 4, startingWoundBoxes: 1, brainsMod: 1, attackCount: 2, specMod: 0 },
+				digimonRookie: { type: 'Rookie', currentPoints: 20, startingPoints: 25, baseMovement: 6, startingWoundBoxes: 2, brainsMod: 3, attackCount: 2, specMod: 1 },
+				digimonChampion: { type: 'Champion', currentPoints: 35, startingPoints: 40, baseMovement: 8, startingWoundBoxes: 5, brainsMod: 5, attackCount: 3, specMod: 2 },
+				digimonUltimate: { type: 'Ultimate', currentPoints: 50, startingPoints: 55, baseMovement: 10, startingWoundBoxes: 7, brainsMod: 7, attackCount: 4, specMod: 3 },
+				digimonMega: { type: 'Mega', currentPoints: 65, startingPoints: 70, baseMovement: 12, startingWoundBoxes: 10, brainsMod: 10, attackCount: 5, specMod: 4 },
+				digimonBurst: { type: 'Burst', currentPoints: 80, startingPoints: 85, baseMovement: 14, startingWoundBoxes: 14, brainsMod: 13, attackCount: 5, specMod: 5 },
 			},
 		}
 	},
@@ -324,11 +324,21 @@ export default {
 			}
 			let qualityRefund = previousStructure.totalDigiPoints - statTotal;
 
+			let attacks = {};
+			for (let i in previousStructure.attacks) {
+				attacks[Number.parseInt(i) + 1] = {
+					name: previousStructure.attacks[i].name,
+					type: previousStructure.attacks[i].type,
+					damage: previousStructure.attacks[i].damage,
+				};
+			}
+
 			return Object.assign({}, characterTemplate, {
 				'name': previousStructure.name,
 				'creationComplete': bonusTotal > 0,
 				'bonusPoints': bonusPoints > 0 ? bonusPoints : 0,
 				'bonusTotal': bonusTotal,
+				'burstModifier': 0,
 				'size': sizes[previousStructure.sizeIndex],
 				'attribute': attributes[previousStructure.attributeIndex],
 				'family': previousStructure.digimonFamilies[0],
@@ -348,6 +358,7 @@ export default {
 				'characterClass': previousStructure.class,
 				'stage': previousStructure.characterType,
 				'currentPoints': previousStructure.digiPoints + qualityRefund,
+				'attacks': attacks,
 				'tvHomebrew': true,
 				'loadCharacter': true,
 			})

@@ -1,6 +1,13 @@
 /*
  * Attack List
  * Quality List
+ * Modifiers (Temporary/Permanent)
+ * Rolling Attributes
+ * Human Attack / Direct Range
+ * Burst Dimensions?
+ * Passive Perception
+ * Elemental Terrain button
+ * Negative Wound Box tracking
  */
 <template>
 	<div>
@@ -10,6 +17,7 @@
 				<p><u>Details</u></p>
 				<dda_input :textProperty='character.name' inputName='Name' @change='updateProperty($event, "name")'/>
 				<dda_input :textProperty='character.type' inputName='Stage' :disableFlag='true'/>
+				<dda_stat v-if='character.type === "Burst"' stat='Burst Modifier' :value='character.burstModifier' @changeStat='changeBurst'/>
 				<dda_select :textProperty='character.size' inputName='Size' :options='sizes' @change='updateProperty($event, "size")'/>
 				<dda_select :textProperty='character.attribute' inputName='Attribute' :options='attributes' @change='updateProperty($event, "attribute")'/>
 				<dda_select :textProperty='character.family' inputName='Family' :options='families' @change='updateProperty($event, "family")'/>
@@ -22,6 +30,8 @@
 				<dda_woundbox :current='character["Wound Boxes"]' :total='derivedWoundBoxes' :temporary='character.temporary' @changeHealth='changeHealth' @markTemporary='markTemporary'/>
 			</div>
 			<div className='secondColumn'>
+				<p><u>Special Information</u></p>
+				<dda_select :textProperty='character.specialDigivolution' inputName='Special Digivolution' :options='specialDigivolutions' @change='updateProperty($event, "specialDigivolution")'/>
 				<p><u>Digimon Picture</u></p>
 				<input type='file' id='files' @change='handleFileSelect'/><br/>
 				<img class='characterImage' :src='character.image' />
@@ -29,32 +39,49 @@
 		</div><div class='divRow'>
 			<div class='firstColumn'>
 				<p><u>Movement</u></p>
-				<dda_span :textProperty='getDerivedStat("derivedMovement")' inputName='Movement'/><br>
-				<dda_span :textProperty='getDerivedStat("movementJumpHeight")' inputName='Jump Height'/><br>
-				<dda_span :textProperty='getDerivedStat("movementJumpLength")' inputName='Jump Length'/><br>
-				<dda_span :textProperty='getDerivedStat("movementSwimSpeed")' inputName='Swim Speed'/><br>
+				<dda_span :textProperty='getDerivedStat("derivedMovement")' inputName='Movement'/>
+				<dda_span :textProperty='getDerivedStat("movementJumpHeight")' inputName='Jump Height'/>
+				<dda_span :textProperty='getDerivedStat("movementJumpLength")' inputName='Jump Length'/>
+				<dda_span :textProperty='getDerivedStat("movementSwimSpeed")' inputName='Swim Speed'/>
 				<p><u>Stats</u></p>
-				<dda_stat v-for='(value, stat) in character.stats' v-bind:key='stat' :stat='stat' :value='character.stats[stat]' @changeStat='changeStat'/>
+				<dda_stat stat='Health' :value='character.stats["Health"]' @changeStat='changeStat' :roll='true' @rollStat='poolCheck("Health")'/>
+				<dda_stat stat='Accuracy' :value='character.stats["Accuracy"]' @changeStat='changeStat'/>
+				<dda_stat stat='Damage' :value='character.stats["Damage"]' @changeStat='changeStat'/>
+				<dda_stat stat='Dodge' :value='character.stats["Dodge"]' @changeStat='changeStat'/>
+				<dda_stat stat='Armor' :value='character.stats["Armor"]' @changeStat='changeStat'/>
 			</div>
 			<div class='secondColumn'>
 				<p><u>Derived Stats</u></p>
 				<dda_span :textProperty='getDerivedStat("derivedWoundBoxes")' inputName='Wound Boxes'/>
-				<span class='roller' @click='poolCheck("derivedWoundBoxes")'>🎲</span><br>
-				<dda_span :textProperty='getDerivedStat("derivedAgility")' inputName='Agility'/>
-				<span class='roller' @click='rollStat("derivedAgility")'>🎲</span><br>
-				<dda_span :textProperty='getDerivedStat("derivedBody")' inputName='Body'/>
-				<span class='roller' @click='rollStat("derivedBody")'>🎲</span><br>
-				<dda_span :textProperty='getDerivedStat("derivedBrains")' inputName='Brains'/>
-				<span class='roller' @click='rollStat("derivedBrains")'>🎲</span><br>
+				<dda_span :textProperty='getDerivedStat("derivedAgility")' inputName='Agility' :roll='true' @rollStat='rollStat("derivedAgility")'/>
+				<dda_span :textProperty='getDerivedStat("derivedBody")' inputName='Body' :roll='true' @rollStat='rollStat("derivedBody")'/>
+				<dda_span :textProperty='getDerivedStat("derivedBrains")' inputName='Brains' :roll='true' @rollStat='rollStat("derivedBrains")'/>
 				<p><u>Spec Stats</u></p>
-				<dda_span :textProperty='getDerivedStat("specRAM")' inputName='RAM [Agility]'/>
-				<span class='roller' @click='rollStat("specRAM")'>🎲</span><br>
-				<dda_span :textProperty='getDerivedStat("specCPU")' inputName='CPU [Body]'/>
-				<span class='roller' @click='rollStat("specCPU")'>🎲</span><br>
-				<dda_span :textProperty='getDerivedStat("specBIT")' inputName='BIT [Brains]'/>
-				<span class='roller' @click='rollStat("specBIT")'>🎲</span><br>
+				<dda_span :textProperty='getDerivedStat("specRAM")' inputName='RAM [Agility]' :roll='true' @rollStat='rollStat("specRAM")'/>
+				<dda_span :textProperty='getDerivedStat("specCPU")' inputName='CPU [Body]' :roll='true' @rollStat='rollStat("specCPU")'/>
+				<dda_span :textProperty='getDerivedStat("specBIT")' inputName='BIT [Brains]' :roll='true' @rollStat='rollStat("specBIT")'/>
+				<!--<p><u>Rolls</u></p>
+				<dda_span textProperty='' inputName='Agility' :roll='true'/>
+				<dda_span textProperty='' inputName='Body' :roll='true'/>
+				<dda_span textProperty='' inputName='Charisma' :roll='true'/>
+				<dda_span textProperty='' inputName='Intelligence' :roll='true'/>
+				<dda_span textProperty='' inputName='Willpower' :roll='true'/>-->
 			</div>
 		</div>
+		<p><u>Digimon Attacks</u></p>
+		<table class='attackTable'>
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Type</th>
+					<th>Damage</th>
+					<th>Area</th>
+					<th>Effect</th>
+					<th>Features</th>
+				</tr>
+			</thead>
+			<dda_attack v-for='attack in character.attackCount' v-bind:key='attack' :data='character.attacks[attack]' :range='2*getDerivedStat("specBIT")' @attackUpdated='updateAttack($event, attack)'/>
+		</table>
 		<p><u>Additional Details</u></p>
 		<dda_textarea :textProperty='character.notes' widthProperty='91' @change='updateProperty($event, "notes")'/>
 		<dda_modal ref='modal'/>
@@ -65,6 +92,7 @@
 import DDA_Stat from './DDA_Stat';
 import DDA_Modal from './DDA_Modal';
 import DDA_WoundBox from './DDA_WoundBox';
+import DDA_Attack from './DDA_Attack';
 export default {
 	name: 'DDA_Digimon',
 	props: ['data'],
@@ -75,19 +103,23 @@ export default {
 				creationComplete: false,
 				bonusPoints: 0,
 				bonusTotal: 0,
+				burstModifier: 0,
+				specialDigivolution: '',
+				startingWoundBoxes: 0,
 				size: null,
 				attribute: null,
 				family: null,
 				digimonType: null,
 				stats: {
-					'Health': 0,
-					'Accuracy': 0,
-					'Damage': 0,
-					'Dodge': 0,
-					'Armor': 0,
+					'Health': 1,
+					'Accuracy': 1,
+					'Damage': 1,
+					'Dodge': 1,
+					'Armor': 1,
 				},
 				'Wound Boxes': 0,
 				temporary: 0,
+				attacks: {},
 				notes: null,
 				image: null,
 			},
@@ -104,6 +136,20 @@ export default {
 				specCPU: 'CPU',
 				specBIT: 'BIT',
 			},
+			burstScaling: {
+				startingDP: 15,
+				baseMovement: 2,
+				woundBoxes: 4,
+				brains: 3,
+				specValues: 1,
+			},
+			specialDigivolutions: [
+				'',
+				'Dark',
+				'DNA',
+				'Hybrid',
+				'Armor',
+			],
 			sizes: [
 				'Tiny',
 				'Small',
@@ -161,39 +207,42 @@ export default {
 	},
 	computed: {
 		derivedMovement: function () {
-			return this.character.baseMovement;
+			return this.character.baseMovement + (this.character.burstModifier * this.burstScaling.baseMovement);
 		},
 		movementJumpHeight: function () {
-			return Math.floor(this.character.baseMovement / 2);
+			return Math.floor(this.derivedMovement / 2);
 		},
 		movementJumpLength: function () {
-			return Math.floor(this.character.baseMovement / 2);
+			return Math.floor(this.derivedMovement / 2);
 		},
 		movementSwimSpeed: function () {
-			return Math.floor(this.character.baseMovement / 2);
+			return Math.floor(this.derivedMovement / 2);
 		},
 		derivedWoundBoxes: function () {
-			return this.character.startingWoundBoxes + this.character.stats['Health'];
+			return this.character.startingWoundBoxes + this.character.stats['Health'] + (this.character.burstModifier * this.burstScaling.woundBoxes);
 		},
 		derivedAgility: function () {
 			let sizeMod = this.character.size in this.sizeLookup ? this.sizeLookup[this.character.size].agilityMod : 0;
-			return Math.floor((this.character.stats['Accuracy'] + this.character.stats['Dodge']) / 2) + sizeMod;
+			let agility = Math.floor((this.character.stats['Accuracy'] + this.character.stats['Dodge']) / 2) + sizeMod;
+			return agility > 0 ? agility : 0;
 		},
 		derivedBody: function () {
 			let sizeMod = this.character.size in this.sizeLookup ? this.sizeLookup[this.character.size].bodyMod : 0;
-			return Math.floor((this.character.stats['Health'] + this.character.stats['Damage'] + this.character.stats['Armor']) / 3) + sizeMod;
+			let body = Math.floor((this.character.stats['Health'] + this.character.stats['Damage'] + this.character.stats['Armor']) / 3) + sizeMod;
+			return body > 0 ? body : 0;
 		},
 		derivedBrains: function () {
-			return Math.floor(this.character.stats['Accuracy'] / 2) + this.character.brainsMod;
+			let brains = Math.floor(this.character.stats['Accuracy'] / 2) + this.character.brainsMod + (this.character.burstModifier * this.burstScaling.brains);
+			return brains > 0 ? brains : 0;
 		},
 		specRAM: function () {
-			return Math.floor(this.derivedAgility / 10) + this.character.specMod;
+			return Math.floor(this.derivedAgility / 10) + this.character.specMod + (this.character.burstModifier * this.burstScaling.specValues);
 		},
 		specCPU: function () {
-			return Math.floor(this.derivedBody / 10) + this.character.specMod;
+			return Math.floor(this.derivedBody / 10) + this.character.specMod + (this.character.burstModifier * this.burstScaling.specValues);
 		},
 		specBIT: function () {
-			return Math.floor(this.derivedBrains / 10) + this.character.specMod;
+			return Math.floor(this.derivedBrains / 10) + this.character.specMod + (this.character.burstModifier * this.burstScaling.specValues);
 		},
 	},
 	watch: {
@@ -245,10 +294,11 @@ export default {
 			return this[stat];
 		},
 		rollStat: function (stat) {
-			this.$refs.modal.activateModal(this.derivedStats[stat] + ' Roll: 3d6+' + this[stat]);
+			let modifier = this[stat] > 0 ? '+' + this[stat] : '-1';
+			this.$refs.modal.activateModal(this.derivedStats[stat] + ' Roll: 3d6' + modifier);
 		},
 		poolCheck: function (stat) {
-			this.$refs.modal.activateModal(this.derivedStats[stat] + ' Pool Check: ' + this[stat] + 'd6, [Roll20: ' + this[stat] + 'd6>5]');
+			this.$refs.modal.activateModal(stat + ' Pool Check: ' + this.character.stats[stat] + 'd6, [Roll20: ' + this.character.stats[stat] + 'd6>5]');
 		},
 		/**
 		* Changers
@@ -260,6 +310,17 @@ export default {
 			} else if (!modifier && this.character.bonusPoints > 0) {
 				this.character.bonusPoints--;
 				this.character.bonusTotal--;
+			}
+		},
+		changeBurst: function (attribute, modifier) {
+			if (modifier) {
+				this.character.burstModifier++;
+				this.character.currentPoints += this.burstScaling.startingDP;
+				this.character.startingPoints += this.burstScaling.startingDP;
+			} else if (!modifier && this.character.burstModifier > 0 && this.character.currentPoints >= this.burstScaling.startingDP) {
+				this.character.currentPoints -= this.burstScaling.startingDP;
+				this.character.startingPoints -= this.burstScaling.startingDP;
+				this.character.burstModifier--;
 			}
 		},
 		changeHealth: function (index) {
@@ -296,6 +357,9 @@ export default {
 				}
 			}
 		},
+		updateAttack: function (data, attack) {
+			this.character.attacks[attack] = data;
+		},
 	},
 	created: function () {
 		this.character = Object.assign(this.character, this.data);
@@ -305,6 +369,7 @@ export default {
 		dda_stat: DDA_Stat,
 		dda_modal: DDA_Modal,
 		dda_woundbox: DDA_WoundBox,
+		dda_attack: DDA_Attack,
 	},
 }
 </script>

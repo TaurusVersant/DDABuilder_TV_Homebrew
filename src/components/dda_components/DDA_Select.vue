@@ -33,7 +33,7 @@ export default {
 <!-- Add 'scoped' attribute to limit CSS to this component only -->
 <style scoped>
 	label.labelTag {
-		width: 150px;
+		min-width: 150px;
 		display: inline-block;
 		text-align: center;
 		margin-left: 5px;
@@ -42,7 +42,7 @@ export default {
 	}
 
 	select.labelInput {
-		width: 169px;
+		min-width: 169px;
 		margin-bottom: 10px;
 		text-align: center;
 	}

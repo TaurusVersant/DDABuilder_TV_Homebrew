@@ -1,20 +1,35 @@
 <template>
-	<span>
+	<p>
 		<label class='labelTag' for='inputName'>{{inputName}}:</label>
 		<span class='labelValue' id='inputName'>{{textProperty}}</span>
-	</span>
+		<span v-if='hasModifier'>
+			<span>+&nbsp;</span>
+			<input class='modifierInput' type='text' :value='modifier' disabled='true'/>
+			<span class='pointer' @click='changeModifier'>&#9998;</span>
+		</span>
+		<span v-if='roll' class='pointer' @click="$emit('rollStat', inputName)">🎲</span>
+	</p>
 </template>
 
 <script>
 export default {
 	name: 'DDA_Span',
-	props: ['textProperty', 'inputName'],
+	props: ['textProperty', 'inputName', 'roll', 'modifier'],
 	data: function () {
 		return {}
 	},
-	computed: {},
+	computed: {
+		hasModifier: function () {
+			return Number.isInteger(this.modifier);
+		},
+		modifierValue: function () {
+			return this.hasModifier ? this.modifier : 0;
+		},
+	},
 	watch: {},
-	methods: {},
+	methods: {
+		changeModifier: function () {},
+	},
 	created: function () {},
 	components: {},
 }
@@ -33,5 +48,14 @@ export default {
 
 	span.labelValue {
 		margin: 26px;
+	}
+
+	span.pointer {
+		cursor: pointer;
+	}
+
+	input.modifierInput {
+		width: 30px;
+		text-align: center;
 	}
 </style>

@@ -3,9 +3,9 @@
 		<p>
 			<label class='labelTag' :for='"stat"+stat'>{{stat}}:</label>
 			<button @click="$emit('changeStat', stat, 0)">-</button>
-			<span class='labelValue' :id='"stat" + stat'>{{value}}{{total_modifier}}</span>
+			<span class='labelValue' :id='"stat" + stat'>{{value}}{{totalModifier}}</span>
 			<button @click="$emit('changeStat', stat, 1)">+</button>
-			<span class='roller' @click="$emit('rollStat', stat)" v-if='add_roll'>🎲</span>
+			<span class='roller' @click="$emit('rollStat', stat)" v-if='roll'>🎲</span>
 		</p>
 	</div>
 </template>
@@ -18,12 +18,9 @@ export default {
 		return {}
 	},
 	computed: {
-		total_modifier: function () {
+		totalModifier: function () {
 			return Number.isInteger(this.total_stat) ? '/' + this.total_stat : null;
 		},
-		add_roll: function () {
-			return this.roll;
-		}
 	},
 	watch: {},
 	methods: {},
