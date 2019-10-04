@@ -2,12 +2,9 @@
  * Attack List
  * Quality List
  * Modifiers (Temporary/Permanent)
- * Rolling Attributes
- * Human Attack / Direct Range
- * Burst Dimensions?
- * Passive Perception
  * Elemental Terrain button
  * Negative Wound Box tracking
+ * Effect Tracker (max 3 of each)
  */
 <template>
 	<div>
@@ -31,7 +28,9 @@
 			</div>
 			<div className='secondColumn'>
 				<p><u>Special Information</u></p>
-				<dda_select :textProperty='character.specialDigivolution' inputName='Special Digivolution' :options='specialDigivolutions' @change='updateProperty($event, "specialDigivolution")'/>
+				<dda_select :textProperty='character.specialDigivolution' inputName='Special Stage' :options='specialDigivolutions' @change='updateProperty($event, "specialDigivolution")'/>
+				<dda_span :textProperty='passivePerception' inputName='Perception'/>
+				<dda_span :textProperty='burstRadius' inputName='Burst Radius'/>
 				<p><u>Digimon Picture</u></p>
 				<input type='file' id='files' @change='handleFileSelect'/><br/>
 				<img class='characterImage' :src='character.image' />
@@ -78,13 +77,46 @@
 					<th>Area</th>
 					<th>Effect</th>
 					<th>Features</th>
+					<th></th>
 				</tr>
 			</thead>
-			<dda_attack v-for='attack in character.attackCount' v-bind:key='attack' :data='character.attacks[attack]' :range='2*getDerivedStat("specBIT")' @attackUpdated='updateAttack($event, attack)'/>
+			<dda_attack
+				v-for='attack in character.attackCount'
+				v-bind:key='attack'
+				:data='character.attacks[attack]'
+				:range='2*getDerivedStat("specBIT")'
+				:areaTags='character.freeAreaTags'
+				:effectTags='character.freeEffectTags'
+				@attackUpdated='updateAttack($event, attack)'
+				@doAttack='doAttack(attack)'
+			/>
 		</table>
 		<p><u>Additional Details</u></p>
 		<dda_textarea :textProperty='character.notes' widthProperty='91' @change='updateProperty($event, "notes")'/>
+		<p>
+			<u>Qualities</u>
+			<button @click='showQualities'>Add Quality</button>
+			<table v-if='Object.keys(character.qualities).length' class='digimonQualityTable'>
+				<thead>
+					<tr class='qualityRow'>
+						<th>Quality</th>
+						<th>Rank</th>
+						<th>Details</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody v-for='(rank, quality) in character.qualities' v-bind:key='quality'>
+					<tr class='qualityRow'>
+						<td>{{quality}}</td>
+						<td>{{rank}}</td>
+						<td>{{library.qualities[quality].text}}</td>
+						<td><button @click='removeQuality(quality)'>Remove</button></td>
+					</tr>
+				</tbody>
+			</table>
+		</p>
 		<dda_modal ref='modal'/>
+		<dda_qualities ref='qualities' :qualities='availableQualities' @purchase='addQuality'/>
 	</div>
 </template>
 
@@ -93,14 +125,18 @@ import DDA_Stat from './DDA_Stat';
 import DDA_Modal from './DDA_Modal';
 import DDA_WoundBox from './DDA_WoundBox';
 import DDA_Attack from './DDA_Attack';
+import DDA_Qualities from './DDA_Qualities';
+let library = require('./library');
 export default {
 	name: 'DDA_Digimon',
 	props: ['data'],
 	data: function () {
 		return {
+			library: null,
 			character: {
 				name: null,
 				creationComplete: false,
+				currentPoints: 0,
 				bonusPoints: 0,
 				bonusTotal: 0,
 				burstModifier: 0,
@@ -120,6 +156,9 @@ export default {
 				'Wound Boxes': 0,
 				temporary: 0,
 				attacks: {},
+				freeAreaTags: {},
+				freeEffectTags: {},
+				qualities: {},
 				notes: null,
 				image: null,
 			},
@@ -244,6 +283,34 @@ export default {
 		specBIT: function () {
 			return Math.floor(this.derivedBrains / 10) + this.character.specMod + (this.character.burstModifier * this.burstScaling.specValues);
 		},
+		passivePerception: function () {
+			return 9 + this.derivedBrains;
+		},
+		burstRadius: function () {
+			return 1.5 + Math.floor(this.specBIT / 2);
+		},
+		availableQualities: function () {
+			let availableQualities = {};
+			for (let quality in this.library.qualities) {
+				if (
+					!this.character.qualities.hasOwnProperty(quality) ||
+					this.character.qualities[quality] < this.library.qualities[quality].ranks
+				) {
+					let approved = true;
+					for (let prerequisite in this.library.qualities[quality].prerequisites) {
+						let qualityRank = this.character.qualities.hasOwnProperty(prerequisite) ? this.character.qualities[prerequisite] : 0;
+						if (this.library.qualities[quality].prerequisites[prerequisite] > qualityRank) {
+							approved = false;
+						}
+					}
+
+					if (approved) {
+						availableQualities[quality] = this.library.qualities[quality];
+					}
+				}
+			}
+			return availableQualities;
+		},
 	},
 	watch: {
 		character: {
@@ -299,6 +366,9 @@ export default {
 		},
 		poolCheck: function (stat) {
 			this.$refs.modal.activateModal(stat + ' Pool Check: ' + this.character.stats[stat] + 'd6, [Roll20: ' + this.character.stats[stat] + 'd6>5]');
+		},
+		showQualities: function () {
+			this.$refs.qualities.activateModal();
 		},
 		/**
 		* Changers
@@ -358,10 +428,167 @@ export default {
 			}
 		},
 		updateAttack: function (data, attack) {
-			this.character.attacks[attack] = data;
+			// Check if area tag is in use
+			if (data.area && this.character.freeAreaTags.hasOwnProperty(data.area)) {
+				this.character.freeAreaTags[data.area] = true;
+			}
+
+			// Check if area tag is not in use
+			if (this.character.attacks[attack] && this.character.attacks[attack].area !== data.area) {
+				this.character.freeAreaTags[this.character.attacks[attack].area] = false;
+			}
+			// Check if effect tag is in use
+			if (data.effect && this.character.freeEffectTags.hasOwnProperty(data.effect)) {
+				this.character.freeEffectTags[data.effect] = true;
+			}
+
+			// Check if effect tag is not in use
+			if (this.character.attacks[attack] && this.character.attacks[attack].effect !== data.effect) {
+				this.character.freeEffectTags[this.character.attacks[attack].effect] = false;
+			}
+
+			this.character.attacks[attack] = Object.assign({}, data);
+		},
+		doAttack: function (attack) {
+			let details = [];
+			let attackObject = this.character.attacks[attack];
+
+			if (attackObject) {
+				details.push('<b><u>' + attackObject.name + '</u></b>');
+
+				// Accuracy Information
+				details.push('<u>Accuracy:</u> ' + this.character.stats['Accuracy']);
+
+				// Damage Information
+				if (attackObject.damage) {
+					details.push('<u>Damage:</u> ' + this.character.stats['Damage']);
+				}
+
+				// Range Information
+				if (attackObject.type) {
+					let range = '';
+					if (attackObject.area) {
+						let args = [];
+						let quality = this.library.qualities[attackObject.area];
+						for (let i in quality.args) {
+							if (quality.args[i] in this) {
+								args.push(this[quality.args[i]]);
+							} else if (quality.args[i] in this.character) {
+								args.push(this.character[quality.args[i]]);
+							}
+						}
+						range = quality.method(attackObject.type, args);
+					} else if (attackObject.type === 'Range') {
+						range = 'Single target. 2 to ' + (2 * this.specBIT) + ' Units';
+					} else {
+						range = 'Single target. ' + 1 + ' Unit';
+					}
+
+					details.push('<u>Range:</u> ' + range);
+				}
+
+				// Effect Information
+				if (attackObject.effect) {
+					let args = [];
+					let quality = this.library.qualities[attackObject.effect];
+					for (let i in quality.args) {
+						if (quality.args[i] in this) {
+							args.push(this[quality.args[i]]);
+						} else if (quality.args[i] in this.character) {
+							args.push(this.character[quality.args[i]]);
+						}
+					}
+					let note = attackObject.damage ? ' Apply at least 2 damage to trigger. ' : ' ';
+					details.push('<u>' + attackObject.effect + ':</u>' + note + ' ' + quality.method(args));
+				}
+
+				this.$refs.modal.activateModal(details.join('<br><br>'));
+			}
+		},
+		addQuality: function (quality) {
+			let qualityObject = this.library.qualities[quality];
+
+			if (this.character.creationComplete) {
+				if (qualityObject.cost > this.character.bonusPoints) {
+					alert('Could not afford Quality: ' + quality);
+					return;
+				}
+				this.character.bonusPoints -= qualityObject.cost;
+			} else {
+				if (qualityObject.cost > this.character.currentPoints) {
+					alert('Could not afford Quality: ' + quality);
+					return;
+				}
+				this.character.currentPoints -= qualityObject.cost;
+			}
+
+			if (this.character.qualities.hasOwnProperty(quality)) {
+				this.$set(this.character.qualities, quality, this.character.qualities[quality] + 1);
+			} else {
+				this.$set(this.character.qualities, quality, 1);
+			}
+
+			// Adds quality to freeAreaTags
+			if (qualityObject.type === 'area') {
+				this.$set(this.character.freeAreaTags, quality, false);
+			}
+
+			// Adds quality to freeEffectTags
+			if (qualityObject.type === 'effect') {
+				this.$set(this.character.freeEffectTags, quality, false);
+			}
+
+			this.$refs.qualities.closeModal();
+		},
+		removeQuality: function (quality) {
+			let qualityObject = this.library.qualities[quality];
+
+			if (qualityObject.unlocks.length) {
+				for (let index in qualityObject.unlocks) {
+					if (this.character.qualities.hasOwnProperty(qualityObject.unlocks[index])) {
+						alert('Cannot remove ' + quality + ' while Digimon has dependant quality: ' + qualityObject.unlocks[index]);
+						return;
+					}
+				}
+			}
+
+			// Prevents area tag in use from being removed
+			if (qualityObject.type === 'area' && this.character.freeAreaTags[quality]) {
+				alert('Cannot remove ' + quality + ' as it is being used by an attack. Remove the Tag from the attack before removing Quality.');
+				return;
+			}
+
+			// Prevents effect tag in use from being removed
+			if (qualityObject.type === 'effect' && this.character.freeEffectTags[quality]) {
+				alert('Cannot remove ' + quality + ' as it is being used by an attack. Remove the Tag from the attack before removing Quality.');
+				return;
+			}
+
+			if (this.character.qualities[quality] === 1) {
+				this.$delete(this.character.qualities, quality);
+			} else {
+				this.$set(this.character.qualities, quality, this.character.qualities[quality] - 1);
+			}
+
+			if (this.character.creationComplete) {
+				this.character.bonusPoints += qualityObject.cost;
+			} else {
+				this.character.currentPoints += qualityObject.cost;
+			}
+
+			// Removes area tag from freeAreaTags
+			if (qualityObject.type === 'area') {
+				this.$delete(this.character.freeAreaTags, quality);
+			}
+
+			// Removes effect tag from freeEffectTags
+			if (qualityObject.type === 'effect') {
+				this.$delete(this.character.freeEffectTags, quality);
+			}
 		},
 	},
 	created: function () {
+		this.library = library;
 		this.character = Object.assign(this.character, this.data);
 		this.$emit('updateCharacter', this.character);
 	},
@@ -370,6 +597,7 @@ export default {
 		dda_modal: DDA_Modal,
 		dda_woundbox: DDA_WoundBox,
 		dda_attack: DDA_Attack,
+		dda_qualities: DDA_Qualities,
 	},
 }
 </script>
@@ -422,5 +650,20 @@ export default {
 		margin-right: 50px;
 		float: right;
 		position: relative;
+	}
+
+	table.digimonQualityTable {
+		display: block;
+		border-style: dotted solid;
+		border-color: #dddddd;
+		overflow: auto;
+		max-height: 500px;
+	}
+
+	tr.qualityRow>td {
+		padding-top: 10px;
+		padding-bottom: 10px;
+		text-align: center;
+		min-width: 100px;
 	}
 </style>

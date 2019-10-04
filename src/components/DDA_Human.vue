@@ -17,6 +17,9 @@
 				<dda_woundbox :current='character["Wound Boxes"]' :total='derivedWoundBoxes' :temporary='character.temporary' @changeHealth='changeHealth' @markTemporary='markTemporary'/>
 			</div>
 			<div className='secondColumn'>
+				<p><u>Special Information</u></p>
+				<dda_span :textProperty='passivePerception' inputName='Perception'/>
+				<dda_span :textProperty='directRange' inputName='Direct Range'/>
 				<p><u>Human Picture</u></p>
 				<input type='file' id='files' @change='handleFileSelect'/><br/>
 				<img class='characterImage' :src='character.image' />
@@ -211,6 +214,12 @@ export default {
 		},
 		inspirationCap: function () {
 			return this.character.attributes['Willpower'] > 1 ? this.character.attributes['Willpower'] : 1;
+		},
+		passivePerception: function () {
+			return 9 + this.character.attributes['Intelligence'];
+		},
+		directRange: function () {
+			return 3 + this.character.attributes['Charisma'];
 		},
 	},
 	watch: {

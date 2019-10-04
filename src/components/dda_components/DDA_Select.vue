@@ -1,5 +1,5 @@
 <template>
-	<p>
+	<p class='component'>
 		<label class='labelTag' for='inputName'>{{inputName}}:</label>
 		<select class='labelInput' id='inputName' v-model='textValue' @input='$emit("change", $event.target.value)'>
 			<option v-for='(option, index) in options' v-bind:key='index' :value='option'>{{option}}</option>
@@ -32,6 +32,10 @@ export default {
 
 <!-- Add 'scoped' attribute to limit CSS to this component only -->
 <style scoped>
+	p.component {
+		min-width: 400px;
+	}
+
 	label.labelTag {
 		min-width: 150px;
 		display: inline-block;

@@ -17,17 +17,17 @@
 			<td class='tableRow'>
 				<select v-model='attack.area'>
 					<option value=''>No Area Attack</option>
+					<option v-for='(used, tag) in areaTags' v-if='tag' :disabled='used' v-bind:key='tag'>{{tag}}</option>
 				</select>
 			</td>
 			<td class='tableRow'>
 				<select v-model='attack.effect'>
 					<option value=''>No Attack Effect</option>
+					<option v-for='(used, tag) in effectTags' v-if='tag' :disabled='used' v-bind:key='tag'>{{tag}}</option>
 				</select>
 			</td>
 			<td class='tableRow'></td>
-		</tr>
-		<tr>
-			<td class='attackTableDescription' colspan='6'><u>Details</u>: {{attackRange}}</td>
+			<td class='tableRow'><span class='roller' @click='$emit("doAttack")'>🎯</span></td>
 		</tr>
 	</tbody>
 </template>
@@ -35,7 +35,7 @@
 <script>
 export default {
 	name: 'DDA_Attack',
-	props: ['data', 'range'],
+	props: ['data', 'areaTags', 'effectTags'],
 	data: function () {
 		return {
 			attack: {
@@ -48,15 +48,7 @@ export default {
 			}
 		}
 	},
-	computed: {
-		attackRange: function () {
-			if (this.attack.type === 'Range') {
-				return '2 - ' + this.range + ' Units Range';
-			} else if (this.attack.type === 'Melee') {
-				return '1 Units Range';
-			}
-		},
-	},
+	computed: {},
 	watch: {
 		attack: {
 			handler: function () {
@@ -88,5 +80,9 @@ export default {
 		padding-top: 5px;
 		padding-bottom: 15px;
 		padding-left: 2px;
+	}
+
+	span.roller {
+		cursor: pointer;
 	}
 </style>

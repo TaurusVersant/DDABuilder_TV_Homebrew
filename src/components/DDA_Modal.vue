@@ -1,7 +1,7 @@
 <template>
-	<div id='ddaModal' class='modal'>
+	<div id='ddaModal' class='modal' @click='deactivateModal'>
 		<div class='modal-content'>
-			<p>{{message}}</p>
+			<p id='modalContainer'></p>
 		</div>
 	</div>
 </template>
@@ -11,16 +11,15 @@ export default {
 	name: 'DDA_Modal',
 	props: [],
 	data: function () {
-		return {
-			message: null,
-		}
+		return {}
 	},
 	computed: {},
 	watch: {},
 	methods: {
 		activateModal: function (message) {
-			this.message = message;
 			document.getElementById('ddaModal').style.display = 'block';
+			// We write to the element innerHTML in order to append HTML tags
+			document.getElementById('modalContainer').innerHTML = message;
 		},
 		deactivateModal: function (event) {
 			// Get the modal
@@ -30,10 +29,7 @@ export default {
 			}
 		},
 	},
-	created: function () {
-		// When the user clicks anywhere outside of the modal, close it
-		window.onclick = this.deactivateModal;
-	},
+	created: function () {},
 	components: {},
 }
 </script>
@@ -60,7 +56,7 @@ export default {
 		margin: 15% auto; /* 15% from the top and centered */
 		padding: 20px;
 		border: 1px solid #888;
-		width: 40%; /* Could be more or less, depending on screen size */
+		width: 60%; /* Could be more or less, depending on screen size */
 		text-align: center;
 	}
 
