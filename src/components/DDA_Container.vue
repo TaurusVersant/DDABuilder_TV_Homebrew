@@ -98,7 +98,7 @@ export default {
 				digimonMega: { type: 'Mega', currentPoints: 65, startingPoints: 70, baseMovement: 12, startingWoundBoxes: 10, brainsMod: 10, attackCount: 5, specMod: 4 },
 				digimonBurst: { type: 'Burst', currentPoints: 80, startingPoints: 85, baseMovement: 14, startingWoundBoxes: 14, brainsMod: 13, attackCount: 5, specMod: 5 },
 			},
-		}
+		};
 	},
 	computed: {},
 	watch: {

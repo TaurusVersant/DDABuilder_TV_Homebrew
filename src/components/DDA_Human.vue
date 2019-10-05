@@ -4,80 +4,239 @@
 		<div class='divRow'>
 			<div class='firstColumn'>
 				<p><u>Details</u></p>
-				<dda_input :textProperty='character.name' inputName='Name' @change='updateProperty($event, "name")'/>
-				<dda_input :textProperty='character.type' inputName='Age Group' :disableFlag='true'/>
-				<dda_span :textProperty='character.currentPoints + "/" + character.startingPoints' inputName='Creation Points'/>
-				<dda_checkbox :textProperty='character.creationComplete' inputName='Creation Complete' @change='updateProperty($event, "creationComplete")'/>
+				<!-- Character Name -->
+				<dda_input
+					:inputName='"Name"'
+					:textProperty='character.name'
+					@change='updateProperty($event, "name")'
+				/>
+				<!-- Character Age -->
+				<dda_input
+					:inputName='"Age Group"'
+					:textProperty='character.type'
+					:disableFlag='true'
+				/>
+				<!-- Creation Points -->
+				<dda_span
+					:inputName='"Creation Points"'
+					:textProperty='character.currentPoints + "/" + character.startingPoints'
+				/>
+				<!-- Creation Complete Checkbox -->
+				<dda_checkbox
+					:inputName='"Creation Complete"'
+					:textProperty='character.creationComplete'
+					@change='updateProperty($event, "creationComplete")'
+				/>
 				<span v-if='character.creationComplete'>
-					<dda_stat stat='XP' :value='character.bonusPoints' :total_stat='character.bonusTotal' @changeStat='changeBonus'/>
-					<dda_stat stat='Cap' :value='character.finalCap' @changeStat='changeFinalCap'/>
+					<!-- XP Points -->
+					<dda_stat
+						:stat='"XP"'
+						:value='character.bonusPoints'
+						:total_stat='character.bonusTotal'
+						@changeStat='changeBonus'
+					/>
+					<!-- Final Stat Cap -->
+					<dda_stat
+						:stat='"Cap"'
+						:value='character.finalCap'
+						@changeStat='changeFinalCap'
+					/>
 				</span>
-				<dda_span :textProperty='character["Wound Boxes"] + "/" + derivedWoundBoxes' inputName='Wound Boxes'/>
+				<!-- Wound Boxes Count -->
+				<dda_span
+					:inputName='"Wound Boxes"'
+					:textProperty='(this.character["Wound Boxes"] + this.character.temporary) + "/" + this.derivedWoundBoxes'
+				/>
+				<!-- Add Temporary Wound Boxes Button -->
 				<button :disabled='character.temporary > 0' @click='addTemporary'>Add Temporary Wound Boxes</button>
-				<dda_woundbox :current='character["Wound Boxes"]' :total='derivedWoundBoxes' :temporary='character.temporary' @changeHealth='changeHealth' @markTemporary='markTemporary'/>
+				<!-- Wound Boxes Display -->
+				<dda_woundbox
+					:current='character["Wound Boxes"]'
+					:total='derivedWoundBoxes'
+					:temporary='character.temporary'
+					@changeHealth='changeHealth'
+					@markTemporary='markTemporary'
+				/>
 			</div>
 			<div className='secondColumn'>
-				<p><u>Special Information</u></p>
-				<dda_span :textProperty='passivePerception' inputName='Perception'/>
-				<dda_span :textProperty='directRange' inputName='Direct Range'/>
 				<p><u>Human Picture</u></p>
-				<input type='file' id='files' @change='handleFileSelect'/><br/>
-				<img class='characterImage' :src='character.image' />
+				<input id='files' type='file' @change='handleFileSelect'/><br/>
+				<img class='characterImage' :src='character.image'/>
 			</div>
 		</div>
 		<div class='divRow'>
 			<div class='firstColumn'>
-				<p><u>Attributes</u><span v-if='!character.creationComplete'> | {{character.attributeTotal}}/{{character.areaCap}}</span></p>
-				<dda_stat v-for='(value, attribute) in character.attributes' v-bind:key='attribute' :stat='attribute' :value='character.attributes[attribute]' :roll='true' @changeStat='changeAttribute' @rollStat='rollAttribute'/>
+				<!-- Attribute Total shown when creation is not complete -->
+				<p>
+					<u>Attributes</u>
+					<span v-if='!character.creationComplete'> | {{character.attributeTotal}}/{{character.areaCap}}</span>
+				</p>
+				<!-- Loop display of Attributes -->
+				<dda_stat
+					v-for='(value, attribute) in character.attributes'
+					:key='attribute'
+					:stat='attribute'
+					:value='character.attributes[attribute]'
+					:roll='true'
+					@changeStat='changeAttribute'
+					@rollStat='rollAttribute'
+				/>
 				<p><u>Derived Stats</u></p>
-				<dda_span :textProperty='derivedWoundBoxes' inputName='Wound Boxes' :roll='true' @rollStat='poolCheck("derivedWoundBoxes")'/>
-				<dda_span :textProperty='derivedMovement' inputName='Movement'/>
-				<dda_span :textProperty='derivedAccuracy' inputName='Accuracy' :modifier='character.modifiers.derivedAccuracy' :roll='true' @rollStat='poolCheck("derivedAccuracy")'/>
-				<dda_span :textProperty='derivedDamage' inputName='Damage'/>
-				<dda_span :textProperty='derivedDodge' inputName='Dodge' :roll='true' @rollStat='poolCheck("derivedDodge")'/>
-				<dda_span :textProperty='derivedArmor' inputName='Armor'/>
+				<!-- Wound Boxes -->
+				<dda_span
+					:inputName='"Wound Boxes"'
+					:textProperty='derivedWoundBoxes'
+					:roll='true'
+					@rollStat='poolCheck("derivedWoundBoxes")'
+				/>
+				<!-- Movement -->
+				<dda_span
+					:inputName='"Movement"'
+					:textProperty='derivedMovement'
+					:modifier='character.modifiers.derivedMovement'
+					@changeMod='changeMod($event, "derivedMovement")'
+				/>
+				<!-- Accuracy -->
+				<dda_span
+					:inputName='"Accuracy"'
+					:textProperty='derivedAccuracy'
+					:modifier='character.modifiers.derivedAccuracy'
+					:roll='true'
+					@changeMod='changeMod($event, "derivedAccuracy")'
+					@rollStat='poolCheck("derivedAccuracy")'/>
+				<!-- Damage -->
+				<dda_span
+					:inputName='"Damage"'
+					:textProperty='derivedDamage'
+					:modifier='character.modifiers.derivedDamage'
+					@changeMod='changeMod($event, "derivedDamage")'
+				/>
+				<!-- Dodge -->
+				<dda_span
+					:inputName='"Dodge"'
+					:textProperty='derivedDodge'
+					:modifier='character.modifiers.derivedDodge'
+					:roll='true'
+					@changeMod='changeMod($event, "derivedDodge")'
+					@rollStat='poolCheck("derivedDodge")'
+				/>
+				<!-- Armor -->
+				<dda_span
+					:inputName='"Armor"'
+					:textProperty='derivedArmor'
+					:modifier='character.modifiers.derivedArmor'
+					@changeMod='changeMod($event, "derivedArmor")'
+				/>
 				<p><u>Special Stats</u></p>
-				<dda_stat stat='Sanity Drain' :value='character["Sanity Drain"]' :total_stat='sanityCap' :roll='true' @changeStat='changeSanity' @rollStat='rollSanity'/>
-				<dda_stat stat='Inspiration' :value='character.Inspiration' :total_stat='inspirationCap' @changeStat='changeInspiration'/>
+				<!-- Passive Perception -->
+				<dda_span
+					:inputName='"Passive Perception"'
+					:textProperty='passivePerception'
+				/>
+				<!-- Directing Range -->
+				<dda_span
+					:inputName='"Direct Range"'
+					:textProperty='directRange'
+				/>
+				<!-- Sanity Drain -->
+				<dda_stat
+					:stat='"Sanity Drain"'
+					:value='character["Sanity Drain"]'
+					:total_stat='sanityCap'
+					:roll='true'
+					@changeStat='changeSanity'
+					@rollStat='rollSanity'
+				/>
+				<!-- Inspiration -->
+				<dda_stat
+					:stat='"Inspiration"'
+					:value='character.Inspiration'
+					:total_stat='inspirationCap'
+					@changeStat='changeInspiration'
+				/>
 			</div>
 			<div class='secondColumn'>
-				<p><u>Skills</u><span v-if='!character.creationComplete'> | {{character.skillTotal}}/{{character.areaCap}}</span></p>
-				<dda_stat v-for='(value, skill) in character.skills' v-bind:key='skill' :stat='skill' :value='character.skills[skill]' :roll='true' @changeStat='changeSkill' @rollStat='rollSkill'/>
+				<p>
+					<u>Skills</u>
+					<span v-if='!character.creationComplete'> | {{character.skillTotal}}/{{character.areaCap}}</span>
+				</p>
+				<!-- Loop display of Skills -->
+				<dda_stat
+					v-for='(value, skill) in character.skills'
+					:key='skill'
+					:stat='skill'
+					:value='character.skills[skill]'
+					:roll='true'
+					@changeStat='changeSkill'
+					@rollStat='rollSkill'
+				/>
 			</div>
 		</div>
+		<p><u>Current Effects</u></p>
+		<dda_effects :effects='character.effects'/>
 		<p><u>Aspects</u></p>
 		<p>
+			<!-- Major Aspect -->
 			<label class='textareaLongTag' for='majorAspect'>Major Aspect (+4/-4):</label>
-			<dda_textarea :textProperty='character.majorAspect' widthProperty='70' @change='updateProperty($event, "majorAspect")'/>
-			<dda_box :current='character.majorUses' :total='1' @change='changeAspect($event, "majorUses")'/>
+			<dda_textarea
+				:textProperty='character.majorAspect'
+				:widthProperty='70'
+				@change='updateProperty($event, "majorAspect")'
+			/>
+			<dda_box
+				:current='character.majorUses'
+				:total='1'
+				@change='changeAspect($event, "majorUses")'
+			/>
 		</p>
 		<p>
+			<!-- Minor Aspect -->
 			<label class='textareaLongTag' for='minorAspect'>Minor Aspect (+2/-2):</label>
-			<dda_textarea :textProperty='character.minorAspect' widthProperty='70' @change='updateProperty($event, "minorAspect")'/>
-			<dda_box :current='character.minorUses' :total='2' @change='changeAspect($event, "minorUses")'/>
+			<dda_textarea
+				:textProperty='character.minorAspect'
+				:widthProperty='70'
+				@change='updateProperty($event, "minorAspect")'
+			/>
+			<dda_box
+				:current='character.minorUses'
+				:total='2'
+				@change='changeAspect($event, "minorUses")'
+			/>
 		</p>
 		<p><u>Torments</u></p>
 		<p>
-			<button type='button' @click="addTorment('Minor')">Add Minor Torment</button>
-			<button type='button' @click="addTorment('Major')">Add Major Torment</button>
-			<button type='button' @click="addTorment('Terrible')">Add Terrible Torment</button>
+			<button type='button' @click='addTorment("Minor")'>Add Minor Torment</button>
+			<button type='button' @click='addTorment("Major")'>Add Major Torment</button>
+			<button type='button' @click='addTorment("Terrible")'>Add Terrible Torment</button>
 		</p>
-		<p v-for='(torment, index) in character.torments' v-bind:key='index'>
+		<!-- Loop of all Torments -->
+		<p v-for='(torment, index) in character.torments' :key='index'>
 			<label class='textareaLongTag'>{{torment.type}} Torment:</label>
-			<dda_textarea :textProperty='torment.text' widthProperty='70' @change='changeTorment($event, index)'/>
+			<dda_textarea
+				:textProperty='torment.text'
+				widthProperty='70'
+				@change='changeTorment($event, index)'
+			/>
 			<span class='deleteButton' @click='deleteTorment(index)'>X</span>
-			<dda_box :current='torment.marked' :total='torment.total' :cap='character.creationComplete ? torment.total : character.currentPoints ? torment.startingCap : torment.marked' @change='markTorment($event, index)'/>
+			<dda_box
+				:current='torment.marked'
+				:total='torment.total'
+				:cap='tormentCap(torment)'
+				@change='markTorment($event, index)'
+			/>
 		</p>
+		<!--Details -->
 		<p><u>Additional Details</u></p>
-		<dda_textarea :textProperty='character.notes' widthProperty='91' @change='updateProperty($event, "notes")'/>
+		<dda_textarea
+			:textProperty='character.notes'
+			:widthProperty='91'
+			@change='updateProperty($event, "notes")'
+		/>
 		<dda_modal ref='modal'/>
 	</div>
 </template>
 
 <script>
-import DDA_Stat from './DDA_Stat';
-import DDA_Modal from './DDA_Modal';
-import DDA_WoundBox from './DDA_WoundBox';
 export default {
 	name: 'DDA_Human',
 	props: ['data'],
@@ -97,7 +256,11 @@ export default {
 					'Willpower': 0,
 				},
 				modifiers: {
+					derivedMovement: 0,
 					derivedAccuracy: 0,
+					derivedDamage: 0,
+					derivedDodge: 0,
+					derivedArmor: 0,
 				},
 				attributeTotal: 0,
 				skills: {
@@ -129,6 +292,18 @@ export default {
 				torments: [],
 				notes: null,
 				image: null,
+				effects: {
+					positive: [
+						{ name: '', duration: 0 },
+						{ name: '', duration: 0 },
+						{ name: '', duration: 0 },
+					],
+					negative: [
+						{ name: '', duration: 0 },
+						{ name: '', duration: 0 },
+						{ name: '', duration: 0 },
+					],
+				},
 			},
 			derivedStats: {
 				derivedWoundBoxes: 'Wound Boxes',
@@ -161,7 +336,7 @@ export default {
 				humanAdult: 15,
 			},
 			allowUpdate: true,
-		}
+		};
 	},
 	computed: {
 		derivedWoundBoxes: function () {
@@ -170,19 +345,24 @@ export default {
 			return woundBoxTotal;
 		},
 		derivedMovement: function () {
-			return this.character.attributes['Agility'] + this.character.skills['Survival'];
+			let value = this.character.attributes['Agility'] + this.character.skills['Survival'] + this.getModifier('derivedMovement');
+			return value > 0 ? value : 0;
 		},
 		derivedAccuracy: function () {
-			return this.character.attributes['Agility'] + this.character.skills['Fight'];
+			let value = this.character.attributes['Agility'] + this.character.skills['Fight'] + this.getModifier('derivedAccuracy');
+			return value > 0 ? value : 0;
 		},
 		derivedDamage: function () {
-			return this.character.attributes['Body'] + this.character.skills['Fight'];
+			let value = this.character.attributes['Body'] + this.character.skills['Fight'] + this.getModifier('derivedDamage');
+			return value > 0 ? value : 0;
 		},
 		derivedDodge: function () {
-			return this.character.attributes['Agility'] + this.character.skills['Evade'];
+			let value = this.character.attributes['Agility'] + this.character.skills['Evade'] + this.getModifier('derivedDodge');
+			return value > 0 ? value : 0;
 		},
 		derivedArmor: function () {
-			return this.character.attributes['Body'] + this.character.skills['Endurance'];
+			let value = this.character.attributes['Body'] + this.character.skills['Endurance'] + this.getModifier('derivedArmor');
+			return value > 0 ? value : 0;
 		},
 		maxAttribute: function () {
 			if (this.character.creationComplete) {
@@ -283,6 +463,12 @@ export default {
 		},
 		poolCheck: function (stat) {
 			this.$refs.modal.activateModal(this.derivedStats[stat] + ' Pool Check: ' + this[stat] + 'd6, [Roll20: ' + this[stat] + 'd6>5]');
+		},
+		tormentCap: function (torment) {
+			return this.character.creationComplete ? torment.total : this.character.currentPoints ? torment.startingCap : torment.marked;
+		},
+		getModifier: function (value) {
+			return Number.isInteger(this.character.modifiers[value]) ? this.character.modifiers[value] : 0;
 		},
 		/**
 		* Changers
@@ -439,16 +625,16 @@ export default {
 		changeAspect: function (index, type) {
 			this.character[type] += index <= this.character[type] ? -1 : 1;
 		},
+		changeMod: function (value, type) {
+			let modifier = Number.parseInt(value);
+			this.character.modifiers[type] = Number.isInteger(modifier) ? modifier : 0;
+		},
 	},
 	created: function () {
 		this.character = Object.assign(this.character, this.data);
 		this.$emit('updateCharacter', this.character);
 	},
-	components: {
-		dda_stat: DDA_Stat,
-		dda_modal: DDA_Modal,
-		dda_woundbox: DDA_WoundBox,
-	},
+	components: {},
 }
 </script>
 

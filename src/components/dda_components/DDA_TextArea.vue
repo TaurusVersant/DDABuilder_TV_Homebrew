@@ -1,5 +1,10 @@
 <template>
-	<textarea :style='"height:" + height + ";width:" + width' v-model='textValue' @input='$emit("change", $event.target.value)'></textarea>
+	<!-- Text Area -->
+	<textarea
+		:style='textAreaStyle'
+		v-model='textValue'
+		@input='$emit("change", $event.target.value)'
+	></textarea>
 </template>
 
 <script>
@@ -17,9 +22,9 @@ export default {
 			let rows = this.textValue ? Math.floor(this.textValue.length / 128) + this.textValue.split(/\r\n|\r|\n/).length : 2;
 			return (rows > 2 ? rows : 2) * modifier + 'px';
 		},
-		width: function () {
-			return this.widthProperty + '%';
-		}
+		textAreaStyle: function () {
+			return 'height:' + this.height + ';width:' + this.widthProperty + '%';
+		},
 	},
 	watch: {
 		textProperty: function () {
@@ -38,5 +43,6 @@ export default {
 <style scoped>
 	textarea {
 		margin: 10px;
+		resize: none;
 	}
 </style>

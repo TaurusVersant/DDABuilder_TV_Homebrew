@@ -1,6 +1,15 @@
 <template>
 	<div>
-		<input v-for='index in total' ref='boxes' v-bind:key='index' class='box' type='checkbox' :disabled='index > fieldCap' @click='$emit("change", index)'/>
+		<!-- List of Wound Box Checkboxes -->
+		<input
+			v-for='index in total'
+			class='box'
+			ref='boxes'
+			type='checkbox'
+			:key='index'
+			:disabled='index > fieldCap'
+			@click='$emit("change", index)'
+		/>
 	</div>
 </template>
 
@@ -20,16 +29,18 @@ export default {
 	},
 	watch: {
 		current: function () {
+			this.setBoxes();
+		},
+	},
+	methods: {
+		setBoxes: function () {
 			for (let i in this.$refs['boxes']) {
 				this.$refs['boxes'][i].checked = i < this.current;
 			}
 		},
 	},
-	methods: {},
 	mounted: function () {
-		for (let i in this.$refs['boxes']) {
-			this.$refs['boxes'][i].checked = i < this.current;
-		}
+		this.setBoxes();
 	},
 	components: {},
 }

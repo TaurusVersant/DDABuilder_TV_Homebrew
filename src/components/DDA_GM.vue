@@ -3,7 +3,7 @@
 		<h1 id='characterTitle'>GM Screen</h1>
 		<div v-for='(character, index) in characters' v-bind:key='index'>
 			<section v-if='character.characterClass === "Human"'>
-				<h3><u>{{character.name}}</u>: {{character['Wound Boxes']}}/{{humanWoundBoxes(index)}}</h3>
+				<h3><u>{{character.name}}</u>: {{character['Wound Boxes'] + character.temporary}}/{{humanWoundBoxes(index)}}</h3>
 				<div><u>Major Aspect</u>: {{character.majorAspect}}</div><br>
 				<div><u>Minor Aspect</u>: {{character.minorAspect}}</div>
 				<div>
@@ -16,7 +16,7 @@
 				<dda_textarea :textProperty='character.gmNotes' widthProperty='91' @change='updateProperty($event, "gmNotes", index)'/>
 			</section>
 			<section v-if='character.characterClass === "Digimon"'>
-				<h3><u>{{character.name}}</u>: {{character['Wound Boxes']}}/{{digimonWoundBoxes(index)}}</h3>
+				<h3><u>{{character.name}}</u>: {{character['Wound Boxes'] + character.temporary}}/{{digimonWoundBoxes(index)}}</h3>
 				<div><u>Stage</u>: {{character.type}} | <u>Attribute</u>: {{character.attribute}} | <u>Family</u>: {{character.family}} | <u>Type</u>: {{character.digimonType}}</div>
 				<p><u>Notes</u></p>
 				<dda_textarea :textProperty='character.gmNotes' widthProperty='91' @change='updateProperty($event, "gmNotes", index)'/>
@@ -31,7 +31,7 @@ export default {
 	name: 'DDA_GM',
 	props: ['characters'],
 	data: function () {
-		return {}
+		return {};
 	},
 	computed: {},
 	watch: {},

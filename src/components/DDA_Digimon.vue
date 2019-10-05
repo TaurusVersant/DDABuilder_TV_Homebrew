@@ -1,10 +1,8 @@
 /*
- * Attack List
  * Quality List
- * Modifiers (Temporary/Permanent)
  * Elemental Terrain button
  * Negative Wound Box tracking
- * Effect Tracker (max 3 of each)
+ * Attribute Rolls
  */
 <template>
 	<div>
@@ -12,53 +10,181 @@
 		<div class='divRow'>
 			<div class='firstColumn'>
 				<p><u>Details</u></p>
-				<dda_input :textProperty='character.name' inputName='Name' @change='updateProperty($event, "name")'/>
-				<dda_input :textProperty='character.type' inputName='Stage' :disableFlag='true'/>
-				<dda_stat v-if='character.type === "Burst"' stat='Burst Modifier' :value='character.burstModifier' @changeStat='changeBurst'/>
-				<dda_select :textProperty='character.size' inputName='Size' :options='sizes' @change='updateProperty($event, "size")'/>
-				<dda_select :textProperty='character.attribute' inputName='Attribute' :options='attributes' @change='updateProperty($event, "attribute")'/>
-				<dda_select :textProperty='character.family' inputName='Family' :options='families' @change='updateProperty($event, "family")'/>
-				<dda_input :textProperty='character.digimonType' inputName='Type' @change='updateProperty($event, "digimonType")'/>
-				<dda_span :textProperty='character.currentPoints + "/" + character.startingPoints' inputName='Digi-Points'/>
-				<dda_checkbox :textProperty='character.creationComplete' inputName='Creation Complete' @change='updateProperty($event, "creationComplete")'/>
-				<dda_stat v-if='character.creationComplete' stat='XP' :value='character.bonusPoints' :total_stat='character.bonusTotal' @changeStat='changeBonus'/>
-				<dda_span :textProperty='character["Wound Boxes"] + "/" + derivedWoundBoxes' inputName='Wound Boxes'/>
+				<!-- Digimon Name -->
+				<dda_input
+					:inputName='"Name"'
+					:textProperty='character.name'
+					@change='updateProperty($event, "name")'
+				/>
+				<!-- Digimon Stage -->
+				<dda_input
+					:inputName='"Stage"'
+					:textProperty='character.type'
+					:disableFlag='true'
+				/>
+				<!-- Burst Modifier -->
+				<dda_stat
+					v-if='character.type === "Burst"'
+					:stat='"Burst Modifier"'
+					:value='character.burstModifier'
+					@changeStat='changeBurst'
+				/>
+				<!-- Digimon Size -->
+				<dda_select
+					:inputName='"Size"'
+					:textProperty='character.size'
+					:options='sizes'
+					@change='updateProperty($event, "size")'
+				/>
+				<!-- Digimon Attribute -->
+				<dda_select
+					:inputName='"Attribute"'
+					:textProperty='character.attribute'
+					:options='attributes'
+					@change='updateProperty($event, "attribute")'
+				/>
+				<!-- Digimon Family -->
+				<dda_select
+					:inputName='"Family"'
+					:textProperty='character.family'
+					:options='families'
+					@change='updateProperty($event, "family")'
+				/>
+				<!-- Digimon Type -->
+				<dda_input
+					:inputName='"Type"'
+					:textProperty='character.digimonType'
+					@change='updateProperty($event, "digimonType")'
+				/>
+				<!-- Digi-Points -->
+				<dda_span
+					:inputName='"Digi-Points"'
+					:textProperty='character.currentPoints + "/" + character.startingPoints'
+				/>
+				<!-- Creation Complete Checkbox -->
+				<dda_checkbox
+					:inputName='"Creation Complete"'
+					:textProperty='character.creationComplete'
+					@change='updateProperty($event, "creationComplete")'
+				/>
+				<!-- XP Points -->
+				<dda_stat
+					v-if='character.creationComplete'
+					:stat='"XP"'
+					:value='character.bonusPoints'
+					:total_stat='character.bonusTotal'
+					@changeStat='changeBonus'
+				/>
+				<!-- Wound Boxes Count -->
+				<dda_span
+					:inputName='"Wound Boxes"'
+					:textProperty='(character["Wound Boxes"] + character.temporary) + "/" + derivedWoundBoxes'
+				/>
+				<!-- Add Temporary Wound Boxes Button -->
 				<button :disabled='character.temporary > 0' @click='addTemporary'>Add Temporary Wound Boxes</button>
-				<dda_woundbox :current='character["Wound Boxes"]' :total='derivedWoundBoxes' :temporary='character.temporary' @changeHealth='changeHealth' @markTemporary='markTemporary'/>
+				<!-- Wound Boxes Display -->
+				<dda_woundbox
+					:current='character["Wound Boxes"]'
+					:total='derivedWoundBoxes'
+					:temporary='character.temporary'
+					@changeHealth='changeHealth'
+					@markTemporary='markTemporary'
+				/>
 			</div>
 			<div className='secondColumn'>
-				<p><u>Special Information</u></p>
-				<dda_select :textProperty='character.specialDigivolution' inputName='Special Stage' :options='specialDigivolutions' @change='updateProperty($event, "specialDigivolution")'/>
-				<dda_span :textProperty='passivePerception' inputName='Perception'/>
-				<dda_span :textProperty='burstRadius' inputName='Burst Radius'/>
 				<p><u>Digimon Picture</u></p>
-				<input type='file' id='files' @change='handleFileSelect'/><br/>
-				<img class='characterImage' :src='character.image' />
+				<input id='files' type='file' @change='handleFileSelect'/><br/>
+				<img class='characterImage' :src='character.image'/>
 			</div>
-		</div><div class='divRow'>
+		</div>
+		<div class='divRow'>
 			<div class='firstColumn'>
 				<p><u>Movement</u></p>
-				<dda_span :textProperty='getDerivedStat("derivedMovement")' inputName='Movement'/>
-				<dda_span :textProperty='getDerivedStat("movementJumpHeight")' inputName='Jump Height'/>
-				<dda_span :textProperty='getDerivedStat("movementJumpLength")' inputName='Jump Length'/>
-				<dda_span :textProperty='getDerivedStat("movementSwimSpeed")' inputName='Swim Speed'/>
+				<!-- Movement -->
+				<dda_span
+					:inputName='"Movement"'
+					:textProperty='getDerivedStat("derivedMovement")'
+					:modifier='character.modifiers.derivedMovement'
+					@changeMod='changeMod($event, "derivedMovement")'
+				/>
+				<!-- Jump Height -->
+				<dda_span
+					:inputName='"Jump Height"'
+					:textProperty='getDerivedStat("movementJumpHeight")'
+				/>
+				<!-- Jump Length -->
+				<dda_span
+					:inputName='"Jump Length"'
+					:textProperty='getDerivedStat("movementJumpLength")'
+				/>
+				<!-- Swim Speed -->
+				<dda_span
+					:inputName='"Swim Speed"'
+					:textProperty='getDerivedStat("movementSwimSpeed")'
+				/>
 				<p><u>Stats</u></p>
-				<dda_stat stat='Health' :value='character.stats["Health"]' @changeStat='changeStat' :roll='true' @rollStat='poolCheck("Health")'/>
-				<dda_stat stat='Accuracy' :value='character.stats["Accuracy"]' @changeStat='changeStat'/>
-				<dda_stat stat='Damage' :value='character.stats["Damage"]' @changeStat='changeStat'/>
-				<dda_stat stat='Dodge' :value='character.stats["Dodge"]' @changeStat='changeStat'/>
-				<dda_stat stat='Armor' :value='character.stats["Armor"]' @changeStat='changeStat'/>
+				<!-- Health Stat -->
+				<dda_stat
+					:stat='"Health"'
+					:value='statHealth'
+					:roll='true'
+					@changeStat='changeStat'
+					@rollStat='poolCheck("Health")'
+				/>
+				<!-- Combat Stats -->
+				<dda_stat
+					v-for='(stat, value) in combatStats'
+					:key='value'
+					:stat='stat'
+					:value='getDerivedStat(value)'
+					:modifier='character.modifiers[value]'
+					@changeStat='changeStat'
+					@changeMod='changeMod($event, value)'
+				/>
 			</div>
 			<div class='secondColumn'>
+				<p><u>Special Information</u></p>
+				<!-- Special Stage -->
+				<dda_select
+					:inputName='"Special Stage"'
+					:textProperty='character.specialDigivolution'
+					:options='specialDigivolutions'
+					@change='updateProperty($event, "specialDigivolution")'
+				/>
+				<!-- Passive Perception -->
+				<dda_span
+					:inputName='"Passive Perception"'
+					:textProperty='passivePerception'
+				/>
+				<!-- Burst Radius -->
+				<dda_span
+					:inputName='"Burst Radius"'
+					:textProperty='burstRadius'
+				/>
 				<p><u>Derived Stats</u></p>
-				<dda_span :textProperty='getDerivedStat("derivedWoundBoxes")' inputName='Wound Boxes'/>
-				<dda_span :textProperty='getDerivedStat("derivedAgility")' inputName='Agility' :roll='true' @rollStat='rollStat("derivedAgility")'/>
-				<dda_span :textProperty='getDerivedStat("derivedBody")' inputName='Body' :roll='true' @rollStat='rollStat("derivedBody")'/>
-				<dda_span :textProperty='getDerivedStat("derivedBrains")' inputName='Brains' :roll='true' @rollStat='rollStat("derivedBrains")'/>
+				<!-- Derived Stats -->
+				<dda_span
+					:textProperty='getDerivedStat("derivedWoundBoxes")'
+					inputName='Wound Boxes'
+				/>
+				<dda_span
+					v-for='(stat, value) in derivedStats'
+					:key='value'
+					:inputName='stat'
+					:textProperty='getDerivedStat(value)'
+					:roll='true'
+					@rollStat='rollStat(value)'
+				/>
 				<p><u>Spec Stats</u></p>
-				<dda_span :textProperty='getDerivedStat("specRAM")' inputName='RAM [Agility]' :roll='true' @rollStat='rollStat("specRAM")'/>
-				<dda_span :textProperty='getDerivedStat("specCPU")' inputName='CPU [Body]' :roll='true' @rollStat='rollStat("specCPU")'/>
-				<dda_span :textProperty='getDerivedStat("specBIT")' inputName='BIT [Brains]' :roll='true' @rollStat='rollStat("specBIT")'/>
+				<!-- Spec Stats -->
+				<dda_span
+					v-for='(stat, value) in specStats'
+					:key='value'
+					:inputName='stat'
+					:textProperty='getDerivedStat(value)'
+					:roll='true'
+					@rollStat='rollStat(value)'
+				/>
 				<!--<p><u>Rolls</u></p>
 				<dda_span textProperty='' inputName='Agility' :roll='true'/>
 				<dda_span textProperty='' inputName='Body' :roll='true'/>
@@ -67,6 +193,8 @@
 				<dda_span textProperty='' inputName='Willpower' :roll='true'/>-->
 			</div>
 		</div>
+		<p><u>Current Effects</u></p>
+		<dda_effects :effects='character.effects'/>
 		<p><u>Digimon Attacks</u></p>
 		<table class='attackTable'>
 			<thead>
@@ -83,20 +211,32 @@
 			<dda_attack
 				v-for='attack in character.attackCount'
 				v-bind:key='attack'
-				:data='character.attacks[attack]'
+				:attackData='character.attacks[attack]'
 				:range='2*getDerivedStat("specBIT")'
 				:areaTags='character.freeAreaTags'
 				:effectTags='character.freeEffectTags'
+				:featureTags='character.freeFeatureTags'
 				@attackUpdated='updateAttack($event, attack)'
 				@doAttack='doAttack(attack)'
 			/>
 		</table>
+		<p><u>Special Features</u></p>
+		<ul>
+			<li v-for='(quality, index) in specialFeatures' class='specialList' :key='index'>{{quality}}</li>
+		</ul>
 		<p><u>Additional Details</u></p>
-		<dda_textarea :textProperty='character.notes' widthProperty='91' @change='updateProperty($event, "notes")'/>
+		<dda_textarea
+			:textProperty='character.notes'
+			:widthProperty='91'
+			@change='updateProperty($event, "notes")'
+		/>
 		<p>
 			<u>Qualities</u>
 			<button @click='showQualities'>Add Quality</button>
-			<table v-if='Object.keys(character.qualities).length' class='digimonQualityTable'>
+			<table
+				v-if='Object.keys(character.qualities).length'
+				class='digimonQualityTable'
+			>
 				<thead>
 					<tr class='qualityRow'>
 						<th>Quality</th>
@@ -105,7 +245,7 @@
 						<th></th>
 					</tr>
 				</thead>
-				<tbody v-for='(rank, quality) in character.qualities' v-bind:key='quality'>
+				<tbody v-for='(rank, quality) in character.qualities' :key='quality'>
 					<tr class='qualityRow'>
 						<td>{{quality}}</td>
 						<td>{{rank}}</td>
@@ -121,9 +261,6 @@
 </template>
 
 <script>
-import DDA_Stat from './DDA_Stat';
-import DDA_Modal from './DDA_Modal';
-import DDA_WoundBox from './DDA_WoundBox';
 import DDA_Attack from './DDA_Attack';
 import DDA_Qualities from './DDA_Qualities';
 let library = require('./library');
@@ -153,16 +290,52 @@ export default {
 					'Dodge': 1,
 					'Armor': 1,
 				},
+				modifiers: {
+					derivedMovement: 0,
+					statAccuracy: 0,
+					statDamage: 0,
+					statDodge: 0,
+					statArmor: 0,
+				},
 				'Wound Boxes': 0,
 				temporary: 0,
 				attacks: {},
 				freeAreaTags: {},
 				freeEffectTags: {},
+				freeFeatureTags: {},
 				qualities: {},
 				notes: null,
 				image: null,
+				effects: {
+					positive: [
+						{ name: '', duration: 0 },
+						{ name: '', duration: 0 },
+						{ name: '', duration: 0 },
+					],
+					negative: [
+						{ name: '', duration: 0 },
+						{ name: '', duration: 0 },
+						{ name: '', duration: 0 },
+					],
+				},
+			},
+			combatStats: {
+				statAccuracy: 'Accuracy',
+				statDamage: 'Damage',
+				statDodge: 'Dodge',
+				statArmor: 'Armor',
 			},
 			derivedStats: {
+				derivedAgility: 'Agility',
+				derivedBody: 'Body',
+				derivedBrains: 'Brains',
+			},
+			specStats: {
+				specRAM: 'RAM [Agility]',
+				specCPU: 'CPU [Body]',
+				specBIT: 'BIT [Brains]',
+			},
+			statsLookup: {
 				derivedMovement: 'Movement',
 				movementJumpHeight: 'Jump Height',
 				movementJumpLength: 'Jump Length',
@@ -242,11 +415,31 @@ export default {
 				'Unknown',
 			],
 			allowUpdate: true,
-		}
+		};
 	},
 	computed: {
 		derivedMovement: function () {
-			return this.character.baseMovement + (this.character.burstModifier * this.burstScaling.baseMovement);
+			let value = this.character.baseMovement + (this.character.burstModifier * this.burstScaling.baseMovement) + this.getModifier('derivedMovement');
+			return value > 0 ? value : 0;
+		},
+		statHealth: function () {
+			return this.character.stats['Health'];
+		},
+		statAccuracy: function () {
+			let value = this.character.stats['Accuracy'] + this.character.modifiers['statAccuracy'];
+			return value > 0 ? value : 0;
+		},
+		statDamage: function () {
+			let value = this.character.stats['Damage'] + this.character.modifiers['statDamage'];
+			return value > 0 ? value : 0;
+		},
+		statDodge: function () {
+			let value = this.character.stats['Dodge'] + this.character.modifiers['statDodge'];
+			return value > 0 ? value : 0;
+		},
+		statArmor: function () {
+			let value = this.character.stats['Armor'] + this.character.modifiers['statArmor'];
+			return value > 0 ? value : 0;
 		},
 		movementJumpHeight: function () {
 			return Math.floor(this.derivedMovement / 2);
@@ -311,6 +504,16 @@ export default {
 			}
 			return availableQualities;
 		},
+		specialFeatures: function () {
+			let features = [];
+			for (let quality in this.character.qualities) {
+				let qualityObject = this.library.qualities[quality];
+				if (qualityObject.type === 'special') {
+					features.push('[' + quality + '] | ' + qualityObject.text);
+				}
+			}
+			return features;
+		},
 	},
 	watch: {
 		character: {
@@ -362,7 +565,7 @@ export default {
 		},
 		rollStat: function (stat) {
 			let modifier = this[stat] > 0 ? '+' + this[stat] : '-1';
-			this.$refs.modal.activateModal(this.derivedStats[stat] + ' Roll: 3d6' + modifier);
+			this.$refs.modal.activateModal(this.statsLookup[stat] + ' Roll: 3d6' + modifier);
 		},
 		poolCheck: function (stat) {
 			this.$refs.modal.activateModal(stat + ' Pool Check: ' + this.character.stats[stat] + 'd6, [Roll20: ' + this.character.stats[stat] + 'd6>5]');
@@ -370,8 +573,84 @@ export default {
 		showQualities: function () {
 			this.$refs.qualities.activateModal();
 		},
+		getModifier: function (value) {
+			return Number.isInteger(this.character.modifiers[value]) ? this.character.modifiers[value] : 0;
+		},
+		doAttack: function (attack) {
+			let details = [];
+			let attackObject = this.character.attacks[attack];
+
+			if (attackObject) {
+				details.push('<b><u>' + attackObject.name + '</u></b>');
+
+				// Accuracy Information
+				details.push('<u>Accuracy:</u> ' + this.statAccuracy);
+
+				// Damage Information
+				if (attackObject.damage) {
+					details.push('<u>Damage:</u> ' + this.statDamage);
+				}
+
+				// Range Information
+				if (attackObject.type) {
+					let range = '';
+					if (attackObject.area) {
+						let args = [];
+						let quality = this.library.qualities[attackObject.area];
+						for (let i in quality.args) {
+							if (quality.args[i] in this) {
+								args.push(this[quality.args[i]]);
+							} else if (quality.args[i] in this.character) {
+								args.push(this.character[quality.args[i]]);
+							}
+						}
+						range = quality.method(attackObject.type, args);
+					} else if (attackObject.type === 'Range') {
+						range = 'Single target. 2 to ' + (2 * this.specBIT) + ' Units';
+					} else {
+						range = 'Single target. ' + 1 + ' Unit';
+					}
+
+					details.push('<u>Range:</u> ' + range);
+				}
+
+				// Effect Information
+				if (attackObject.effect) {
+					let args = [];
+					let quality = this.library.qualities[attackObject.effect];
+					for (let i in quality.args) {
+						if (quality.args[i] in this) {
+							args.push(this[quality.args[i]]);
+						} else if (quality.args[i] in this.character) {
+							args.push(this.character[quality.args[i]]);
+						}
+					}
+					let note = attackObject.damage && quality.type === 'effect' ? ' Apply at least 2 damage to trigger. ' : ' ';
+					details.push('<u>' + attackObject.effect + ':</u>' + note + ' ' + quality.method(args));
+				}
+
+				// Feature Information
+				for (let i in attackObject.features) {
+					if (attackObject.features[i]) {
+						let args = [];
+						let quality = this.library.qualities[attackObject.features[i]];
+						for (let j in quality.args) {
+							if (quality.args[j] === 'ranks') {
+								args.push(this.character.qualities[attackObject.features[i]]);
+							} else if (quality.args[j] in this) {
+								args.push(this[quality.args[j]]);
+							} else if (quality.args[j] in this.character) {
+								args.push(this.character[quality.args[j]]);
+							}
+						}
+						details.push('<u>' + attackObject.features[i] + ':</u> ' + quality.method(args));
+					}
+				}
+				this.$refs.modal.activateModal(details.join('<br><br>'));
+			}
+		},
 		/**
-		* Changers
+		* Setters
 		*/
 		changeBonus: function (attribute, modifier) {
 			if (modifier) {
@@ -437,6 +716,7 @@ export default {
 			if (this.character.attacks[attack] && this.character.attacks[attack].area !== data.area) {
 				this.character.freeAreaTags[this.character.attacks[attack].area] = false;
 			}
+
 			// Check if effect tag is in use
 			if (data.effect && this.character.freeEffectTags.hasOwnProperty(data.effect)) {
 				this.character.freeEffectTags[data.effect] = true;
@@ -447,63 +727,19 @@ export default {
 				this.character.freeEffectTags[this.character.attacks[attack].effect] = false;
 			}
 
-			this.character.attacks[attack] = Object.assign({}, data);
-		},
-		doAttack: function (attack) {
-			let details = [];
-			let attackObject = this.character.attacks[attack];
-
-			if (attackObject) {
-				details.push('<b><u>' + attackObject.name + '</u></b>');
-
-				// Accuracy Information
-				details.push('<u>Accuracy:</u> ' + this.character.stats['Accuracy']);
-
-				// Damage Information
-				if (attackObject.damage) {
-					details.push('<u>Damage:</u> ' + this.character.stats['Damage']);
+			for (let i in data.features) {
+				// Check if feature tag is in use
+				if (data.features[i] && this.character.freeFeatureTags.hasOwnProperty(data.features[i])) {
+					this.character.freeFeatureTags[data.features[i]] = true;
 				}
 
-				// Range Information
-				if (attackObject.type) {
-					let range = '';
-					if (attackObject.area) {
-						let args = [];
-						let quality = this.library.qualities[attackObject.area];
-						for (let i in quality.args) {
-							if (quality.args[i] in this) {
-								args.push(this[quality.args[i]]);
-							} else if (quality.args[i] in this.character) {
-								args.push(this.character[quality.args[i]]);
-							}
-						}
-						range = quality.method(attackObject.type, args);
-					} else if (attackObject.type === 'Range') {
-						range = 'Single target. 2 to ' + (2 * this.specBIT) + ' Units';
-					} else {
-						range = 'Single target. ' + 1 + ' Unit';
-					}
-
-					details.push('<u>Range:</u> ' + range);
+				// Check if feature tag is not in use
+				if (this.character.attacks[attack] && this.character.attacks[attack].features[i] !== data.features[i]) {
+					this.character.freeFeatureTags[this.character.attacks[attack].features[i]] = false;
 				}
-
-				// Effect Information
-				if (attackObject.effect) {
-					let args = [];
-					let quality = this.library.qualities[attackObject.effect];
-					for (let i in quality.args) {
-						if (quality.args[i] in this) {
-							args.push(this[quality.args[i]]);
-						} else if (quality.args[i] in this.character) {
-							args.push(this.character[quality.args[i]]);
-						}
-					}
-					let note = attackObject.damage ? ' Apply at least 2 damage to trigger. ' : ' ';
-					details.push('<u>' + attackObject.effect + ':</u>' + note + ' ' + quality.method(args));
-				}
-
-				this.$refs.modal.activateModal(details.join('<br><br>'));
 			}
+
+			this.character.attacks[attack] = Object.assign({}, data);
 		},
 		addQuality: function (quality) {
 			let qualityObject = this.library.qualities[quality];
@@ -534,8 +770,29 @@ export default {
 			}
 
 			// Adds quality to freeEffectTags
-			if (qualityObject.type === 'effect') {
+			if (qualityObject.type === 'effect' || qualityObject.type === 'stance') {
 				this.$set(this.character.freeEffectTags, quality, false);
+			}
+
+			// Adds quality to freeFeatureTags
+			if (qualityObject.type === 'feature') {
+				this.$set(this.character.freeFeatureTags, quality, false);
+			}
+
+			// Signature Move handler
+			if (quality === 'Signature Move') {
+				if (!this.character.attacks[1]) {
+					this.character.attacks[1] = {
+						name: null,
+						type: null,
+						damage: false,
+						area: '',
+						effect: '',
+						features: ['', ''],
+					}
+				} else {
+					this.character.attacks[1].features.push('');
+				}
 			}
 
 			this.$refs.qualities.closeModal();
@@ -553,19 +810,48 @@ export default {
 			}
 
 			// Prevents area tag in use from being removed
-			if (qualityObject.type === 'area' && this.character.freeAreaTags[quality]) {
+			if (qualityObject.type === 'area' && this.character.freeAreaTags[quality] && this.character.qualities[quality] === 1) {
 				alert('Cannot remove ' + quality + ' as it is being used by an attack. Remove the Tag from the attack before removing Quality.');
 				return;
 			}
 
 			// Prevents effect tag in use from being removed
-			if (qualityObject.type === 'effect' && this.character.freeEffectTags[quality]) {
+			if ((qualityObject.type === 'effect' || qualityObject.type === 'stance') && this.character.freeEffectTags[quality] && this.character.qualities[quality] === 1) {
 				alert('Cannot remove ' + quality + ' as it is being used by an attack. Remove the Tag from the attack before removing Quality.');
 				return;
 			}
 
+			// Prevents feature tag in use from being removed
+			if (qualityObject.type === 'feature' && this.character.freeFeatureTags[quality] && this.character.qualities[quality] === 1) {
+				alert('Cannot remove ' + quality + ' as it is being used by an attack. Remove the Tag from the attack before removing Quality.');
+				return;
+			}
+
+			// Signature Move handler
+			if (quality === 'Signature Move') {
+				let feature = this.character.attacks[1].features.pop();
+				if (feature) {
+					this.$set(this.character.freeFeatureTags, feature, false);
+				}
+			}
+
 			if (this.character.qualities[quality] === 1) {
 				this.$delete(this.character.qualities, quality);
+
+				// Removes area tag from freeAreaTags
+				if (qualityObject.type === 'area') {
+					this.$delete(this.character.freeAreaTags, quality);
+				}
+
+				// Removes effect tag from freeEffectTags
+				if (qualityObject.type === 'effect' || qualityObject.type === 'stance') {
+					this.$delete(this.character.freeEffectTags, quality);
+				}
+
+				// Removes effect tag from freeFeatureTags
+				if (qualityObject.type === 'feature') {
+					this.$delete(this.character.freeFeatureTags, quality);
+				}
 			} else {
 				this.$set(this.character.qualities, quality, this.character.qualities[quality] - 1);
 			}
@@ -575,16 +861,10 @@ export default {
 			} else {
 				this.character.currentPoints += qualityObject.cost;
 			}
-
-			// Removes area tag from freeAreaTags
-			if (qualityObject.type === 'area') {
-				this.$delete(this.character.freeAreaTags, quality);
-			}
-
-			// Removes effect tag from freeEffectTags
-			if (qualityObject.type === 'effect') {
-				this.$delete(this.character.freeEffectTags, quality);
-			}
+		},
+		changeMod: function (value, type) {
+			let modifier = Number.parseInt(value);
+			this.character.modifiers[type] = Number.isInteger(modifier) ? modifier : 0;
 		},
 	},
 	created: function () {
@@ -593,9 +873,6 @@ export default {
 		this.$emit('updateCharacter', this.character);
 	},
 	components: {
-		dda_stat: DDA_Stat,
-		dda_modal: DDA_Modal,
-		dda_woundbox: DDA_WoundBox,
 		dda_attack: DDA_Attack,
 		dda_qualities: DDA_Qualities,
 	},
@@ -665,5 +942,9 @@ export default {
 		padding-bottom: 10px;
 		text-align: center;
 		min-width: 100px;
+	}
+
+	li.specialList {
+		padding-bottom: 10px;
 	}
 </style>

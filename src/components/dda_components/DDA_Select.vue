@@ -1,8 +1,23 @@
 <template>
 	<p class='component'>
-		<label class='labelTag' for='inputName'>{{inputName}}:</label>
-		<select class='labelInput' id='inputName' v-model='textValue' @input='$emit("change", $event.target.value)'>
-			<option v-for='(option, index) in options' v-bind:key='index' :value='option'>{{option}}</option>
+		<!-- Label -->
+		<label
+			class='labelTag'
+			for='inputName'
+		>{{inputName}}:</label>
+		<!-- Select -->
+		<select
+			class='labelInput'
+			id='inputName'
+			v-model='textValue'
+			@input='$emit("change", $event.target.value)'
+		>
+			<!-- Options -->
+			<option
+				v-for='(option, index) in options'
+				:key='index'
+				:value='option'
+			>{{option}}</option>
 		</select>
 	</p>
 </template>
@@ -10,7 +25,7 @@
 <script>
 export default {
 	name: 'DDA_Select',
-	props: ['textProperty', 'inputName', 'options'],
+	props: ['inputName', 'textProperty', 'options'],
 	data: function () {
 		return {
 			textValue: '',
@@ -19,12 +34,16 @@ export default {
 	computed: {},
 	watch: {
 		textProperty: function () {
+			this.setTextValue();
+		},
+	},
+	methods: {
+		setTextValue: function () {
 			this.textValue = this.textProperty;
 		},
 	},
-	methods: {},
 	created: function () {
-		this.textValue = this.textProperty;
+		this.setTextValue();
 	},
 	components: {},
 }

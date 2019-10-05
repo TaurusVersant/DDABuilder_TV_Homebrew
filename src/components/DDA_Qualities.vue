@@ -3,7 +3,7 @@
 		<div class='modal-content'>
 			<h3>Available Qualities</h3>
 			<table>
-				<thead>
+				<tbody v-for='(quality, name) in qualities' v-bind:key='name'>
 					<tr class='qualityHeader'>
 						<th></th>
 						<th>Name</th>
@@ -11,8 +11,6 @@
 						<th>Prerequisites</th>
 						<th>Unlocks</th>
 					</tr>
-				</thead>
-				<tbody v-for='(quality, name) in qualities' v-bind:key='name'>
 					<tr class='qualityRow'>
 						<td><button @click='$emit("purchase", name)'>Purchase</button></td>
 						<td><i>{{name}}</i></td>
@@ -34,7 +32,7 @@ export default {
 	name: 'DDA_Qualities',
 	props: ['qualities'],
 	data: function () {
-		return {}
+		return {};
 	},
 	computed: {},
 	watch: {},

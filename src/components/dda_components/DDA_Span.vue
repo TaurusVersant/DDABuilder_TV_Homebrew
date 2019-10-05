@@ -1,36 +1,53 @@
 <template>
 	<p>
-		<label class='labelTag' for='inputName'>{{inputName}}:</label>
-		<span class='labelValue' id='inputName'>{{textProperty}}</span>
+		<!-- Label -->
+		<label
+			class='labelTag'
+			for='inputName'
+		>{{inputName}}:</label>
+		<!-- Span -->
+		<span
+			class='labelValue'
+			id='inputName'
+		>{{textProperty}}</span>
+		<!-- Modifier -->
 		<span v-if='hasModifier'>
 			<span>+&nbsp;</span>
-			<input class='modifierInput' type='text' :value='modifier' disabled='true'/>
-			<span class='pointer' @click='changeModifier'>&#9998;</span>
+			<input
+				class='modifierInput'
+				type='number'
+				v-model='modifierValue'
+				@change='$emit("changeMod", modifierValue)'
+			/>
 		</span>
-		<span v-if='roll' class='pointer' @click="$emit('rollStat', inputName)">🎲</span>
+		<!-- Roller -->
+		<span
+			v-if='roll'
+			class='pointer'
+			@click='$emit("rollStat", inputName)'
+		>&#127922;</span>
 	</p>
 </template>
 
 <script>
 export default {
 	name: 'DDA_Span',
-	props: ['textProperty', 'inputName', 'roll', 'modifier'],
+	props: ['inputName', 'textProperty', 'modifier', 'roll'],
 	data: function () {
-		return {}
+		return {
+			modifierValue: 0,
+		};
 	},
 	computed: {
 		hasModifier: function () {
 			return Number.isInteger(this.modifier);
 		},
-		modifierValue: function () {
-			return this.hasModifier ? this.modifier : 0;
-		},
 	},
 	watch: {},
-	methods: {
-		changeModifier: function () {},
+	methods: {},
+	created: function () {
+		this.modifierValue = this.hasModifier ? this.modifier : 0;
 	},
-	created: function () {},
 	components: {},
 }
 </script>
@@ -55,7 +72,7 @@ export default {
 	}
 
 	input.modifierInput {
-		width: 30px;
+		width: 40px;
 		text-align: center;
 	}
 </style>

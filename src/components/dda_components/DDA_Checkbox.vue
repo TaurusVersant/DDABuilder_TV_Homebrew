@@ -1,14 +1,25 @@
 <template>
 	<p>
-		<label class='labelTag' for='inputName'>{{inputName}}:</label>
-		<input class='labelCheckbox' id='inputName' type='checkbox' v-model='textValue' @change='$emit("change", textValue)'/>
+		<!-- Label -->
+		<label
+			class='labelTag'
+			for='inputName'
+		>{{inputName}}:</label>
+		<!-- Checkbox -->
+		<input
+			class='labelCheckbox'
+			id='inputName'
+			type='checkbox'
+			v-model='textValue'
+			@change='$emit("change", textValue)'
+		/>
 	</p>
 </template>
 
 <script>
 export default {
 	name: 'DDA_Checkbox',
-	props: ['textProperty', 'inputName'],
+	props: ['inputName', 'textProperty'],
 	data: function () {
 		return {
 			textValue: false,
@@ -17,12 +28,16 @@ export default {
 	computed: {},
 	watch: {
 		textProperty: function () {
+			this.setTextValue();
+		},
+	},
+	methods: {
+		setTextValue: function () {
 			this.textValue = this.textProperty;
 		},
 	},
-	methods: {},
 	created: function () {
-		this.textValue = this.textProperty;
+			this.setTextValue();
 	},
 	components: {},
 }

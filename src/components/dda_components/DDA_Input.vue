@@ -1,14 +1,25 @@
 <template>
 	<p>
-		<label class='labelTag' for='inputName'>{{inputName}}:</label>
-		<input class='labelInput' id='inputName' v-model='textValue' :disabled='disableFlag' @input='$emit("change", $event.target.value)'/>
+		<!-- Label -->
+		<label
+			class='labelTag'
+			for='inputName'
+		>{{inputName}}:</label>
+		<!-- Input -->
+		<input
+			class='labelInput'
+			id='inputName'
+			:disabled='disableFlag'
+			v-model='textValue'
+			@input='$emit("change", $event.target.value)'
+		/>
 	</p>
 </template>
 
 <script>
 export default {
 	name: 'DDA_Input',
-	props: ['textProperty', 'inputName', 'disableFlag'],
+	props: ['inputName', 'textProperty', 'disableFlag'],
 	data: function () {
 		return {
 			textValue: '',
@@ -17,12 +28,16 @@ export default {
 	computed: {},
 	watch: {
 		textProperty: function () {
+			this.setTextValue();
+		},
+	},
+	methods: {
+		setTextValue: function () {
 			this.textValue = this.textProperty;
 		},
 	},
-	methods: {},
 	created: function () {
-		this.textValue = this.textProperty;
+		this.setTextValue();
 	},
 	components: {},
 }

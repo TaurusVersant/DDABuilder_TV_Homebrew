@@ -1,5 +1,9 @@
 <template>
-	<div id='ddaModal' class='modal' @click='deactivateModal'>
+	<div
+		id='ddaModal'
+		class='modal'
+		@click='deactivateModal'
+	>
 		<div class='modal-content'>
 			<p id='modalContainer'></p>
 		</div>
@@ -17,6 +21,7 @@ export default {
 	watch: {},
 	methods: {
 		activateModal: function (message) {
+			// Show the modal
 			document.getElementById('ddaModal').style.display = 'block';
 			// We write to the element innerHTML in order to append HTML tags
 			document.getElementById('modalContainer').innerHTML = message;
@@ -24,7 +29,9 @@ export default {
 		deactivateModal: function (event) {
 			// Get the modal
 			let modal = document.getElementById('ddaModal');
+			// If we're clicking outside this specific modal
 			if (modal && event.target.id === modal.id) {
+				// Hide the modal
 				modal.style.display = 'none';
 			}
 		},
