@@ -43,7 +43,11 @@ export default {
 			return Number.isInteger(this.modifier);
 		},
 	},
-	watch: {},
+	watch: {
+		modifier: function () {
+			this.modifierValue = this.modifier;
+		},
+	},
 	methods: {},
 	created: function () {
 		this.modifierValue = this.hasModifier ? this.modifier : 0;
@@ -55,7 +59,7 @@ export default {
 <!-- Add 'scoped' attribute to limit CSS to this component only -->
 <style scoped>
 	label.labelTag {
-		width: 150px;
+		width: 160px;
 		display: inline-block;
 		text-align: center;
 		margin-left: 5px;
@@ -64,7 +68,9 @@ export default {
 	}
 
 	span.labelValue {
-		margin: 26px;
+		margin-left: 26px;
+		width: 20px;
+		display: inline-block;
 	}
 
 	span.pointer {

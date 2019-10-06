@@ -1,8 +1,7 @@
 /*
  * Quality List
- * Elemental Terrain button
- * Negative Wound Box tracking
- * Attribute Rolls
+ * Special Stage qualities (Boss included) (make them checkboxes instead?)
+ * colour code your qualities
  */
 <template>
 	<div>
@@ -82,20 +81,22 @@
 				/>
 				<!-- Add Temporary Wound Boxes Button -->
 				<button :disabled='character.temporary > 0' @click='addTemporary'>Add Temporary Wound Boxes</button>
-				<!-- Wound Boxes Display -->
-				<dda_woundbox
-					:current='character["Wound Boxes"]'
-					:total='derivedWoundBoxes'
-					:temporary='character.temporary'
-					@changeHealth='changeHealth'
-					@markTemporary='markTemporary'
-				/>
 			</div>
 			<div className='secondColumn'>
 				<p><u>Digimon Picture</u></p>
 				<input id='files' type='file' @change='handleFileSelect'/><br/>
 				<img class='characterImage' :src='character.image'/>
 			</div>
+		</div>
+		<div class='divRow'>
+			<!-- Wound Boxes Display -->
+			<dda_woundbox
+				:current='character["Wound Boxes"]'
+				:total='derivedWoundBoxes'
+				:temporary='character.temporary'
+				@changeHealth='changeHealth'
+				@markTemporary='markTemporary'
+			/>
 		</div>
 		<div class='divRow'>
 			<div class='firstColumn'>
@@ -161,6 +162,13 @@
 					:inputName='"Burst Radius"'
 					:textProperty='burstRadius'
 				/>
+				<!-- Elemental Terrain -->
+				<dda_select
+					:inputName='"Elemental Terrain"'
+					:textProperty='character.terrainStatus'
+					:options='elementalTerrain'
+					@change='updateProperty($event, "terrainStatus")'
+				/>
 				<p><u>Derived Stats</u></p>
 				<!-- Derived Stats -->
 				<dda_span
@@ -185,16 +193,19 @@
 					:roll='true'
 					@rollStat='rollStat(value)'
 				/>
-				<!--<p><u>Rolls</u></p>
-				<dda_span textProperty='' inputName='Agility' :roll='true'/>
-				<dda_span textProperty='' inputName='Body' :roll='true'/>
-				<dda_span textProperty='' inputName='Charisma' :roll='true'/>
-				<dda_span textProperty='' inputName='Intelligence' :roll='true'/>
-				<dda_span textProperty='' inputName='Willpower' :roll='true'/>-->
 			</div>
 		</div>
+		<hr>
 		<p><u>Current Effects</u></p>
 		<dda_effects :effects='character.effects'/>
+		<hr>
+		<section v-if='modifierNegatives.length'>
+			<p><u>Modifier Negatives</u></p>
+			<ul>
+				<li v-for='(quality, index) in modifierNegatives' class='specialList' :key='index'>{{quality}}</li>
+			</ul>
+			<hr>
+		</section>
 		<p><u>Digimon Attacks</u></p>
 		<table class='attackTable'>
 			<thead>
@@ -220,16 +231,38 @@
 				@doAttack='doAttack(attack)'
 			/>
 		</table>
-		<p><u>Special Features</u></p>
-		<ul>
-			<li v-for='(quality, index) in specialFeatures' class='specialList' :key='index'>{{quality}}</li>
-		</ul>
+		<hr>
+		<section v-if='Object.keys(attackModifiers).length'>
+			<p><u>Attack Modifiers</u></p>
+			<ul>
+				<li v-for='(qualityText, quality) in attackModifiers' class='specialList' :key='quality'>
+					<input type='checkbox' :name='quality' @change='applyModifier($event)'/>
+					<span>{{qualityText}}</span>
+				</li>
+			</ul>
+			<hr>
+		</section>
+		<section v-if='specialActions.length'>
+			<p><u>Special Actions</u></p>
+			<ul>
+				<li v-for='(quality, index) in specialActions' class='specialList' :key='index'>{{quality}}</li>
+			</ul>
+			<hr>
+		</section>
+		<section v-if='specialFeatures.length'>
+			<p><u>Special Features</u></p>
+			<ul>
+				<li v-for='(quality, index) in specialFeatures' class='specialList' :key='index'>{{quality}}</li>
+			</ul>
+			<hr>
+		</section>
 		<p><u>Additional Details</u></p>
 		<dda_textarea
 			:textProperty='character.notes'
 			:widthProperty='91'
 			@change='updateProperty($event, "notes")'
 		/>
+		<hr>
 		<p>
 			<u>Qualities</u>
 			<button @click='showQualities'>Add Quality</button>
@@ -256,7 +289,7 @@
 			</table>
 		</p>
 		<dda_modal ref='modal'/>
-		<dda_qualities ref='qualities' :qualities='availableQualities' @purchase='addQuality'/>
+		<dda_qualities ref='qualities' @purchase='addQuality'/>
 	</div>
 </template>
 
@@ -318,6 +351,9 @@ export default {
 						{ name: '', duration: 0 },
 					],
 				},
+				terrainStatus: 'No',
+				digizoidWeapon: false,
+				digizoidArmor: false,
 			},
 			combatStats: {
 				statAccuracy: 'Accuracy',
@@ -361,6 +397,10 @@ export default {
 				'DNA',
 				'Hybrid',
 				'Armor',
+			],
+			elementalTerrain: [
+				'No',
+				'Yes',
 			],
 			sizes: [
 				'Tiny',
@@ -414,7 +454,17 @@ export default {
 				'Dark Area',
 				'Unknown',
 			],
+			stages: [
+				'Fresh',
+				'In-Training',
+				'Rookie',
+				'Champion',
+				'Ultimate',
+				'Mega',
+				'Burst',
+			],
 			allowUpdate: true,
+			currentAttackModifiers: [],
 		};
 	},
 	computed: {
@@ -477,7 +527,9 @@ export default {
 			return Math.floor(this.derivedBrains / 10) + this.character.specMod + (this.character.burstModifier * this.burstScaling.specValues);
 		},
 		passivePerception: function () {
-			return 9 + this.derivedBrains;
+			// We have to hard-code a Tracker check here, I don't think there's a good way to update this otherwise
+			let base = this.character.qualities.hasOwnProperty('Tracker') ? 12 : 9;
+			return base + this.specBIT;
 		},
 		burstRadius: function () {
 			return 1.5 + Math.floor(this.specBIT / 2);
@@ -491,10 +543,25 @@ export default {
 				) {
 					let approved = true;
 					for (let prerequisite in this.library.qualities[quality].prerequisites) {
-						let qualityRank = this.character.qualities.hasOwnProperty(prerequisite) ? this.character.qualities[prerequisite] : 0;
-						if (this.library.qualities[quality].prerequisites[prerequisite] > qualityRank) {
-							approved = false;
+						if (prerequisite === 'Stage') {
+							let stage = this.library.qualities[quality].prerequisites[prerequisite];
+							approved = this.stages.indexOf(this.character.type) >= this.stages.indexOf(stage);
+						} else {
+							let qualityRank = this.character.qualities.hasOwnProperty(prerequisite) ? this.character.qualities[prerequisite] : 0;
+							if (this.library.qualities[quality].prerequisites[prerequisite] > qualityRank) {
+								approved = false;
+							}
 						}
+					}
+
+					// single Digizoid Weapon check
+					if (this.library.qualities[quality].type === 'digizoidWeapon' && this.character.digizoidWeapon) {
+						approved = false;
+					}
+
+					// single Digizoid Armor check
+					if (this.library.qualities[quality].type === 'digizoidArmor' && this.character.digizoidArmor) {
+						approved = false;
 					}
 
 					if (approved) {
@@ -503,6 +570,30 @@ export default {
 				}
 			}
 			return availableQualities;
+		},
+		attackModifiers: function () {
+			let modifiers = {};
+			let types = [
+				'modifier',
+				'digizoidWeapon',
+			];
+			for (let quality in this.character.qualities) {
+				let qualityObject = this.library.qualities[quality];
+				if (types.indexOf(qualityObject.type) !== -1) {
+					modifiers[quality] = '[' + quality + '] | ' + qualityObject.text;
+				}
+			}
+			return modifiers;
+		},
+		modifierNegatives: function () {
+			let negatives = [];
+			for (let quality in this.character.qualities) {
+				let qualityObject = this.library.qualities[quality];
+				if (qualityObject.type === 'modifier' && qualityObject.hasOwnProperty('negative')) {
+					negatives.push('[' + quality + '] | ' + qualityObject.negative);
+				}
+			}
+			return negatives;
 		},
 		specialFeatures: function () {
 			let features = [];
@@ -514,6 +605,16 @@ export default {
 			}
 			return features;
 		},
+		specialActions: function () {
+			let actions = [];
+			for (let quality in this.character.qualities) {
+				let qualityObject = this.library.qualities[quality];
+				if (qualityObject.type === 'action') {
+					actions.push('[' + quality + '] | ' + qualityObject.text);
+				}
+			}
+			return actions;
+		},
 	},
 	watch: {
 		character: {
@@ -524,6 +625,13 @@ export default {
 				this.allowUpdate = true;
 			},
 			deep: true,
+		},
+		'character.terrainStatus': function () {
+			let modifier = this.character.terrainStatus === 'Yes' ? 2 : -2;
+			this.character.modifiers.statAccuracy += modifier;
+			this.character.modifiers.statDamage += modifier;
+			this.character.modifiers.statDodge += modifier;
+			this.character.modifiers.statArmor += modifier;
 		},
 		data: function () {
 			this.allowUpdate = false;
@@ -571,7 +679,7 @@ export default {
 			this.$refs.modal.activateModal(stat + ' Pool Check: ' + this.character.stats[stat] + 'd6, [Roll20: ' + this.character.stats[stat] + 'd6>5]');
 		},
 		showQualities: function () {
-			this.$refs.qualities.activateModal();
+			this.$refs.qualities.activateModal(this.availableQualities);
 		},
 		getModifier: function (value) {
 			return Number.isInteger(this.character.modifiers[value]) ? this.character.modifiers[value] : 0;
@@ -598,11 +706,13 @@ export default {
 						let args = [];
 						let quality = this.library.qualities[attackObject.area];
 						for (let i in quality.args) {
+							let value = false;
 							if (quality.args[i] in this) {
-								args.push(this[quality.args[i]]);
+								value = this[quality.args[i]];
 							} else if (quality.args[i] in this.character) {
-								args.push(this.character[quality.args[i]]);
+								value = this.character[quality.args[i]];
 							}
+							args.push(value);
 						}
 						range = quality.method(attackObject.type, args);
 					} else if (attackObject.type === 'Range') {
@@ -619,11 +729,13 @@ export default {
 					let args = [];
 					let quality = this.library.qualities[attackObject.effect];
 					for (let i in quality.args) {
+						let value = false;
 						if (quality.args[i] in this) {
-							args.push(this[quality.args[i]]);
+							value = this[quality.args[i]];
 						} else if (quality.args[i] in this.character) {
-							args.push(this.character[quality.args[i]]);
+							value = this.character[quality.args[i]];
 						}
+						args.push(value);
 					}
 					let note = attackObject.damage && quality.type === 'effect' ? ' Apply at least 2 damage to trigger. ' : ' ';
 					details.push('<u>' + attackObject.effect + ':</u>' + note + ' ' + quality.method(args));
@@ -635,17 +747,40 @@ export default {
 						let args = [];
 						let quality = this.library.qualities[attackObject.features[i]];
 						for (let j in quality.args) {
+							let value = false;
 							if (quality.args[j] === 'ranks') {
-								args.push(this.character.qualities[attackObject.features[i]]);
+								value = this.character.qualities[attackObject.features[i]];
 							} else if (quality.args[j] in this) {
-								args.push(this[quality.args[j]]);
+								value = this[quality.args[j]];
 							} else if (quality.args[j] in this.character) {
-								args.push(this.character[quality.args[j]]);
+								value = this.character[quality.args[j]];
+							} else if (quality.args[j] in this.character.qualities) {
+								value = true;
 							}
+							args.push(value);
 						}
 						details.push('<u>' + attackObject.features[i] + ':</u> ' + quality.method(args));
 					}
 				}
+
+				// Modifier Information
+				for (let i in this.currentAttackModifiers) {
+					let args = [];
+					let quality = this.library.qualities[this.currentAttackModifiers[i]];
+					for (let j in quality.args) {
+						let value = false;
+						if (quality.args[j] in this) {
+							value = this[quality.args[j]];
+						} else if (quality.args[j] in this.character) {
+							value = this.character[quality.args[j]];
+						} else if (quality.args[j] in this.character.qualities) {
+							value = true;
+						}
+						args.push(value);
+					}
+					details.push('<u>' + this.currentAttackModifiers[i] + ':</u> ' + quality.method(args));
+				}
+
 				this.$refs.modal.activateModal(details.join('<br><br>'));
 			}
 		},
@@ -795,6 +930,15 @@ export default {
 				}
 			}
 
+			// Digizoid handlers
+			if (qualityObject.type === 'digizoidWeapon') {
+				this.character.digizoidWeapon = true;
+			}
+
+			if (qualityObject.type === 'digizoidArmor') {
+				this.character.digizoidArmor = true;
+			}
+
 			this.$refs.qualities.closeModal();
 		},
 		removeQuality: function (quality) {
@@ -830,6 +974,7 @@ export default {
 			// Signature Move handler
 			if (quality === 'Signature Move') {
 				let feature = this.character.attacks[1].features.pop();
+				// this.$set(this.character.attacks[1], 'features', this.character.attacks[1].features);
 				if (feature) {
 					this.$set(this.character.freeFeatureTags, feature, false);
 				}
@@ -852,6 +997,20 @@ export default {
 				if (qualityObject.type === 'feature') {
 					this.$delete(this.character.freeFeatureTags, quality);
 				}
+
+				// Digizoid handlers
+				if (qualityObject.type === 'digizoidWeapon') {
+					this.character.digizoidWeapon = false;
+				}
+
+				if (qualityObject.type === 'digizoidArmor') {
+					this.character.digizoidArmor = false;
+				}
+
+				let attackModIndex = this.currentAttackModifiers.indexOf(quality);
+				if (attackModIndex !== -1) {
+					this.currentAttackModifiers.splice(attackModIndex, 1);
+				}
 			} else {
 				this.$set(this.character.qualities, quality, this.character.qualities[quality] - 1);
 			}
@@ -865,6 +1024,21 @@ export default {
 		changeMod: function (value, type) {
 			let modifier = Number.parseInt(value);
 			this.character.modifiers[type] = Number.isInteger(modifier) ? modifier : 0;
+		},
+		applyModifier: function (evt) {
+			if (evt.target.checked) {
+				if (this.currentAttackModifiers.length === 3) {
+					alert('No more than 3 Attack Modifiers can be applied at one time.');
+					evt.target.checked = false;
+					return;
+				}
+				this.currentAttackModifiers.push(evt.target.name);
+			} else {
+				let index = this.currentAttackModifiers.indexOf(evt.target.name);
+				if (index > -1) {
+					this.currentAttackModifiers.splice(index, 1);
+				}
+			}
 		},
 	},
 	created: function () {
@@ -946,5 +1120,10 @@ export default {
 
 	li.specialList {
 		padding-bottom: 10px;
+	}
+
+	input.terrainCheckbox {
+		margin-left: 50px;
+		margin-left: 50px;
 	}
 </style>

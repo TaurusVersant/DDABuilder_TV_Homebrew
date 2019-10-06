@@ -15,7 +15,7 @@
 						<td><button @click='$emit("purchase", name)'>Purchase</button></td>
 						<td><i>{{name}}</i></td>
 						<td>{{quality.cost}}</td>
-						<td>{{Object.keys(quality.prerequisites).join(', ')}}</td>
+						<td>{{getPrerequisities(quality.prerequisites)}}</td>
 						<td>{{quality.unlocks.join(', ')}}</td>
 					</tr>
 					<tr>
@@ -30,14 +30,17 @@
 <script>
 export default {
 	name: 'DDA_Qualities',
-	props: ['qualities'],
+	props: [],
 	data: function () {
-		return {};
+		return {
+			qualities: {},
+		};
 	},
 	computed: {},
 	watch: {},
 	methods: {
-		activateModal: function () {
+		activateModal: function (qualities) {
+			this.qualities = qualities;
 			document.getElementById('ddaQualities').style.display = 'block';
 		},
 		deactivateModal: function (event) {
@@ -49,6 +52,14 @@ export default {
 		},
 		closeModal: function () {
 			document.getElementById('ddaQualities').style.display = 'none';
+		},
+		getPrerequisities: function (prerequisities) {
+			let list = [];
+			for (let key in prerequisities) {
+				list.push(key + ': ' + prerequisities[key]);
+			}
+
+			return list.join(', ');
 		},
 	},
 	created: function () {},
@@ -104,6 +115,7 @@ export default {
 	tr.qualityHeader>th {
 		border-bottom: dotted;
 		border-width: 5px;
+		background-color: #bbee55;
 	}
 
 	td.qualityDesc {

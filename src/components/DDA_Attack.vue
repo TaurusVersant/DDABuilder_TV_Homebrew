@@ -89,6 +89,7 @@ export default {
 				features: [''],
 			},
 			features: [''],
+			allowUpdate: false,
 		};
 	},
 	computed: {
@@ -99,12 +100,18 @@ export default {
 	watch: {
 		attack: {
 			handler: function () {
-				this.$emit('attackUpdated', this.attack);
+				if (this.allowUpdate) {
+					this.$emit('attackUpdated', this.attack);
+				}
+				this.allowUpdate = true;
 			},
 			deep: true,
 		},
-		attackData: function () {
-			this.setAttack();
+		attackData: {
+			handler: function () {
+				this.setAttack();
+			},
+			deep: true,
 		},
 		features: function () {
 			this.attack.features = this.features.slice(0);
@@ -113,10 +120,13 @@ export default {
 	methods: {
 		setAttack: function () {
 			this.attack = Object.assign(this.attack, this.attackData);
+			// We have to prevent an update here or this will cause an infinite loop
+			this.allowUpdate = false;
 			this.features = this.attack.features.slice(0);
 		},
 	},
 	mounted: function () {
+		this.allowUpdate = false;
 		this.setAttack();
 	},
 	components: {},

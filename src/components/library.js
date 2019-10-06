@@ -701,9 +701,10 @@ module.exports.qualities = {
 		text: 'An Attack with the [Counter] Tag can be used once per round whenever this Digimon is missed by an Attack. The Digimon uses this Attack against the attacker, with the target reducing their Dodge Stat by this Digimon’s RAM. When using this Attack as a Counter, do not apply an Area Attack Quality if one is set. In the next round, this Digimon will have one less Simple Action. A [Counter] Tagged Attack cannot be used if this Digimon has no Simple Actions remaining in the next Round.',
 		unlocks: ['Counterblow'],
 		prerequisites: {},
-		args: ['specRAM'],
+		args: ['specRAM', 'Counterblow', 'specCPU'],
 		method: function (args) {
-			return 'Spend one Simple Action from your next turn when an opponent misses you with an Attack. Make this Attack against that opponent, reducing their Dodge Stat by ' + args[0] + ' for the length of this Attack. Do not apply an Area Attack Quality if this Attack has one.';
+			let counterblow = args[1] ? ' Also reduce your opponent\'s Armor Stat by ' + args[2] + '.' : '';
+			return 'Spend one Simple Action from your next turn when an opponent misses you with an Attack. Make this Attack against that opponent, reducing their Dodge Stat by ' + args[0] + ' for the length of this Attack. Do not apply an Area Attack Quality if this Attack has one.' + counterblow;
 		},
 	},
 	'Feature - Critical': {
@@ -834,4 +835,580 @@ module.exports.qualities = {
 		unlocks: [],
 		prerequisites: {},
 	},
+	'Balance Health': {
+		type: 'action',
+		cost: 2,
+		ranks: 1,
+		text: 'As a Simple Action, select one willing adjacent character. Sum your current unmarked Wound Boxes together, then set both you and that character’s current unmarked Wound Boxes to half of that sum total (rounded down).',
+		unlocks: [],
+		prerequisites: {},
+	},
+	'Burn Health': {
+		type: 'modifier',
+		cost: 1,
+		ranks: 1,
+		text: 'A Digimon with the Burn Health Quality may increase its Damage Stat for an Attack by 1 for each Wound Box you mark. For an Area Attack, this increase will only apply to one of the targets.',
+		unlocks: [],
+		prerequisites: {},
+		args: [],
+		method: function (args) {
+			return 'Mark a number of your Wound Boxes and increase the Damage of this Attack by that number.';
+		},
+	},
+	'Camper': {
+		type: 'special',
+		cost: 2,
+		ranks: 1,
+		text: 'At the beginning of a Short or Long Rest (before Dedigivolving if you are above your Base Digivolution Stage), you can make a Survival Check using your Brains Stat to create a safe environment for resting and to gather/prepare food for consumption. You may also use your Brains Stat for Survival Checks when attempting to locate plants or food, and your Brains Stat for Knowledge Checks regarding the usages of plants and the like.',
+		unlocks: [],
+		prerequisites: {},
+	},
+	'Cleanse Self': {
+		type: 'action',
+		cost: 1,
+		ranks: 1,
+		text: 'As a Complex Action, the user may end all Attack Effects currently applied to them.',
+		unlocks: [],
+		prerequisites: {},
+	},
+	'Counterblow': {
+		type: 'special',
+		cost: 2,
+		ranks: 1,
+		text: 'When using a [Counter] tagged attack through the Counter quality, reduce the target\'s Armor stat by the attacker\'s CPU.',
+		unlocks: [],
+		prerequisites: {
+			'Feature - Counter': 1
+		},
+	},
+	'Chrome Digizoid Weapon': {
+		type: 'digizoidWeapon',
+		cost: 1,
+		ranks: 1,
+		text: 'This modifier can only be used once per round. The Digimon adds 2 to Accuracy and 1 to Damage to an Attack.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Ultimate',
+		},
+		args: [],
+		method: function (args) {
+			return 'This modifier can only be used once per round. The Digimon adds 2 to the Accuracy and 1 to the Damage of this Attack.';
+		},
+	},
+	'Black Digizoid Weapon': {
+		type: 'digizoidWeapon',
+		cost: 2,
+		ranks: 1,
+		text: 'The Digimon’s Attack gains 2 Accuracy. When using this Attack, before rolling Accuracy this Digimon may choose to gain either 4 Accuracy or 4 Damage for the length of attack calculation.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Mega',
+		},
+		args: [],
+		method: function (args) {
+			return 'This modifier can only be used once per round. The Digimon adds 2 to the Accuracy of this Attack. Additionally, before rolling Accuracy, this Digimon may choose to add 4 to either the Accuracy or Damage of this Attack.';
+		},
+	},
+	'Blue Digizoid Weapon': {
+		type: 'digizoidWeapon',
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon’s Attack gains 2 bonus Accuracy when used and 1 bonus Damage. Additionally, treat the Attack as having an Attack Feature of an extra rank in Certain Strike, even if the Attack already had Certain Strike.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Mega',
+		},
+		args: [],
+		method: function (args) {
+			return 'This modifier can only be used once per round. The Digimon adds 2 to the Accuracy and 1 to the Damage of this Attack. Additionally, reduce the number of successfully Dodge dice rolled against this Attack by 1.';
+		},
+	},
+	'Gold Digizoid Weapon': {
+		type: 'digizoidWeapon',
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon’s Attack gains 4 extra Damage and 1 extra Accuracy. If the Attack is [Range], the maximum range increases by 5 Units.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Mega',
+		},
+		args: [],
+		method: function (args) {
+			return 'This modifier can only be used once per round. The Digimon adds 1 to the Accuracy and 4 to the Damage of this Attack. Additionally, if the Attack is [Range], the maximum range increases by 5 Units.';
+		},
+	},
+	'Obsidian Digizoid Weapon': {
+		type: 'digizoidWeapon',
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon’s Attack gains 2 bonus Damage when used and 1 bonus Accuracy. Additionally, treat the Attack as having an Attack Feature of an extra rank in Armor Piercing, even if the Attack already had Armor Piercing.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Mega',
+		},
+		args: [],
+		method: function (args) {
+			return 'This modifier can only be used once per round. The Digimon adds 1 to the Accuracy and 2 to the Damage of this Attack. Additionally, ignore 2 Armor when calculating the Damage of this Attack.';
+		},
+	},
+	'Red Digizoid Weapon': {
+		type: 'digizoidWeapon',
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon’s Attack gains +7 Damage.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Mega',
+		},
+		args: [],
+		method: function (args) {
+			return 'This modifier can only be used once per round. The Digimon adds 7 to the Damage of this Attack.';
+		},
+	},
+	'Doombringer': {
+		type: 'action',
+		cost: 3,
+		ranks: 1,
+		text: 'Once per Short Rest, if this Digimon would be reduced to 0 Wound Boxes, immediately make a basic [Damage] Attack (Range depending on attacker) on the attacker. If this attack brings the opponent to 0 Wound Boxes, set your Wound Boxes to 1. You may apply Attack Modifiers to this Attack.',
+		unlocks: [],
+		prerequisites: {},
+	},
+	'Flying Hunter': {
+		type: 'modifier',
+		cost: 2,
+		ranks: 1,
+		text: 'A Digimon with Flying Hunter takes double damage from falling and throwing. When attacking while spending your entire Turn 1 or higher Units in the air, this Digimon may add its RAM Value to its Accuracy.',
+		negative: 'A Digimon with Flying Hunter takes double damage from falling and throwing.',
+		unlocks: [],
+		prerequisites: {},
+		args: ['specRAM'],
+		method: function (args) {
+			return 'While spending your entire turn 1 or higher Units in the air, this Digimon may add ' + args[0] + ' to the Accuracy of this Attack.';
+		},
+	},
+	'Focused Mind': {
+		type: 'special',
+		cost: 1,
+		ranks: 1,
+		text: 'This Digimon now applies BIT+2 as the modifier for its Willpower Checks.',
+		unlocks: [],
+		prerequisites: {},
+	},
+	'Graduate of Digital University': {
+		type: 'special',
+		cost: 2,
+		ranks: 1,
+		text: 'Digimon with this Quality may apply their full Brains score when making Knowledge Skill Checks.',
+		unlocks: [],
+		prerequisites: {},
+	},
+	'Healing Hands': {
+		type: 'special',
+		cost: 3,
+		ranks: 1,
+		text: 'When performing a Heal Check, add your BIT to the Heal Check Roll of all allies with you.',
+		unlocks: [],
+		prerequisites: {},
+	},
+	'Huge Power': {
+		type: 'special',
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon may re-roll any dice that show up as 1’s when making an Accuracy roll. The Digimon does not reroll and subsequent 1’s.',
+		unlocks: ['Overkill'],
+		prerequisites: {},
+	},
+	'Overkill': {
+		type: 'special',
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon may re-roll any dice that show up as 2’s when making an Accuracy roll. The Digimon does not reroll any subsequent 2’s.',
+		unlocks: [],
+		prerequisites: {
+			'Huge Power': 1,
+		},
+	},
+	'Hide in Plain Sight': {
+		type: 'action',
+		cost: 2,
+		ranks: 1,
+		text: 'A Digimon with this Quality may attempt to make a Stealth Check even when there is line of sight to it. If it has broken line of sight, it may use Agility for its Stealth Check. The Digimon may become transparent, be capable of disguising itself to be less obvious, or maybe just really good at finding a place to hide.',
+		unlocks: ['Shade Cloak'],
+		prerequisites: {},
+	},
+	'Shade Cloak': {
+		type: 'special',
+		cost: 2,
+		ranks: 1,
+		text: 'Allies within your [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent included] may also make Stealth Checks even while there is line of sight to them.',
+		unlocks: [],
+		prerequisites: {
+			'Hide in Plain Sight': 1,
+		},
+	},
+	'Hunter': {
+		type: 'modifier',
+		cost: 1,
+		ranks: 1,
+		text: 'When you take this Quality, select and record a Digimon Family and Type. You automatically know if any Digimon you encounter is of that Family or relative Type. When making an Attack Roll against a target, if the target’s Family or Type matches one of your selected Family and Type, add your RAM to your Accuracy. If both match, add RAM+CPU to your Accuracy. Digimon of this Family or Type will feel innately unsettled by a Digimon with the Hunter Quality tuned to their Family or Type.',
+		unlocks: ['Slayer'],
+		prerequisites: {},
+		args: ['specRAM', 'specCPU', 'Slayer', 'specBIT'],
+		method: function (args) {
+			let slayer = args[2] ? ' If your target\'s Attribute matches your chosen Attribute for Slayer, add ' + args[3] + ' to this Attack\'s Accuracy. This can stack with the bonus for matching Family and/or Type. If Attribute, Family, and Type are all matched, and this Attack leaves the target with less than half its health remaining, the target is immediately destroyed, unless it is a Boss Stage Digimon.' : '';
+			return 'If your target\'s Family or Type matches your chosen Family and Type, add ' + args[0] + ' to this Attack\'s Accuracy. If both match, add ' + (args[0] + args[1]) + '.' + slayer;
+		},
+	},
+	'Slayer': {
+		type: 'special',
+		cost: 2,
+		ranks: 1,
+		text: 'When you take this Quality, select and record a Digimon Attribute. You automatically know if any Digimon you encounter is of that Attribute. When making an Attack Roll against a target with that Attribute, add your BIT to your Accuracy. This Attack Modifier stacks with Hunter: you may apply both these Qualities as one Attack Modifier. If the combination of Hunter and Slayer matches exactly to a target Digimon (Attribute, Family, and Type match), and after this attack deals damage the target has less than half health remaining, the target is immediately destroyed. Digimon with any Boss Qualities are immune to this specific effect. Digimon of the target Attribute will react extremely negatively to the presence of this Digimon.',
+		unlocks: [],
+		prerequisites: {
+			'Hunter': 1,
+		},
+	},
+	'Nature Territory': {
+		type: 'action',
+		cost: 1,
+		ranks: 1,
+		text: 'As a Simple Action, a Digimon with Nature Territory may convert all tiles it is occupying, and all adjacent tiles to it, into Elemental Terrain suitable to that Digimon. See the DDA-TV Homebrew manual for more information.',
+		unlocks: ['Recovery Territory'],
+		prerequisites: {},
+	},
+	'Recovery Territory': {
+		type: 'special',
+		cost: 2,
+		ranks: 1,
+		text: 'At the end of its turn, if this Digimon is standing on Elemental Terrain that benefits it, it may recover 1 Wound Box.',
+		unlocks: [],
+		prerequisites: {
+			'Nature Territory': 1,
+		},
+	},
+	'Naturewalk - Dragon\'s Roar': {
+		type: 'special',
+		cost: 1,
+		ranks: 1,
+		text: 'This Digimon is not affected by difficult terrain of the Fire Elemental Terrain type.',
+		unlocks: ['Element Master - Dragon\'s Roar'],
+		prerequisites: {},
+	},
+	'Element Master - Dragon\'s Roar': {
+		type: 'action',
+		cost: 2,
+		ranks: 1,
+		text: 'As a Simple Action, convert all tiles within your [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent included] into Fire Elemental Terrain. You may decide whether these tiles (as a whole) are difficult terrain, and if they are already Fire Elemental Terrain, you may convert them to or from difficult terrain. In the same action you may also move these tiles of terrain (as a whole) up or down one Unit.',
+		unlocks: [],
+		prerequisites: {
+			'Naturewalk - Dragon\'s Roar': 1,
+		},
+	},
+	'Naturewalk - Deep Savers': {
+		type: 'special',
+		cost: 1,
+		ranks: 1,
+		text: 'This Digimon is not affected by difficult terrain of the Water Elemental Terrain type.',
+		unlocks: ['Element Master - Deep Savers'],
+		prerequisites: {},
+	},
+	'Element Master - Deep Savers': {
+		type: 'action',
+		cost: 2,
+		ranks: 1,
+		text: 'As a Simple Action, convert all tiles within your [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent included] into Water Elemental Terrain. You may decide whether these tiles (as a whole) are difficult terrain, and if they are already Water Elemental Terrain, you may convert them to or from difficult terrain. In the same action you may also move these tiles of terrain (as a whole) up or down one Unit.',
+		unlocks: [],
+		prerequisites: {
+			'Naturewalk - Deep Savers': 1,
+		},
+	},
+	'Naturewalk - Nature Spirits': {
+		type: 'special',
+		cost: 1,
+		ranks: 1,
+		text: 'This Digimon is not affected by difficult terrain of the Earth Elemental Terrain type.',
+		unlocks: ['Element Master - Nature Spirits'],
+		prerequisites: {},
+	},
+	'Element Master - Nature Spirits': {
+		type: 'action',
+		cost: 2,
+		ranks: 1,
+		text: 'As a Simple Action, convert all tiles within your [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent included] into Earth Elemental Terrain. You may decide whether these tiles (as a whole) are difficult terrain, and if they are already Earth Elemental Terrain, you may convert them to or from difficult terrain. In the same action you may also move these tiles of terrain (as a whole) up or down one Unit.',
+		unlocks: [],
+		prerequisites: {
+			'Naturewalk - Nature Spirits': 1,
+		},
+	},
+	'Naturewalk - Wind Guardians': {
+		type: 'special',
+		cost: 1,
+		ranks: 1,
+		text: 'This Digimon is not affected by difficult terrain of the Wind Elemental Terrain type.',
+		unlocks: ['Element Master - Wind Guardians'],
+		prerequisites: {},
+	},
+	'Element Master - Wind Guardians': {
+		type: 'action',
+		cost: 2,
+		ranks: 1,
+		text: 'As a Simple Action, convert all tiles within your [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent included] into Wind Elemental Terrain. You may decide whether these tiles (as a whole) are difficult terrain, and if they are already Wind Elemental Terrain, you may convert them to or from difficult terrain. In the same action you may also move these tiles of terrain (as a whole) up or down one Unit.',
+		unlocks: [],
+		prerequisites: {
+			'Naturewalk - Wind Guardians': 1,
+		},
+	},
+	'Naturewalk - Jungle Troopers': {
+		type: 'special',
+		cost: 1,
+		ranks: 1,
+		text: 'This Digimon is not affected by difficult terrain of the Plant Elemental Terrain type.',
+		unlocks: ['Element Master - Jungle Troopers'],
+		prerequisites: {},
+	},
+	'Element Master - Jungle Troopers': {
+		type: 'action',
+		cost: 2,
+		ranks: 1,
+		text: 'As a Simple Action, convert all tiles within your [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent included] into Plant Elemental Terrain. You may decide whether these tiles (as a whole) are difficult terrain, and if they are already Plant Elemental Terrain, you may convert them to or from difficult terrain. In the same action you may also move these tiles of terrain (as a whole) up or down one Unit.',
+		unlocks: [],
+		prerequisites: {
+			'Naturewalk - Jungle Troopers': 1,
+		},
+	},
+	'Naturewalk - Metal Empire': {
+		type: 'special',
+		cost: 1,
+		ranks: 1,
+		text: 'This Digimon is not affected by difficult terrain of the Machine Elemental Terrain type.',
+		unlocks: ['Element Master - Metal Empire'],
+		prerequisites: {},
+	},
+	'Element Master - Metal Empire': {
+		type: 'action',
+		cost: 2,
+		ranks: 1,
+		text: 'As a Simple Action, convert all tiles within your [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent included] into Machine Elemental Terrain. You may decide whether these tiles (as a whole) are difficult terrain, and if they are already Machine Elemental Terrain, you may convert them to or from difficult terrain. In the same action you may also move these tiles of terrain (as a whole) up or down one Unit.',
+		unlocks: [],
+		prerequisites: {
+			'Naturewalk - Metal Empire': 1,
+		},
+	},
+	'Naturewalk - Virus Busters': {
+		type: 'special',
+		cost: 1,
+		ranks: 1,
+		text: 'This Digimon is not affected by difficult terrain of the Light Elemental Terrain type.',
+		unlocks: ['Element Master - Virus Busters'],
+		prerequisites: {},
+	},
+	'Element Master - Virus Busters': {
+		type: 'action',
+		cost: 2,
+		ranks: 1,
+		text: 'As a Simple Action, convert all tiles within your [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent included] into Light Elemental Terrain. You may decide whether these tiles (as a whole) are difficult terrain, and if they are already Light Elemental Terrain, you may convert them to or from difficult terrain. In the same action you may also move these tiles of terrain (as a whole) up or down one Unit.',
+		unlocks: [],
+		prerequisites: {
+			'Naturewalk - Virus Busters': 1,
+		},
+	},
+	'Naturewalk - Nightmare Soldiers': {
+		type: 'special',
+		cost: 1,
+		ranks: 1,
+		text: 'This Digimon is not affected by difficult terrain of the Dark Elemental Terrain type.',
+		unlocks: ['Element Master - Nightmare Soldiers'],
+		prerequisites: {},
+	},
+	'Element Master - Nightmare Soldiers': {
+		type: 'action',
+		cost: 2,
+		ranks: 1,
+		text: 'As a Simple Action, convert all tiles within your [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent included] into Dark Elemental Terrain. You may decide whether these tiles (as a whole) are difficult terrain, and if they are already Dark Elemental Terrain, you may convert them to or from difficult terrain. In the same action you may also move these tiles of terrain (as a whole) up or down one Unit.',
+		unlocks: [],
+		prerequisites: {
+			'Naturewalk - Nightmare Soldiers': 1,
+		},
+	},
+	'Naturewalk - Dark Area': {
+		type: 'special',
+		cost: 1,
+		ranks: 1,
+		text: 'This Digimon is not affected by difficult terrain of the Chaos Elemental Terrain type.',
+		unlocks: ['Element Master - Dark Area'],
+		prerequisites: {},
+	},
+	'Element Master - Dark Area': {
+		type: 'action',
+		cost: 2,
+		ranks: 1,
+		text: 'As a Simple Action, convert all tiles within your [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent included] into Chaos Elemental Terrain. You may decide whether these tiles (as a whole) are difficult terrain, and if they are already Chaos Elemental Terrain, you may convert them to or from difficult terrain. In the same action you may also move these tiles of terrain (as a whole) up or down one Unit.',
+		unlocks: [],
+		prerequisites: {
+			'Naturewalk - Dark Area': 1,
+		},
+	},
+	'Naturewalk - Unknown': {
+		type: 'special',
+		cost: 1,
+		ranks: 1,
+		text: 'This Digimon is not affected by difficult terrain of the Order Elemental Terrain type.',
+		unlocks: ['Element Master - Unknown'],
+		prerequisites: {},
+	},
+	'Element Master - Unknown': {
+		type: 'action',
+		cost: 2,
+		ranks: 1,
+		text: 'As a Simple Action, convert all tiles within your [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent included] into Order Elemental Terrain. You may decide whether these tiles (as a whole) are difficult terrain, and if they are already Order Elemental Terrain, you may convert them to or from difficult terrain. In the same action you may also move these tiles of terrain (as a whole) up or down one Unit.',
+		unlocks: [],
+		prerequisites: {
+			'Naturewalk - Unknown': 1,
+		},
+	},
+	'Pack Master': {
+		type: 'action',
+		cost: 3,
+		ranks: 1,
+		text: 'Once per Round, when an ally Intercedes to protect a Digimon with the Pack Master Quality, it does not consume a Simple Action of that ally from the next Round.',
+		unlocks: [],
+		prerequisites: {},
+	},
+	'Pack Tactics': {
+		type: 'modifier',
+		cost: 3,
+		ranks: 1,
+		text: 'Whenever an ally is adjacent to an enemy, you can add your RAM Value to your Accuracy when attacking that enemy.',
+		unlocks: ['Coordinated Assault'],
+		prerequisites: {},
+		args: ['specRAM'],
+		method: function (args) {
+			return 'When an ally is adjacent to the target, add ' + args[0] + ' to the Accuracy of this Attack.';
+		},
+	},
+	'Coordinated Assault': {
+		type: 'action',
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon may Mark a single target within [Range] distance (BITx2, not adjacent) as a Simple Action. All allies gain the benefits of the Pack Tactics Quality when attacking this target (adding their own RAM to Accuracy). This benefit still counts as an Attack modifier. This Quality may only have one active target. The Mark vanishes if the user loses the Quality (eg: by Digivolving) or if the target is defeated.',
+		unlocks: [],
+		prerequisites: {
+			'Pack Tactics': 1,
+		},
+	},
+	'Performance Training': {
+		type: 'special',
+		cost: 2,
+		ranks: 1,
+		text: 'Digimon with this Quality may apply their full Brains score when making Persuasion and Performance Skill Checks.',
+		unlocks: [],
+		prerequisites: {},
+	},
+	'Quick Healer': {
+		type: 'special',
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon may re-roll any dice that show up as 1’s when making a Heal Check. The Digimon does not reroll any subsequent 1’s.',
+		unlocks: ['Regenerator'],
+		prerequisites: {},
+	},
+	'Regenerator': {
+		type: 'special',
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon may re-roll any dice that show up as 2’s when making a Heal Check. The Digimon does not reroll any subsequent 2’s.',
+		unlocks: [],
+		prerequisites: {
+			'Quick Healer': 1,
+		},
+	},
+	'Reckless': {
+		type: 'modifier',
+		cost: 3,
+		ranks: 1,
+		text: 'A Digimon with the Reckless Quality will always take a minimum of 2 Damage, and Attack Effects applied will have a minimum duration of 2, from Attacks that connect. The Digimon may add its CPU Value to its Accuracy when attacking.',
+		negative: 'A Digimon with the Reckless Quality will always take a minimum of 2 Damage, and Attack Effects applied will have a minimum duration of 2, from Attacks that connect.',
+		unlocks: [],
+		prerequisites: {},
+		args: ['specCPU'],
+		method: function (args) {
+			return 'Add ' + args[0] + ' to the Accuracy of this Attack.';
+		},
+	},
+	'Resistant': {
+		type: 'special',
+		cost: 3,
+		ranks: 1,
+		text: 'A Digimon with the Resistant Quality reduces the duration of Negative Effects by their CPU. This Quality cannot bring the duration below their minimum duration.',
+		unlocks: [],
+		prerequisites: {},
+	},
+	'Silver Tongue': {
+		type: 'special',
+		cost: 1,
+		ranks: 1,
+		text: 'This Digimon now applies BIT+2 as the modifier for its Charisma Checks.',
+		unlocks: [],
+		prerequisites: {},
+	},
+	'Technician': {
+		type: 'special',
+		cost: 2,
+		ranks: 1,
+		text: 'A Digimon with Technician is skilled at working with code and technology, and by default can read and comprehend Digicode for its Tamer. When making any Computer Skill Check, or a Knowledge Check regarding technical knowledge, the Digimon may use its full Brains Stat in place of BIT.',
+		unlocks: [],
+		prerequisites: {},
+	},
+	'Tracker': {
+		type: 'special',
+		cost: 2,
+		ranks: 1,
+		text: 'Tracker makes a Digimon significantly better at finding its target. When performing a Perception Check with the goal of locating a target, or a Survival Check with the goal of tracking a target, the Digimon may use its full Brains Stat in place of BIT. Additionally, the TN to hide from this Digimon increases to 12 + Brains.',
+		unlocks: [],
+		prerequisites: {},
+	},
+	'Tumbler': {
+		type: 'special',
+		cost: 1,
+		ranks: 1,
+		text: 'Reduce damage this Digimon takes from falling/throwing by RAMx2, to a minimum of 1.',
+		unlocks: [],
+		prerequisites: {},
+	},
+	/*
+	 * TO ADD
+	 * Burst Power
+	 * Combat Awareness - you need to rewrite this
+	 *
+	 * Conjurer - unique ability
+	 * Summoner - unique ability
+	 * Elemental Summoner - there needs to be a summoner section
+	 * Minion Explosion - summoning
+	 * Mixed Summoner - summoning
+	 *
+	 * Data Optimization - all optimizations involve work
+	 * Data Specializations - all specializations involve more work
+	 * Hybrid Drive - complexity
+	 *
+	 * Digizoid Armor - haven't made stat changing yet
+	 *
+	 * Extra Movement - More Stat changes
+	 * Advanced Mobility - MORE stat change
+	 *
+	 * Improved Derived Stat - change stat
+	 * Learning - a little complex
+	 * Mode Change - very complex, maybe build a thing for it
+	 * Mode Change x.0 - ditto
+	 *
+	 * Rage - another thing to build a section for
+	 * Berserker - would love to see a rage bar tbh
+	 * Focused rage - put it all together
+	 *
+	 * Reach - this will change ranges
+	 * Speedy - weird rank stuff AND stat changes
+	 * System Boost - stat changes
+	 * Teleport - movement
+	 * Transporter - goes with teleport
+	 */
 };

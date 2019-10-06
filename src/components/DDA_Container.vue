@@ -1,8 +1,7 @@
 /*
  * Digivice Builder
  * Item Builder
- * Effect Applier
- * Attack Rolls
+ * Human Inventory
  * FAQ
  */
 <template>
@@ -330,6 +329,9 @@ export default {
 					name: previousStructure.attacks[i].name,
 					type: previousStructure.attacks[i].type,
 					damage: previousStructure.attacks[i].damage,
+					area: '',
+					effect: '',
+					features: [''],
 				};
 			}
 

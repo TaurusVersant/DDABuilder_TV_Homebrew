@@ -56,7 +56,11 @@ export default {
 			return Number.isInteger(this.modifier);
 		},
 	},
-	watch: {},
+	watch: {
+		modifier: function () {
+			this.modifierValue = this.modifier;
+		},
+	},
 	methods: {},
 	created: function () {
 		this.modifierValue = this.hasModifier ? this.modifier : 0;
@@ -76,7 +80,9 @@ export default {
 	}
 
 	span.labelValue {
-		margin: 10px;
+		margin-left: 10px;
+		width: 30px;
+		display: inline-block;
 	}
 
 	span.roller {

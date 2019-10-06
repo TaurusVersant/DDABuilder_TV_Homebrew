@@ -57,6 +57,11 @@
 					@changeHealth='changeHealth'
 					@markTemporary='markTemporary'
 				/>
+				<dda_stat
+					:stat='"Health Below Zero"'
+					:value='character.belowZero'
+					@changeStat='changeBelowZero'
+				/>
 			</div>
 			<div className='secondColumn'>
 				<p><u>Human Picture</u></p>
@@ -283,6 +288,7 @@ export default {
 				skillTotal: 0,
 				'Wound Boxes': 2,
 				temporary: 0,
+				belowZero: 0,
 				'Sanity Drain': 0,
 				'Inspiration': 1,
 				majorAspect: null,
@@ -568,6 +574,13 @@ export default {
 			let input = Number.parseInt(prompt('Add X Temporary Wound Boxes:', 0));
 			if (Number.isInteger(input) && input < 50) {
 				this.$set(this.character, 'temporary', input);
+			}
+		},
+		changeBelowZero: function (type, modifier) {
+			if (modifier && this.character.belowZero < 0) {
+				this.character.belowZero++;
+			} else if (!modifier) {
+				this.character.belowZero--;
 			}
 		},
 		markTemporary: function () {
