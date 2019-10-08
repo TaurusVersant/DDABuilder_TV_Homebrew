@@ -21,7 +21,7 @@
 					</optgroup>
 					<optgroup label='Digimon'>
 						<option value='digimonFresh'>Add Fresh Digimon</option>
-						<option value='digimonInTraining'>Add In-Training Digimon</option>
+						<option value='digimonIn-Training'>Add In-Training Digimon</option>
 						<option value='digimonRookie'>Add Rookie Digimon</option>
 						<option value='digimonChampion'>Add Champion Digimon</option>
 						<option value='digimonUltimate'>Add Ultimate Digimon</option>
@@ -51,7 +51,7 @@
 				</div>
 				<span v-for='(character, index) in characters' v-bind:key='index'>
 				<div class='paneFields' v-if='index === currentCharacter'>
-					<dda_digimon :data='character' v-if='character.characterClass === "Digimon"' @updateCharacter='updateCharacter($event, index)'/>
+					<dda_digimon :digimon_data='character' v-if='character.characterClass === "Digimon"' @updateCharacter='updateCharacter($event, index)'/>
 					<dda_human :data='character' v-else-if='character.characterClass === "Human"' @updateCharacter='updateCharacter($event, index)'/>
 				</div>
 				</span>
@@ -90,7 +90,7 @@ export default {
 				humanTeen: { type: 'Teenager', currentPoints: 40, startingPoints: 40, startingCap: 5, finalCap: 7, areaCap: 20 },
 				humanAdult: { type: 'Adult', currentPoints: 50, startingPoints: 50, startingCap: 7, finalCap: 10, areaCap: 25 },
 				digimonFresh: { type: 'Fresh', currentPoints: 0, startingPoints: 5, baseMovement: 2, startingWoundBoxes: 0, brainsMod: 0, attackCount: 1, specMod: 0 },
-				digimonInTraining: { type: 'In-Training', currentPoints: 10, startingPoints: 15, baseMovement: 4, startingWoundBoxes: 1, brainsMod: 1, attackCount: 2, specMod: 0 },
+				'digimonIn-Training': { type: 'In-Training', currentPoints: 10, startingPoints: 15, baseMovement: 4, startingWoundBoxes: 1, brainsMod: 1, attackCount: 2, specMod: 0 },
 				digimonRookie: { type: 'Rookie', currentPoints: 20, startingPoints: 25, baseMovement: 6, startingWoundBoxes: 2, brainsMod: 3, attackCount: 2, specMod: 1 },
 				digimonChampion: { type: 'Champion', currentPoints: 35, startingPoints: 40, baseMovement: 8, startingWoundBoxes: 5, brainsMod: 5, attackCount: 3, specMod: 2 },
 				digimonUltimate: { type: 'Ultimate', currentPoints: 50, startingPoints: 55, baseMovement: 10, startingWoundBoxes: 7, brainsMod: 7, attackCount: 4, specMod: 3 },
@@ -292,7 +292,7 @@ export default {
 					'Bravery': previousStructure.skills['Bravery'],
 				},
 				'skillTotal': skillTotal,
-				'Wound Boxes': previousStructure.woundBoxes,
+				'woundBoxes': previousStructure.woundBoxes,
 				'Sanity Drain': previousStructure.sanityDrain,
 				'Inspiration': previousStructure.inspiration,
 				'majorAspect': previousStructure.majorAspects[0],
@@ -352,7 +352,7 @@ export default {
 					'Dodge': previousStructure.stats['Dodge'],
 					'Armor': previousStructure.stats['Armor'],
 				},
-				'Wound Boxes': previousStructure.woundBoxes,
+				'currentWoundBoxes': previousStructure.woundBoxes,
 				'temporary': 0,
 				'notes': previousStructure.details,
 				'image': previousStructure.digimonImage,

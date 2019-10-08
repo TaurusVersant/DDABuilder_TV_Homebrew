@@ -1,22 +1,443 @@
-module.exports.qualities = {
-	'Agility': {
-		type: 'special',
-		cost: 3,
-		ranks: 1,
-		text: 'The Digimon may re-roll any dice that show up as 1’s when making a Dodge roll. The Digimon does not reroll any subsequent 1’s',
-		unlocks: ['Avoidance'],
-		prerequisites: {},
+module.exports.burstScaling = {
+	startingDP: 15,
+	baseMovement: 2,
+	woundBoxes: 4,
+	brains: 3,
+	specValues: 1,
+};
+
+module.exports.specialDigivolutions = [
+	'',
+	'Dark',
+	'DNA',
+	'Hybrid',
+	'Armor',
+	'Boss',
+];
+
+module.exports.families = [
+	"Dragon's Roar",
+	'Deep Savers',
+	'Nature Spirits',
+	'Wind Guardians',
+	'Jungle Troopers',
+	'Metal Empire',
+	'Virus Busters',
+	'Nightmare Soldiers',
+	'Dark Area',
+	'Unknown',
+];
+
+module.exports.attributes = [
+	'Vaccine',
+	'Virus',
+	'Data',
+	'Free',
+];
+
+module.exports.stages = [
+	'Fresh',
+	'In-Training',
+	'Rookie',
+	'Champion',
+	'Ultimate',
+	'Mega',
+	'Burst',
+];
+
+module.exports.sizes = [
+	'Tiny',
+	'Small',
+	'Medium',
+	'Large',
+	'Huge',
+	'Gigantic',
+];
+
+module.exports.combatStats = {
+	statAccuracy: 'Accuracy',
+	statDamage: 'Damage',
+	statDodge: 'Dodge',
+	statArmor: 'Armor',
+};
+
+module.exports.derivedStats = {
+	derivedAgility: 'Agility',
+	derivedBody: 'Body',
+	derivedBrains: 'Brains',
+};
+
+module.exports.specStats = {
+	specRAM: 'RAM [Agility]',
+	specCPU: 'CPU [Body]',
+	specBIT: 'BIT [Brains]',
+};
+
+module.exports.sizeLookup = {
+	'Tiny': {
+		'agilityMod': 2,
+		'bodyMod': -2,
 	},
-	'Avoidance': {
-		type: 'special',
-		cost: 3,
+	'Small': {
+		'agilityMod': 1,
+		'bodyMod': -1,
+	},
+	'Medium': {
+		'agilityMod': 0,
+		'bodyMod': 0,
+	},
+	'Large': {
+		'agilityMod': -1,
+		'bodyMod': 1,
+	},
+	'Huge': {
+		'agilityMod': -1,
+		'bodyMod': 2,
+	},
+	'Gigantic': {
+		'agilityMod': -2,
+		'bodyMod': 3,
+	},
+};
+
+module.exports.getQuality = function (quality) {
+	if (quality in this.qualities) {
+		return this.qualities[quality];
+	}
+	if (quality in this.areaQualities) {
+		return this.areaQualities[quality];
+	}
+	if (quality in this.effectQualities) {
+		return this.effectQualities[quality];
+	}
+	if (quality in this.featureQualities) {
+		return this.featureQualities[quality];
+	}
+	if (quality in this.modifierQualities) {
+		return this.modifierQualities[quality];
+	}
+	if (quality in this.optimizationQualities) {
+		return this.optimizationQualities[quality];
+	}
+
+	return {};
+};
+
+/* Quality Types
+ *
+ * quality - default type, does nothing special
+ * modifier - appears as a list under the digimon's attacks, with checkboxes for selecting modifiers
+ * special - qualities that can affect attack rolls
+ * passive - qualities that can affect non-attack rolls
+ * action - qualities that grant special actions that can be made in combat
+ * area - area effect qualities
+ * effect - attack effect qualities
+ * feature - attack feature qualities
+ */
+
+module.exports.optimizationQualities = {
+	'Data Optimization - Close Combat': {
+		type: 'modifier',
+		optimization: true,
+		cost: 1,
 		ranks: 1,
-		text: 'The Digimon may re-roll any dice that show up as 2’s when making a Dodge roll. The Digimon does not reroll any subsequent 2’s.',
-		unlocks: [],
-		prerequisites: {
-			'Agility': 1,
+		text: 'The Digimon gains a +2 bonus to its Accuracy when using a [Melee] tagged Attack, but takes a -1 Armor penalty.',
+		unlocks: ['Data Specialization - Fistful of Force', 'Data Specialization - Flurry'],
+		prerequisites: {},
+		args: [],
+		method: function (args) {
+			return '[Melee] Atacks only. Add 2 to the Accuracy of this Attack.';
+		},
+		statMods: {
+			qualityArmor: -1,
 		},
 	},
+	'Data Specialization - Fistful of Force': {
+		type: 'special',
+		specialization: true,
+		cost: 2,
+		ranks: 1,
+		text: 'The Digimon’s [Melee] tagged [Area] Attacks now scale for area size as if they were [Range] Attacks. The [Range] deadzone of adjacent Units does not apply.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Ultimate',
+			'Data Optimization - Close Combat': 1,
+		},
+	},
+	'Data Specialization - Flurry': {
+		type: 'passive',
+		specialization: true,
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon may make an additional [Melee] [Damage] Attack once per Round for free. This Attack has no Tags applied to it, and cannot benefit from Attack Modifiers.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Ultimate',
+			'Data Optimization - Close Combat': 1,
+		},
+	},
+	'Data Optimization - Ranged Striker': {
+		type: 'modifier',
+		optimization: true,
+		cost: 1,
+		ranks: 1,
+		text: 'The Digimon gains a +2 bonus to its Accuracy when using a [Range] tagged Attack, but takes a -1 Dodge penalty.',
+		unlocks: ['Data Specialization - Sniper', 'Data Specialization - Mobile Artillery'],
+		prerequisites: {},
+		args: [],
+		method: function (args) {
+			return '[Range] Atacks only. Add 2 to the Accuracy of this Attack.';
+		},
+		statMods: {
+			qualityDodge: -1,
+		},
+	},
+	'Data Specialization - Sniper': {
+		type: 'special',
+		specialization: true,
+		cost: 2,
+		ranks: 1,
+		text: 'The Digimon’s maximum range for [Range] Attacks is considered doubled. The Digimon takes a -1 Base Movement Penalty, and can no longer target foes within two Units of it. Scale [Area Attack] dimensions accordingly.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Ultimate',
+			'Data Optimization - Ranged Striker': 1,
+		},
+		statMods: {
+			baseMovement: -1,
+		},
+	},
+	'Data Specialization - Mobile Artillery': {
+		type: 'modifier',
+		specialization: true,
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon adds its CPU value to the damage dealt by [Range][Area] tagged Attacks. The Digimon takes a -1 Base Movement Penalty.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Ultimate',
+			'Data Optimization - Ranged Striker': 1,
+		},
+		statMods: {
+			baseMovement: -1,
+		},
+		args: ['specCPU'],
+		method: function (args) {
+			return '[Range][Area] Attacks only. Add ' + args[0] + ' to the Damage of this Attack.';
+		},
+	},
+	'Data Optimization - Guardian': {
+		type: 'quality',
+		optimization: true,
+		cost: 1,
+		ranks: 1,
+		text: 'The Digimon gains a +2 Armor bonus, but takes a -1 penalty to its Base Movement score.',
+		unlocks: ['Data Specialization - What Goes Around', 'Data Specialization - True Guardian'],
+		prerequisites: {},
+		statMods: {
+			qualityArmor: 2,
+			baseMovement: -1,
+		},
+	},
+	'Data Specialization - What Goes Around': {
+		type: 'passive',
+		specialization: true,
+		cost: 2,
+		ranks: 1,
+		text: 'Whenever the Digimon is hit by a [Melee] Attack, it deals damage equal to its CPU Value to the opponent. This damage is reduced by Armor but cannot be Dodged. The damage dealt by this Quality, however, cannot be brought below 2.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Ultimate',
+			'Data Optimization - Guardian': 1,
+		},
+	},
+	'Data Specialization - True Guardian': {
+		type: 'passive',
+		specialization: true,
+		cost: 3,
+		ranks: 1,
+		text: 'Whenever the Digimon Intercedes, it gains a bonus to Armor equal to the distance traveled to Intercede, and the Digimon is not affected by any [Effect] tags on the Attack. Additionally, once per round the Digimon does not lose a Simple Action in the next round for interceding. The Digimon takes a -2 Accuracy Penalty.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Ultimate',
+			'Data Optimization - Guardian': 1,
+		},
+		statMods: {
+			qualityAccuracy: -2,
+		},
+	},
+	'Data Optimization - Brawler': {
+		type: 'passive',
+		optimization: true,
+		cost: 2,
+		ranks: 1,
+		text: 'The Digimon gains a +4 bonus to Body Skill Checks it makes when Clashing.',
+		unlocks: ['Data Specialization - Power Throw', 'Data Specialization - Wrestlemania'],
+		prerequisites: {},
+	},
+	'Data Specialization - Power Throw': {
+		type: 'passive',
+		specialization: true,
+		cost: 2,
+		ranks: 1,
+		text: 'Whenever the Digimon throws a target, it adds its CPU value to its Damage.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Ultimate',
+			'Data Optimization - Brawler': 1,
+		},
+	},
+	'Data Specialization - Wrestlemania': {
+		type: 'action',
+		specialization: true,
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon may use a [Clash] Tagged Attack as a free Action against a target it is not Clashing with once per Round.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Ultimate',
+			'Data Optimization - Brawler': 1,
+		},
+	},
+	'Data Optimization - Speed Striker': {
+		type: 'quality',
+		optimization: true,
+		cost: 1,
+		ranks: 1,
+		text: 'The Digimon gains a +2 bonus to its Base Movement score.',
+		unlocks: ['Data Specialization - Hit and Run', 'Data Specialization - Uncatchable Target'],
+		prerequisites: {},
+		statMods: {
+			baseMovement: 2,
+		},
+	},
+	'Data Specialization - Hit and Run': {
+		type: 'modifier',
+		specialization: true,
+		cost: 2,
+		ranks: 1,
+		text: 'Whenever the Digimon moves before using a [Melee] Attack, they may add their RAM stat to the Damage. If the Digimon moves as part of a [Pass] or [Charge], this effect will still apply.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Ultimate',
+			'Data Optimization - Speed Striker': 1,
+		},
+		args: ['specRAM'],
+		method: function (args) {
+			return '[Melee] Attacks only. When moving before using an Attack (whether by action or a quality like [Pass] or [Charge]) add ' + args[0] + ' to Damage.';
+		},
+	},
+	'Data Specialization - Uncatchable Target': {
+		type: 'passive',
+		specialization: true,
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon gains a +3 Dodge bonus. The Digimon gains a +4 to Agility Skill Checks made when Clashing. If the Digimon succeeds an Agility Skill Check to escape a Clash, the Digimon may move up to its RAM stat in any direction as a free action. The Digimon’s Dodge Stat cannot be lowered by any means in combat.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Ultimate',
+			'Data Optimization - Speed Striker': 1,
+		},
+		statMods: {
+			qualityDodge: 3,
+		},
+	},
+	'Data Optimization - Effect Warrior': {
+		type: 'quality',
+		optimization: true,
+		cost: 2,
+		ranks: 1,
+		text: 'The Digimon gains a +1 bonus to its base Spec Values, but takes a -2 Armor penalty.',
+		unlocks: ['Data Specialization - White Mage', 'Data Specialization - Black Mage'],
+		prerequisites: {},
+		statMods: {
+			specRAM: 1,
+			specCPU: 1,
+			specBIT: 1,
+			qualityArmor: -2,
+		},
+	},
+	'Data Specialization - White Mage': {
+		type: 'special',
+		specialization: true,
+		cost: 1,
+		ranks: 1,
+		text: 'This Digimon can freely choose the targets of Positive [Effect] Tagged [Area] Attacks regardless of the number of targets within its [Area] dimensions.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Ultimate',
+			'Data Optimization - Effect Warrior': 1,
+		},
+	},
+	'Data Specialization - Black Mage': {
+		type: 'special',
+		specialization: true,
+		cost: 1,
+		ranks: 1,
+		text: 'This Digimon can freely choose the targets of Negative [Effect] Tagged [Area] Attacks regardless of the number of targets within its [Area] dimensions.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Ultimate',
+			'Data Optimization - Effect Warrior': 1,
+		},
+	},
+	'Data Optimization - Stealth Attacker': {
+		type: 'action',
+		optimization: true,
+		cost: 2,
+		ranks: 1,
+		text: 'The Digimon takes a -1 penalty to its Body Stat. Once per Round, a Digimon with this Quality may make a Stealth Check as a free Action during their turn.',
+		unlocks: ['Data Specialization - Ninja', 'Data Specialization - Assassin'],
+		prerequisites: {},
+		statMods: {
+			derivedBody: -1,
+		},
+	},
+	'Data Specialization - Ninja': {
+		type: 'modifier',
+		specialization: true,
+		cost: 3,
+		ranks: 1,
+		text: 'This Digimon may treat all of its Attacks as having the [Sneak Attack] Feature tag. This does not prevent the Attack from having a purchased Attack Feature tag. This does not stack with a purchased [Sneak Attack] Tag. Applying this Feature counts as using an Attack Modifier.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Ultimate',
+			'Data Optimization - Stealth Attacker': 1,
+		},
+		args: ['specRAM'],
+		method: function (args) {
+			return 'When attacking from Stealth, increase the Accuracy of this Attack by ' + args[0] + '.';
+		},
+	},
+	'Data Specialization - Assassin': {
+		type: 'special',
+		specialization: true,
+		cost: 3,
+		ranks: 1,
+		text: 'This Digimon may treat all of its Attacks as having the [Critical] Feature tag. This does not prevent the Attack from having a purchased Attack Feature tag. This does not stack with a purchased [Critical] Tag. Applying this Feature does not count as using an Attack Modifier.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Ultimate',
+			'Data Optimization - Stealth Attacker': 1,
+		},
+		args: ['specRAM'],
+		method: function (args) {
+			return 'When the difference between your rolled Accuracy and your opponent\'s rolled Dodge is ' + args[0] + ' or higher, add ' + args[0] + ' to the Damage of this Attack.';
+		},
+	},
+	'Hybrid Drive': {
+		type: 'quality',
+		cost: 2,
+		ranks: 2,
+		text: 'For each rank of Hybrid Drive taken, instead of a Data Specialization that requires your Data Optimization, you may instead taken a Data Specialization from another branch. You must still pay the cost of the Data Specialization after purchasing a rank in Hybrid Drive and obey the Stage limitations.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Ultimate',
+		},
+	},
+};
+
+module.exports.areaQualities = {
 	'Area Attack - Blast': {
 		type: 'area',
 		cost: 2,
@@ -142,7 +563,7 @@ module.exports.qualities = {
 		args: ['specRAM', 'derivedMovement'],
 		method: function (type, args) {
 			if (type === 'Melee') {
-				return 'Move in a straight line between ' + args[0] + ' and ' + args[1] + ' Units. Each target in this line is affected by this attack.';
+				return 'Move in a straight line between ' + args[0] + ' and ' + args[1] + ' Units. Each target in this line is affected by this attack. This uses a Complex Action without Charge or Retreat.';
 			}
 			return 'Cannot apply Area Attack - Pass to [Range] Attacks.';
 		},
@@ -162,6 +583,9 @@ module.exports.qualities = {
 			return 'Cannot apply Area Attack - Suppress to [Range] Attacks.';
 		},
 	},
+};
+
+module.exports.effectQualities = {
 	'Positive Effect - Cleanse': {
 		type: 'effect',
 		cost: 2,
@@ -551,7 +975,8 @@ module.exports.qualities = {
 		},
 	},
 	'Stance - Offensive Stance': {
-		type: 'stance',
+		type: 'effect',
+		stance: true,
 		cost: 1,
 		ranks: 1,
 		text: 'After the Attack resolves, apply [Offensive Stance]. While in Offensive Stance, increase your Accuracy by BIT and decrease your Dodge by BIT.',
@@ -563,7 +988,8 @@ module.exports.qualities = {
 		},
 	},
 	'Stance - Neutral Stance': {
-		type: 'stance',
+		type: 'effect',
+		stance: true,
 		cost: 0,
 		ranks: 1,
 		text: 'Before the Attack resolves, apply [Neutral Stance]. While in Neutral Stance, remove all effects granted by other Stances.',
@@ -575,7 +1001,8 @@ module.exports.qualities = {
 		},
 	},
 	'Stance - Defensive Stance': {
-		type: 'stance',
+		type: 'effect',
+		stance: true,
 		cost: 1,
 		ranks: 1,
 		text: 'After the Attack resolves, apply [Defensive Stance]. While in Defensive Stance, increase your Dodge by BIT and decrease your Accuracy by BIT.',
@@ -587,7 +1014,8 @@ module.exports.qualities = {
 		},
 	},
 	'Stance - Courageous Stance': {
-		type: 'stance',
+		type: 'effect',
+		stance: true,
 		cost: 1,
 		ranks: 1,
 		text: 'After the Attack resolves, apply [Courageous Stance]. While in Courageous Stance, increase your Accuracy and Dodge by 1 for each Positive Attack Effect applied to you. This Stance does not count for this calculation.',
@@ -599,7 +1027,8 @@ module.exports.qualities = {
 		},
 	},
 	'Stance - Gutsy Stance': {
-		type: 'stance',
+		type: 'effect',
+		stance: true,
 		cost: 1,
 		ranks: 1,
 		text: 'After the Attack resolves, apply [Gutsy Stance]. While in Gutsy Stance, increase your Damage and Armor by 1 for each Negative Attack Effect applied to you.',
@@ -611,7 +1040,8 @@ module.exports.qualities = {
 		},
 	},
 	'Stance - Swollen Stance': {
-		type: 'stance',
+		type: 'effect',
+		stance: true,
 		cost: 1,
 		ranks: 1,
 		text: 'After the Attack resolves, apply [Swollen Stance]. While in Swollen Stance, increase your Size Class by one, and use this Size for the purpose of Qualities. Increase your Damage and Armor by 1, and decrease your Accuracy and Dodge by 1. This Stance cannot be used if your Size Class is Gigantic.',
@@ -623,7 +1053,8 @@ module.exports.qualities = {
 		},
 	},
 	'Stance - Shrunken Stance': {
-		type: 'stance',
+		type: 'effect',
+		stance: true,
 		cost: 1,
 		ranks: 1,
 		text: 'After the Attack resolves, apply [Shrunken Stance]. While in Shrunken Stance, decrease your Size Class by one, and use this Size for the purpose of Qualities. Increase your Accuracy and Dodge by 1, and decrease your Damage and Armor by 1. This Stance cannot be used if your Size Class is Tiny.',
@@ -633,6 +1064,17 @@ module.exports.qualities = {
 		method: function (args) {
 			return 'Increase your Accuracy and Dodge by 1, and decrease your Size Class, Damage, and Armor by 1.';
 		},
+	},
+};
+
+module.exports.featureQualities = {
+	'Signature Move': {
+		type: 'quality',
+		cost: 3,
+		ranks: 2,
+		text: 'For each Rank of Signature Move a Digimon has, it may apply one extra Attack Feature Quality to a single Attack. Only a single Attack can be modified by Signature Move. NOTE: in the DDA Builder, Signature Move applies to the FIRST Attack in the Attack list.',
+		unlocks: [],
+		prerequisites: {},
 	},
 	'Feature - Certain Strike': {
 		type: 'feature',
@@ -827,22 +1269,9 @@ module.exports.qualities = {
 			return 'When attacking from Stealth, increase the Accuracy of this Attack by ' + args[0] + '.';
 		},
 	},
-	'Signature Move': {
-		type: 'special',
-		cost: 3,
-		ranks: 2,
-		text: 'For each Rank of Signature Move a Digimon has, it may apply one extra Attack Feature Quality to a single Attack. Only a single Attack can be modified by Signature Move. NOTE: in the DDA Builder, Signature Move applies to the FIRST Attack in the Attack list.',
-		unlocks: [],
-		prerequisites: {},
-	},
-	'Balance Health': {
-		type: 'action',
-		cost: 2,
-		ranks: 1,
-		text: 'As a Simple Action, select one willing adjacent character. Sum your current unmarked Wound Boxes together, then set both you and that character’s current unmarked Wound Boxes to half of that sum total (rounded down).',
-		unlocks: [],
-		prerequisites: {},
-	},
+};
+
+module.exports.modifierQualities = {
 	'Burn Health': {
 		type: 'modifier',
 		cost: 1,
@@ -855,8 +1284,198 @@ module.exports.qualities = {
 			return 'Mark a number of your Wound Boxes and increase the Damage of this Attack by that number.';
 		},
 	},
+	'Chrome Digizoid Weapon': {
+		type: 'modifier',
+		digizoidWeapon: true,
+		cost: 1,
+		ranks: 1,
+		text: 'This modifier can only be used once per round. The Digimon adds 2 to Accuracy and 1 to Damage to an Attack.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Ultimate',
+		},
+		args: [],
+		method: function (args) {
+			return 'This modifier can only be used once per round. The Digimon adds 2 to the Accuracy and 1 to the Damage of this Attack.';
+		},
+	},
+	'Black Digizoid Weapon': {
+		type: 'modifier',
+		digizoidWeapon: true,
+		cost: 2,
+		ranks: 1,
+		text: 'The Digimon’s Attack gains 2 Accuracy. When using this Attack, before rolling Accuracy this Digimon may choose to gain either 4 Accuracy or 4 Damage for the length of attack calculation.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Mega',
+		},
+		args: [],
+		method: function (args) {
+			return 'This modifier can only be used once per round. The Digimon adds 2 to the Accuracy of this Attack. Additionally, before rolling Accuracy, this Digimon may choose to add 4 to either the Accuracy or Damage of this Attack.';
+		},
+	},
+	'Blue Digizoid Weapon': {
+		type: 'modifier',
+		digizoidWeapon: true,
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon’s Attack gains 2 bonus Accuracy when used and 1 bonus Damage. Additionally, treat the Attack as having an Attack Feature of an extra rank in Certain Strike, even if the Attack already had Certain Strike.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Mega',
+		},
+		args: [],
+		method: function (args) {
+			return 'This modifier can only be used once per round. The Digimon adds 2 to the Accuracy and 1 to the Damage of this Attack. Additionally, reduce the number of successfully Dodge dice rolled against this Attack by 1.';
+		},
+	},
+	'Gold Digizoid Weapon': {
+		type: 'modifier',
+		digizoidWeapon: true,
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon’s Attack gains 4 extra Damage and 1 extra Accuracy. If the Attack is [Range], the maximum range increases by 5 Units.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Mega',
+		},
+		args: [],
+		method: function (args) {
+			return 'This modifier can only be used once per round. The Digimon adds 1 to the Accuracy and 4 to the Damage of this Attack. Additionally, if the Attack is [Range], the maximum range increases by 5 Units.';
+		},
+	},
+	'Obsidian Digizoid Weapon': {
+		type: 'modifier',
+		digizoidWeapon: true,
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon’s Attack gains 2 bonus Damage when used and 1 bonus Accuracy. Additionally, treat the Attack as having an Attack Feature of an extra rank in Armor Piercing, even if the Attack already had Armor Piercing.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Mega',
+		},
+		args: [],
+		method: function (args) {
+			return 'This modifier can only be used once per round. The Digimon adds 1 to the Accuracy and 2 to the Damage of this Attack. Additionally, ignore 2 Armor when calculating the Damage of this Attack.';
+		},
+	},
+	'Red Digizoid Weapon': {
+		type: 'modifier',
+		digizoidWeapon: true,
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon’s Attack gains +7 Damage.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Mega',
+		},
+		args: [],
+		method: function (args) {
+			return 'This modifier can only be used once per round. The Digimon adds 7 to the Damage of this Attack.';
+		},
+	},
+	'Flying Hunter': {
+		type: 'modifier',
+		cost: 2,
+		ranks: 1,
+		text: 'A Digimon with Flying Hunter takes double damage from falling and throwing. When attacking while spending your entire Turn 1 or higher Units in the air, this Digimon may add its RAM Value to its Accuracy.',
+		negative: 'A Digimon with Flying Hunter takes double damage from falling and throwing.',
+		unlocks: [],
+		prerequisites: {},
+		args: ['specRAM'],
+		method: function (args) {
+			return 'While spending your entire turn 1 or higher Units in the air, this Digimon may add ' + args[0] + ' to the Accuracy of this Attack.';
+		},
+	},
+	'Hunter': {
+		type: 'modifier',
+		cost: 1,
+		ranks: 1,
+		text: 'When you take this Quality, select and record a Digimon Family and Type. You automatically know if any Digimon you encounter is of that Family or relative Type. When making an Attack Roll against a target, if the target’s Family or Type matches one of your selected Family and Type, add your RAM to your Accuracy. If both match, add RAM+CPU to your Accuracy. Digimon of this Family or Type will feel innately unsettled by a Digimon with the Hunter Quality tuned to their Family or Type.',
+		unlocks: ['Slayer'],
+		prerequisites: {},
+		args: ['specRAM', 'specCPU', 'Slayer', 'specBIT'],
+		method: function (args) {
+			let slayer = args[2] ? ' If your target\'s Attribute matches your chosen Attribute for Slayer, add ' + args[3] + ' to this Attack\'s Accuracy. This can stack with the bonus for matching Family and/or Type. If Attribute, Family, and Type are all matched, and this Attack leaves the target with less than half its health remaining, the target is immediately destroyed, unless it is a Boss Stage Digimon.' : '';
+			return 'If your target\'s Family or Type matches your chosen Family and Type, add ' + args[0] + ' to this Attack\'s Accuracy. If both match, add ' + (args[0] + args[1]) + '.' + slayer;
+		},
+	},
+	'Slayer': {
+		type: 'quality',
+		cost: 2,
+		ranks: 1,
+		text: 'When you take this Quality, select and record a Digimon Attribute. You automatically know if any Digimon you encounter is of that Attribute. When making an Attack Roll against a target with that Attribute, add your BIT to your Accuracy. This Attack Modifier stacks with Hunter: you may apply both these Qualities as one Attack Modifier. If the combination of Hunter and Slayer matches exactly to a target Digimon (Attribute, Family, and Type match), and after this attack deals damage the target has less than half health remaining, the target is immediately destroyed. Digimon with any Boss Qualities are immune to this specific effect. Digimon of the target Attribute will react extremely negatively to the presence of this Digimon.',
+		unlocks: [],
+		prerequisites: {
+			'Hunter': 1,
+		},
+	},
+	'Pack Tactics': {
+		type: 'modifier',
+		cost: 3,
+		ranks: 1,
+		text: 'Whenever an ally is adjacent to an enemy, you can add your RAM Value to your Accuracy when attacking that enemy.',
+		unlocks: ['Coordinated Assault'],
+		prerequisites: {},
+		args: ['specRAM'],
+		method: function (args) {
+			return 'When an ally is adjacent to the target, add ' + args[0] + ' to the Accuracy of this Attack.';
+		},
+	},
+	'Reckless': {
+		type: 'modifier',
+		cost: 3,
+		ranks: 1,
+		text: 'A Digimon with the Reckless Quality will always take a minimum of 2 Damage, and Attack Effects applied will have a minimum duration of 2, from Attacks that connect. The Digimon may add its CPU Value to its Accuracy when attacking.',
+		negative: 'A Digimon with the Reckless Quality will always take a minimum of 2 Damage, and Attack Effects applied will have a minimum duration of 2, from Attacks that connect.',
+		unlocks: [],
+		prerequisites: {},
+		args: ['specCPU'],
+		method: function (args) {
+			return 'Add ' + args[0] + ' to the Accuracy of this Attack.';
+		},
+	},
+};
+
+module.exports.qualities = {
+	'Agility': {
+		type: 'passive',
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon may re-roll any dice that show up as 1’s when making a Dodge roll. The Digimon does not reroll any subsequent 1’s',
+		unlocks: ['Avoidance'],
+		prerequisites: {},
+	},
+	'Avoidance': {
+		type: 'passive',
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon may re-roll any dice that show up as 2’s when making a Dodge roll. The Digimon does not reroll any subsequent 2’s.',
+		unlocks: [],
+		prerequisites: {
+			'Agility': 1,
+		},
+	},
+	'Balance Health': {
+		type: 'action',
+		cost: 2,
+		ranks: 1,
+		text: 'As a Simple Action, select one willing adjacent character. Sum your current unmarked Wound Boxes together, then set both you and that character’s current unmarked Wound Boxes to half of that sum total (rounded down).',
+		unlocks: [],
+		prerequisites: {},
+	},
+	'Burst Power': {
+		type: 'action',
+		cost: 0,
+		ranks: 1,
+		text: 'Burst Power is activated as a Simple Action. When activated, the Digimon gains +4 to Accuracy, Damage, Dodge, and Armor for 4 Rounds. At the end of the 4th round, the Digimon instead loses 1 point in each Stat per Round after. So, if the Digimon maintains Burst Power for 7 rounds, they would be at a -3 in all Stats. Burst Power is Deactivated as a Complex Action. Once Burst Power has been activated, the Digimon cannot activate it again until after a Short Rest.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Burst',
+		},
+	},
 	'Camper': {
-		type: 'special',
+		type: 'passive',
 		cost: 2,
 		ranks: 1,
 		text: 'At the beginning of a Short or Long Rest (before Dedigivolving if you are above your Base Digivolution Stage), you can make a Survival Check using your Brains Stat to create a safe environment for resting and to gather/prepare food for consumption. You may also use your Brains Stat for Survival Checks when attempting to locate plants or food, and your Brains Stat for Knowledge Checks regarding the usages of plants and the like.',
@@ -872,7 +1491,7 @@ module.exports.qualities = {
 		prerequisites: {},
 	},
 	'Counterblow': {
-		type: 'special',
+		type: 'quality',
 		cost: 2,
 		ranks: 1,
 		text: 'When using a [Counter] tagged attack through the Counter quality, reduce the target\'s Armor stat by the attacker\'s CPU.',
@@ -881,88 +1500,92 @@ module.exports.qualities = {
 			'Feature - Counter': 1
 		},
 	},
-	'Chrome Digizoid Weapon': {
-		type: 'digizoidWeapon',
+	'Chrome Digizoid Armor': {
+		type: 'quality',
+		digizoidArmor: true,
 		cost: 1,
 		ranks: 1,
-		text: 'This modifier can only be used once per round. The Digimon adds 2 to Accuracy and 1 to Damage to an Attack.',
+		text: 'The Digimon gains 2 Armor and 1 Health.',
 		unlocks: [],
 		prerequisites: {
 			Stage: 'Ultimate',
 		},
-		args: [],
-		method: function (args) {
-			return 'This modifier can only be used once per round. The Digimon adds 2 to the Accuracy and 1 to the Damage of this Attack.';
+		statMods: {
+			qualityArmor: 2,
+			qualityWoundBoxes: 1,
 		},
 	},
-	'Black Digizoid Weapon': {
-		type: 'digizoidWeapon',
+	'Black Digizoid Armor': {
+		type: 'passive',
+		digizoidArmor: true,
 		cost: 2,
 		ranks: 1,
-		text: 'The Digimon’s Attack gains 2 Accuracy. When using this Attack, before rolling Accuracy this Digimon may choose to gain either 4 Accuracy or 4 Damage for the length of attack calculation.',
+		text: 'The Digimon gains 2 Armor. Once per round, when targeted by an Attack, before rolling Dodge this Digimon may choose to gain either 4 Dodge or 4 Armor for the length of attack calculation.',
 		unlocks: [],
 		prerequisites: {
 			Stage: 'Mega',
 		},
-		args: [],
-		method: function (args) {
-			return 'This modifier can only be used once per round. The Digimon adds 2 to the Accuracy of this Attack. Additionally, before rolling Accuracy, this Digimon may choose to add 4 to either the Accuracy or Damage of this Attack.';
+		statMods: {
+			qualityArmor: 2,
 		},
 	},
-	'Blue Digizoid Weapon': {
-		type: 'digizoidWeapon',
+	'Blue Digizoid Armor': {
+		type: 'quality',
+		digizoidArmor: true,
 		cost: 3,
 		ranks: 1,
-		text: 'The Digimon’s Attack gains 2 bonus Accuracy when used and 1 bonus Damage. Additionally, treat the Attack as having an Attack Feature of an extra rank in Certain Strike, even if the Attack already had Certain Strike.',
+		text: 'The Digimon’s Armor score increases by 2, it gains an additional 2 Dodge, and their Base Movement is increased by 4.',
 		unlocks: [],
 		prerequisites: {
 			Stage: 'Mega',
 		},
-		args: [],
-		method: function (args) {
-			return 'This modifier can only be used once per round. The Digimon adds 2 to the Accuracy and 1 to the Damage of this Attack. Additionally, reduce the number of successfully Dodge dice rolled against this Attack by 1.';
+		statMods: {
+			qualityArmor: 2,
+			qualityDodge: 2,
+			baseMovement: 4,
 		},
 	},
-	'Gold Digizoid Weapon': {
-		type: 'digizoidWeapon',
-		cost: 3,
+	'Gold Digizoid Armor': {
+		type: 'passive',
+		digizoidArmor: true,
+		cost: 2,
 		ranks: 1,
-		text: 'The Digimon’s Attack gains 4 extra Damage and 1 extra Accuracy. If the Attack is [Range], the maximum range increases by 5 Units.',
+		text: 'The Digimon’s Armor increases by 2. Additionally, whenever the user is hit by a [Range] Attack, the opponent who used the Attack takes Damage equal to the user’s CPU Value doubled. The damage is reduced by Armor as per normal, but cannot be brought below 1.',
 		unlocks: [],
 		prerequisites: {
 			Stage: 'Mega',
 		},
-		args: [],
-		method: function (args) {
-			return 'This modifier can only be used once per round. The Digimon adds 1 to the Accuracy and 4 to the Damage of this Attack. Additionally, if the Attack is [Range], the maximum range increases by 5 Units.';
+		statMods: {
+			qualityArmor: 2,
 		},
 	},
-	'Obsidian Digizoid Weapon': {
-		type: 'digizoidWeapon',
-		cost: 3,
+	'Obsidian Digizoid Armor': {
+		type: 'passive',
+		digizoidArmor: true,
+		cost: 2,
 		ranks: 1,
-		text: 'The Digimon’s Attack gains 2 bonus Damage when used and 1 bonus Accuracy. Additionally, treat the Attack as having an Attack Feature of an extra rank in Armor Piercing, even if the Attack already had Armor Piercing.',
+		text: 'The Digimon’s Armor increases by 2. Additionally, whenever the user is hit by a [Melee] Attack, the opponent who used the Attack takes Damage equal to the user’s CPU Value doubled. The damage is reduced by Armor as per normal, but cannot be brought below 1.',
 		unlocks: [],
 		prerequisites: {
 			Stage: 'Mega',
 		},
-		args: [],
-		method: function (args) {
-			return 'This modifier can only be used once per round. The Digimon adds 1 to the Accuracy and 2 to the Damage of this Attack. Additionally, ignore 2 Armor when calculating the Damage of this Attack.';
+		statMods: {
+			qualityArmor: 2,
 		},
 	},
-	'Red Digizoid Weapon': {
-		type: 'digizoidWeapon',
-		cost: 3,
+	'Red Digizoid Armor': {
+		type: 'quality',
+		digizoidArmor: true,
+		cost: 2,
 		ranks: 1,
-		text: 'The Digimon’s Attack gains +7 Damage.',
+		text: 'The Digimon gains +4 to their Armor and +2 to their Health.',
 		unlocks: [],
 		prerequisites: {
 			Stage: 'Mega',
 		},
-		args: [],
-		method: function (args) {
-			return 'This modifier can only be used once per round. The Digimon adds 7 to the Damage of this Attack.';
+		statMods: {
+			qualityArmor: 4,
+			qualityWoundBoxes: 2,
 		},
 	},
 	'Doombringer': {
@@ -973,21 +1596,111 @@ module.exports.qualities = {
 		unlocks: [],
 		prerequisites: {},
 	},
-	'Flying Hunter': {
-		type: 'modifier',
+	'Extra Movement - Flight': {
+		type: 'quality',
 		cost: 2,
 		ranks: 1,
-		text: 'A Digimon with Flying Hunter takes double damage from falling and throwing. When attacking while spending your entire Turn 1 or higher Units in the air, this Digimon may add its RAM Value to its Accuracy.',
-		negative: 'A Digimon with Flying Hunter takes double damage from falling and throwing.',
-		unlocks: [],
+		text: 'The Digimon is capable of flying through the air at a speed equal to their Movement.',
+		unlocks: ['Advanced Mobility - Flight'],
 		prerequisites: {},
-		args: ['specRAM'],
-		method: function (args) {
-			return 'While spending your entire turn 1 or higher Units in the air, this Digimon may add ' + args[0] + ' to the Accuracy of this Attack.';
+	},
+	'Advanced Mobility - Flight': {
+		type: 'quality',
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon is not slowed down by even the harshest of winds while it’s in the air and its Flight speed is increased by its RAM value.',
+		unlocks: [],
+		prerequisites: {
+			'Extra Movement - Flight': 1,
+		},
+	},
+	'Extra Movement - Digger': {
+		type: 'quality',
+		cost: 1,
+		ranks: 1,
+		text: 'The Digimon is capable of burrowing through the ground at a speed equal to its movement, so long as it’s as soft as dirt. Snow or sand are other alternatives.',
+		unlocks: ['Advanced Mobility - Digger'],
+		prerequisites: {},
+	},
+	'Advanced Mobility - Digger': {
+		type: 'quality',
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon is now capable of digging through the majority of surfaces without being slowed down. It can dig through softer metals but this is now treated as Difficult Terrain. The Digimon’s Digging speed is increased by its RAM value.',
+		unlocks: [],
+		prerequisites: {
+			'Extra Movement - Digger': 1,
+		},
+	},
+	'Extra Movement - Swimmer': {
+		type: 'quality',
+		cost: 1,
+		ranks: 1,
+		text: 'The Digimon is capable of moving through the water at a much faster speed than normal, at a speed equal to its Movement.',
+		unlocks: ['Advanced Mobility - Swimmer'],
+		prerequisites: {},
+	},
+	'Advanced Mobility - Swimmer': {
+		type: 'quality',
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon is capable of swimming without being slowed down by harsh currents, and its Swimming speed is increased by its RAM value.',
+		unlocks: [],
+		prerequisites: {
+			'Extra Movement - Swimmer': 1,
+		},
+	},
+	'Extra Movement - Wallclimber': {
+		type: 'quality',
+		cost: 1,
+		ranks: 1,
+		text: 'The Digimon is capable of scaling vertical surfaces, but not on ceilings, at a speed equal to its Movement.',
+		unlocks: ['Advanced Mobility - Wallclimber'],
+		prerequisites: {},
+	},
+	'Advanced Mobility - Wallclimber': {
+		type: 'quality',
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon is now capable of walking on ceilings, and cannot be slowed or slip off any normal wall surfaces. Its Wallclimber speed is increased by its RAM value.',
+		unlocks: [],
+		prerequisites: {
+			'Extra Movement - Wallclimber': 1,
+		},
+	},
+	'Extra Movement - Jumper': {
+		type: 'quality',
+		cost: 1,
+		ranks: 1,
+		text: 'The Digimon is capable of jumping at a height and length equal to its Movement.',
+		unlocks: ['Advanced Mobility - Jumper'],
+		prerequisites: {},
+	},
+	'Advanced Mobility - Jumper': {
+		type: 'quality',
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon’s Jump height is increased by its CPU Value times Three. The Digimon’s Jump length is increased by its CPU value.',
+		unlocks: [],
+		prerequisites: {
+			'Extra Movement - Jumper': 1,
+		},
+	},
+	'Advanced Mobility - Speedy': {
+		type: 'quality',
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon adds 6 to its Movement score.',
+		unlocks: [],
+		prerequisites: {
+			'Speedy': 3,
+		},
+		statMods: {
+			qualityMovement: 6,
 		},
 	},
 	'Focused Mind': {
-		type: 'special',
+		type: 'passive',
 		cost: 1,
 		ranks: 1,
 		text: 'This Digimon now applies BIT+2 as the modifier for its Willpower Checks.',
@@ -995,7 +1708,7 @@ module.exports.qualities = {
 		prerequisites: {},
 	},
 	'Graduate of Digital University': {
-		type: 'special',
+		type: 'passive',
 		cost: 2,
 		ranks: 1,
 		text: 'Digimon with this Quality may apply their full Brains score when making Knowledge Skill Checks.',
@@ -1003,7 +1716,7 @@ module.exports.qualities = {
 		prerequisites: {},
 	},
 	'Healing Hands': {
-		type: 'special',
+		type: 'passive',
 		cost: 3,
 		ranks: 1,
 		text: 'When performing a Heal Check, add your BIT to the Heal Check Roll of all allies with you.',
@@ -1037,7 +1750,7 @@ module.exports.qualities = {
 		prerequisites: {},
 	},
 	'Shade Cloak': {
-		type: 'special',
+		type: 'passive',
 		cost: 2,
 		ranks: 1,
 		text: 'Allies within your [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent included] may also make Stealth Checks even while there is line of sight to them.',
@@ -1046,27 +1759,37 @@ module.exports.qualities = {
 			'Hide in Plain Sight': 1,
 		},
 	},
-	'Hunter': {
-		type: 'modifier',
+	'Improved Derived Stat - Agility': {
+		type: 'quality',
 		cost: 1,
-		ranks: 1,
-		text: 'When you take this Quality, select and record a Digimon Family and Type. You automatically know if any Digimon you encounter is of that Family or relative Type. When making an Attack Roll against a target, if the target’s Family or Type matches one of your selected Family and Type, add your RAM to your Accuracy. If both match, add RAM+CPU to your Accuracy. Digimon of this Family or Type will feel innately unsettled by a Digimon with the Hunter Quality tuned to their Family or Type.',
-		unlocks: ['Slayer'],
+		ranks: 0,
+		text: 'For each rank of Improved Derived Stat - Agility you take, increase your Agility Derived Stat by 1.',
+		unlocks: [],
 		prerequisites: {},
-		args: ['specRAM', 'specCPU', 'Slayer', 'specBIT'],
-		method: function (args) {
-			let slayer = args[2] ? ' If your target\'s Attribute matches your chosen Attribute for Slayer, add ' + args[3] + ' to this Attack\'s Accuracy. This can stack with the bonus for matching Family and/or Type. If Attribute, Family, and Type are all matched, and this Attack leaves the target with less than half its health remaining, the target is immediately destroyed, unless it is a Boss Stage Digimon.' : '';
-			return 'If your target\'s Family or Type matches your chosen Family and Type, add ' + args[0] + ' to this Attack\'s Accuracy. If both match, add ' + (args[0] + args[1]) + '.' + slayer;
+		statMods: {
+			derivedAgility: 1,
 		},
 	},
-	'Slayer': {
-		type: 'special',
-		cost: 2,
-		ranks: 1,
-		text: 'When you take this Quality, select and record a Digimon Attribute. You automatically know if any Digimon you encounter is of that Attribute. When making an Attack Roll against a target with that Attribute, add your BIT to your Accuracy. This Attack Modifier stacks with Hunter: you may apply both these Qualities as one Attack Modifier. If the combination of Hunter and Slayer matches exactly to a target Digimon (Attribute, Family, and Type match), and after this attack deals damage the target has less than half health remaining, the target is immediately destroyed. Digimon with any Boss Qualities are immune to this specific effect. Digimon of the target Attribute will react extremely negatively to the presence of this Digimon.',
+	'Improved Derived Stat - Body': {
+		type: 'quality',
+		cost: 1,
+		ranks: 0,
+		text: 'For each rank of Improved Derived Stat - Body you take, increase your Body Derived Stat by 1.',
 		unlocks: [],
-		prerequisites: {
-			'Hunter': 1,
+		prerequisites: {},
+		statMods: {
+			derivedBody: 1,
+		},
+	},
+	'Improved Derived Stat - Brains': {
+		type: 'quality',
+		cost: 1,
+		ranks: 0,
+		text: 'For each rank of Improved Derived Stat - Brains you take, increase your Brains Derived Stat by 1.',
+		unlocks: [],
+		prerequisites: {},
+		statMods: {
+			derivedBrains: 1,
 		},
 	},
 	'Nature Territory': {
@@ -1078,7 +1801,7 @@ module.exports.qualities = {
 		prerequisites: {},
 	},
 	'Recovery Territory': {
-		type: 'special',
+		type: 'passive',
 		cost: 2,
 		ranks: 1,
 		text: 'At the end of its turn, if this Digimon is standing on Elemental Terrain that benefits it, it may recover 1 Wound Box.',
@@ -1088,7 +1811,7 @@ module.exports.qualities = {
 		},
 	},
 	'Naturewalk - Dragon\'s Roar': {
-		type: 'special',
+		type: 'passive',
 		cost: 1,
 		ranks: 1,
 		text: 'This Digimon is not affected by difficult terrain of the Fire Elemental Terrain type.',
@@ -1106,7 +1829,7 @@ module.exports.qualities = {
 		},
 	},
 	'Naturewalk - Deep Savers': {
-		type: 'special',
+		type: 'passive',
 		cost: 1,
 		ranks: 1,
 		text: 'This Digimon is not affected by difficult terrain of the Water Elemental Terrain type.',
@@ -1124,7 +1847,7 @@ module.exports.qualities = {
 		},
 	},
 	'Naturewalk - Nature Spirits': {
-		type: 'special',
+		type: 'passive',
 		cost: 1,
 		ranks: 1,
 		text: 'This Digimon is not affected by difficult terrain of the Earth Elemental Terrain type.',
@@ -1142,7 +1865,7 @@ module.exports.qualities = {
 		},
 	},
 	'Naturewalk - Wind Guardians': {
-		type: 'special',
+		type: 'passive',
 		cost: 1,
 		ranks: 1,
 		text: 'This Digimon is not affected by difficult terrain of the Wind Elemental Terrain type.',
@@ -1160,7 +1883,7 @@ module.exports.qualities = {
 		},
 	},
 	'Naturewalk - Jungle Troopers': {
-		type: 'special',
+		type: 'passive',
 		cost: 1,
 		ranks: 1,
 		text: 'This Digimon is not affected by difficult terrain of the Plant Elemental Terrain type.',
@@ -1178,7 +1901,7 @@ module.exports.qualities = {
 		},
 	},
 	'Naturewalk - Metal Empire': {
-		type: 'special',
+		type: 'passive',
 		cost: 1,
 		ranks: 1,
 		text: 'This Digimon is not affected by difficult terrain of the Machine Elemental Terrain type.',
@@ -1196,7 +1919,7 @@ module.exports.qualities = {
 		},
 	},
 	'Naturewalk - Virus Busters': {
-		type: 'special',
+		type: 'passive',
 		cost: 1,
 		ranks: 1,
 		text: 'This Digimon is not affected by difficult terrain of the Light Elemental Terrain type.',
@@ -1214,7 +1937,7 @@ module.exports.qualities = {
 		},
 	},
 	'Naturewalk - Nightmare Soldiers': {
-		type: 'special',
+		type: 'passive',
 		cost: 1,
 		ranks: 1,
 		text: 'This Digimon is not affected by difficult terrain of the Dark Elemental Terrain type.',
@@ -1232,7 +1955,7 @@ module.exports.qualities = {
 		},
 	},
 	'Naturewalk - Dark Area': {
-		type: 'special',
+		type: 'passive',
 		cost: 1,
 		ranks: 1,
 		text: 'This Digimon is not affected by difficult terrain of the Chaos Elemental Terrain type.',
@@ -1250,7 +1973,7 @@ module.exports.qualities = {
 		},
 	},
 	'Naturewalk - Unknown': {
-		type: 'special',
+		type: 'passive',
 		cost: 1,
 		ranks: 1,
 		text: 'This Digimon is not affected by difficult terrain of the Order Elemental Terrain type.',
@@ -1268,24 +1991,12 @@ module.exports.qualities = {
 		},
 	},
 	'Pack Master': {
-		type: 'action',
+		type: 'passive',
 		cost: 3,
 		ranks: 1,
 		text: 'Once per Round, when an ally Intercedes to protect a Digimon with the Pack Master Quality, it does not consume a Simple Action of that ally from the next Round.',
 		unlocks: [],
 		prerequisites: {},
-	},
-	'Pack Tactics': {
-		type: 'modifier',
-		cost: 3,
-		ranks: 1,
-		text: 'Whenever an ally is adjacent to an enemy, you can add your RAM Value to your Accuracy when attacking that enemy.',
-		unlocks: ['Coordinated Assault'],
-		prerequisites: {},
-		args: ['specRAM'],
-		method: function (args) {
-			return 'When an ally is adjacent to the target, add ' + args[0] + ' to the Accuracy of this Attack.';
-		},
 	},
 	'Coordinated Assault': {
 		type: 'action',
@@ -1298,7 +2009,7 @@ module.exports.qualities = {
 		},
 	},
 	'Performance Training': {
-		type: 'special',
+		type: 'passive',
 		cost: 2,
 		ranks: 1,
 		text: 'Digimon with this Quality may apply their full Brains score when making Persuasion and Performance Skill Checks.',
@@ -1306,7 +2017,7 @@ module.exports.qualities = {
 		prerequisites: {},
 	},
 	'Quick Healer': {
-		type: 'special',
+		type: 'passive',
 		cost: 3,
 		ranks: 1,
 		text: 'The Digimon may re-roll any dice that show up as 1’s when making a Heal Check. The Digimon does not reroll any subsequent 1’s.',
@@ -1314,7 +2025,7 @@ module.exports.qualities = {
 		prerequisites: {},
 	},
 	'Regenerator': {
-		type: 'special',
+		type: 'passive',
 		cost: 3,
 		ranks: 1,
 		text: 'The Digimon may re-roll any dice that show up as 2’s when making a Heal Check. The Digimon does not reroll any subsequent 2’s.',
@@ -1323,21 +2034,8 @@ module.exports.qualities = {
 			'Quick Healer': 1,
 		},
 	},
-	'Reckless': {
-		type: 'modifier',
-		cost: 3,
-		ranks: 1,
-		text: 'A Digimon with the Reckless Quality will always take a minimum of 2 Damage, and Attack Effects applied will have a minimum duration of 2, from Attacks that connect. The Digimon may add its CPU Value to its Accuracy when attacking.',
-		negative: 'A Digimon with the Reckless Quality will always take a minimum of 2 Damage, and Attack Effects applied will have a minimum duration of 2, from Attacks that connect.',
-		unlocks: [],
-		prerequisites: {},
-		args: ['specCPU'],
-		method: function (args) {
-			return 'Add ' + args[0] + ' to the Accuracy of this Attack.';
-		},
-	},
 	'Resistant': {
-		type: 'special',
+		type: 'passive',
 		cost: 3,
 		ranks: 1,
 		text: 'A Digimon with the Resistant Quality reduces the duration of Negative Effects by their CPU. This Quality cannot bring the duration below their minimum duration.',
@@ -1345,23 +2043,101 @@ module.exports.qualities = {
 		prerequisites: {},
 	},
 	'Silver Tongue': {
-		type: 'special',
+		type: 'passive',
 		cost: 1,
 		ranks: 1,
 		text: 'This Digimon now applies BIT+2 as the modifier for its Charisma Checks.',
 		unlocks: [],
 		prerequisites: {},
 	},
+	'Speedy': {
+		type: 'quality',
+		cost: 1,
+		ranks: 3,
+		text: 'For each Rank you take in Speedy, the Digimon adds 2 to its Movement score.',
+		unlocks: ['Advanced Mobility - Speedy', 'Teleport', 'Speedy II'],
+		prerequisites: {},
+		statMods: {
+			qualityMovement: 2,
+		},
+	},
+	'Speedy II': {
+		type: 'quality',
+		cost: 1,
+		ranks: 2,
+		text: 'For each Rank you take in Speedy, the Digimon adds 2 to its Movement score.',
+		unlocks: [],
+		prerequisites: {
+			'Stage': 'Ultimate',
+			'Speedy': 3,
+		},
+		statMods: {
+			qualityMovement: 2,
+		},
+	},
+	'System Boost - RAM': {
+		type: 'quality',
+		cost: 3,
+		ranks: 3,
+		text: 'For each rank of System Boost - RAM you take, increase your RAM Spec Stat by 1.',
+		unlocks: [],
+		prerequisites: {},
+		statMods: {
+			specRAM: 1,
+		},
+	},
+	'System Boost - CPU': {
+		type: 'quality',
+		cost: 3,
+		ranks: 3,
+		text: 'For each rank of System Boost - CPU you take, increase your CPU Spec Stat by 1.',
+		unlocks: [],
+		prerequisites: {},
+		statMods: {
+			specCPU: 1,
+		},
+	},
+	'System Boost - BIT': {
+		type: 'quality',
+		cost: 3,
+		ranks: 3,
+		text: 'For each rank of System Boost - BIT you take, increase your BIT Spec Stat by 1.',
+		unlocks: [],
+		prerequisites: {},
+		statMods: {
+			specBIT: 1,
+		},
+	},
 	'Technician': {
-		type: 'special',
+		type: 'passive',
 		cost: 2,
 		ranks: 1,
 		text: 'A Digimon with Technician is skilled at working with code and technology, and by default can read and comprehend Digicode for its Tamer. When making any Computer Skill Check, or a Knowledge Check regarding technical knowledge, the Digimon may use its full Brains Stat in place of BIT.',
 		unlocks: [],
 		prerequisites: {},
 	},
+	'Teleport': {
+		type: 'action',
+		cost: 3,
+		ranks: 1,
+		text: 'The Digimon is capable of instantly teleporting a number of Units equal to its Base Movement+2. It requires a line of sight to be able to utilize this Quality. It may use this Quality to teleport away as a reaction to an enemy’s Attack once per combat, causing the Attack to miss. Using Teleport to cause an Attack to miss will not trigger Counter. When it uses Teleport to avoid an Attack, the Digimon forfeits a Simple Action on its next round of combat.',
+		unlocks: ['Transporter'],
+		prerequisites: {
+			'Speedy': 3,
+		},
+	},
+	'Transporter': {
+		type: 'action',
+		cost: 2,
+		ranks: 1,
+		text: 'The Digimon is now capable of warping away with allies in tow while using Teleport. The allies must be adjacent for Transporter to work properly. This also means it can use the Teleport Quality to bring allies out of harm’s way in reaction to an Attack. Finally, the Digimon’s Teleport distance increases by 2.',
+		unlocks: [],
+		prerequisites: {
+			'Teleport': 1,
+		},
+	},
 	'Tracker': {
-		type: 'special',
+		type: 'passive',
 		cost: 2,
 		ranks: 1,
 		text: 'Tracker makes a Digimon significantly better at finding its target. When performing a Perception Check with the goal of locating a target, or a Survival Check with the goal of tracking a target, the Digimon may use its full Brains Stat in place of BIT. Additionally, the TN to hide from this Digimon increases to 12 + Brains.',
@@ -1369,7 +2145,7 @@ module.exports.qualities = {
 		prerequisites: {},
 	},
 	'Tumbler': {
-		type: 'special',
+		type: 'passive',
 		cost: 1,
 		ranks: 1,
 		text: 'Reduce damage this Digimon takes from falling/throwing by RAMx2, to a minimum of 1.',
@@ -1377,8 +2153,9 @@ module.exports.qualities = {
 		prerequisites: {},
 	},
 	/*
+	 * Create Arguments for Special Qualities
+	 *
 	 * TO ADD
-	 * Burst Power
 	 * Combat Awareness - you need to rewrite this
 	 *
 	 * Conjurer - unique ability
@@ -1387,17 +2164,8 @@ module.exports.qualities = {
 	 * Minion Explosion - summoning
 	 * Mixed Summoner - summoning
 	 *
-	 * Data Optimization - all optimizations involve work
-	 * Data Specializations - all specializations involve more work
-	 * Hybrid Drive - complexity
+	 * Data Specializations - Fistful of Force/Sniper changing range
 	 *
-	 * Digizoid Armor - haven't made stat changing yet
-	 *
-	 * Extra Movement - More Stat changes
-	 * Advanced Mobility - MORE stat change
-	 *
-	 * Improved Derived Stat - change stat
-	 * Learning - a little complex
 	 * Mode Change - very complex, maybe build a thing for it
 	 * Mode Change x.0 - ditto
 	 *
@@ -1406,9 +2174,5 @@ module.exports.qualities = {
 	 * Focused rage - put it all together
 	 *
 	 * Reach - this will change ranges
-	 * Speedy - weird rank stuff AND stat changes
-	 * System Boost - stat changes
-	 * Teleport - movement
-	 * Transporter - goes with teleport
 	 */
 };

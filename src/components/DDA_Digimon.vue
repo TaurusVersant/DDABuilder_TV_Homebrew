@@ -2,6 +2,7 @@
  * Quality List
  * Special Stage qualities (Boss included) (make them checkboxes instead?)
  * colour code your qualities
+ * Digimon Total Stat Caps?
  */
 <template>
 	<div>
@@ -32,21 +33,21 @@
 				<dda_select
 					:inputName='"Size"'
 					:textProperty='character.size'
-					:options='sizes'
+					:options='library.sizes'
 					@change='updateProperty($event, "size")'
 				/>
 				<!-- Digimon Attribute -->
 				<dda_select
 					:inputName='"Attribute"'
 					:textProperty='character.attribute'
-					:options='attributes'
+					:options='library.attributes'
 					@change='updateProperty($event, "attribute")'
 				/>
 				<!-- Digimon Family -->
 				<dda_select
 					:inputName='"Family"'
 					:textProperty='character.family'
-					:options='families'
+					:options='library.families'
 					@change='updateProperty($event, "family")'
 				/>
 				<!-- Digimon Type -->
@@ -77,10 +78,10 @@
 				<!-- Wound Boxes Count -->
 				<dda_span
 					:inputName='"Wound Boxes"'
-					:textProperty='(character["Wound Boxes"] + character.temporary) + "/" + derivedWoundBoxes'
+					:textProperty='(character.currentWoundBoxes + character.temporaryWoundBoxes) + "/" + derivedWoundBoxes'
 				/>
 				<!-- Add Temporary Wound Boxes Button -->
-				<button :disabled='character.temporary > 0' @click='addTemporary'>Add Temporary Wound Boxes</button>
+				<button :disabled='character.temporaryWoundBoxes > 0' @click='addTemporary'>Add Temporary Wound Boxes</button>
 			</div>
 			<div className='secondColumn'>
 				<p><u>Digimon Picture</u></p>
@@ -91,9 +92,9 @@
 		<div class='divRow'>
 			<!-- Wound Boxes Display -->
 			<dda_woundbox
-				:current='character["Wound Boxes"]'
+				:current='character.currentWoundBoxes'
 				:total='derivedWoundBoxes'
-				:temporary='character.temporary'
+				:temporary='character.temporaryWoundBoxes'
 				@changeHealth='changeHealth'
 				@markTemporary='markTemporary'
 			/>
@@ -105,7 +106,7 @@
 				<dda_span
 					:inputName='"Movement"'
 					:textProperty='getDerivedStat("derivedMovement")'
-					:modifier='character.modifiers.derivedMovement'
+					:modifier='getModifier("derivedMovement")'
 					@changeMod='changeMod($event, "derivedMovement")'
 				/>
 				<!-- Jump Height -->
@@ -123,6 +124,30 @@
 					:inputName='"Swim Speed"'
 					:textProperty='getDerivedStat("movementSwimSpeed")'
 				/>
+				<!-- Flight Speed -->
+				<dda_span
+					v-if='movementFlightSpeed > 0'
+					:inputName='"Flight Speed"'
+					:textProperty='getDerivedStat("movementFlightSpeed")'
+				/>
+				<!-- Teleport Speed -->
+				<dda_span
+					v-if='movementTeleportSpeed > 0'
+					:inputName='"Teleport Speed"'
+					:textProperty='getDerivedStat("movementTeleportSpeed")'
+				/>
+				<!-- Dig Speed -->
+				<dda_span
+					v-if='movementDigSpeed > 0'
+					:inputName='"Digging Speed"'
+					:textProperty='getDerivedStat("movementDigSpeed")'
+				/>
+				<!-- Climb Speed -->
+				<dda_span
+					v-if='movementClimbSpeed > 0'
+					:inputName='"Climbing Speed"'
+					:textProperty='getDerivedStat("movementClimbSpeed")'
+				/>
 				<p><u>Stats</u></p>
 				<!-- Health Stat -->
 				<dda_stat
@@ -134,11 +159,11 @@
 				/>
 				<!-- Combat Stats -->
 				<dda_stat
-					v-for='(stat, value) in combatStats'
+					v-for='(stat, value) in library.combatStats'
 					:key='value'
 					:stat='stat'
 					:value='getDerivedStat(value)'
-					:modifier='character.modifiers[value]'
+					:modifier='getModifier(value)'
 					@changeStat='changeStat'
 					@changeMod='changeMod($event, value)'
 				/>
@@ -149,7 +174,7 @@
 				<dda_select
 					:inputName='"Special Stage"'
 					:textProperty='character.specialDigivolution'
-					:options='specialDigivolutions'
+					:options='library.specialDigivolutions'
 					@change='updateProperty($event, "specialDigivolution")'
 				/>
 				<!-- Passive Perception -->
@@ -176,7 +201,7 @@
 					inputName='Wound Boxes'
 				/>
 				<dda_span
-					v-for='(stat, value) in derivedStats'
+					v-for='(stat, value) in library.derivedStats'
 					:key='value'
 					:inputName='stat'
 					:textProperty='getDerivedStat(value)'
@@ -186,7 +211,7 @@
 				<p><u>Spec Stats</u></p>
 				<!-- Spec Stats -->
 				<dda_span
-					v-for='(stat, value) in specStats'
+					v-for='(stat, value) in library.specStats'
 					:key='value'
 					:inputName='stat'
 					:textProperty='getDerivedStat(value)'
@@ -197,16 +222,20 @@
 		</div>
 		<hr>
 		<p><u>Current Effects</u></p>
+		<!-- Current Effects -->
 		<dda_effects :effects='character.effects'/>
 		<hr>
-		<section v-if='modifierNegatives.length'>
+		<section v-if='Object.keys(modifierNegatives).length'>
 			<p><u>Modifier Negatives</u></p>
 			<ul>
-				<li v-for='(quality, index) in modifierNegatives' class='specialList' :key='index'>{{quality}}</li>
+				<li v-for='(qualityText, quality) in modifierNegatives' class='specialList' :key='quality'>
+					<span><b>[{{quality}}]</b> | {{qualityText}}</span>
+				</li>
 			</ul>
 			<hr>
 		</section>
 		<p><u>Digimon Attacks</u></p>
+		<!-- Digimon Attacks -->
 		<table class='attackTable'>
 			<thead>
 				<tr>
@@ -232,30 +261,38 @@
 			/>
 		</table>
 		<hr>
+		<!-- Attack Modifiers -->
 		<section v-if='Object.keys(attackModifiers).length'>
 			<p><u>Attack Modifiers</u></p>
 			<ul>
 				<li v-for='(qualityText, quality) in attackModifiers' class='specialList' :key='quality'>
 					<input type='checkbox' :name='quality' @change='applyModifier($event)'/>
-					<span>{{qualityText}}</span>
+					<span><b>[{{quality}}]</b> | {{qualityText}}</span>
 				</li>
 			</ul>
 			<hr>
 		</section>
-		<section v-if='specialActions.length'>
+		<!-- Special Actions -->
+		<section v-if='Object.keys(specialActions).length'>
 			<p><u>Special Actions</u></p>
 			<ul>
-				<li v-for='(quality, index) in specialActions' class='specialList' :key='index'>{{quality}}</li>
+				<li v-for='(qualityText, quality) in specialActions' class='specialList' :key='quality'>
+					<span><b>[{{quality}}]</b> | {{qualityText}}</span>
+				</li>
 			</ul>
 			<hr>
 		</section>
-		<section v-if='specialFeatures.length'>
-			<p><u>Special Features</u></p>
+		<!-- Roll Modifiers -->
+		<section v-if='Object.keys(passiveQualities).length'>
+			<p><u>Passive Abilities</u></p>
 			<ul>
-				<li v-for='(quality, index) in specialFeatures' class='specialList' :key='index'>{{quality}}</li>
+				<li v-for='(qualityText, quality) in passiveQualities' class='specialList' :key='quality'>
+					<span><b>[{{quality}}]</b> | {{qualityText}}</span>
+				</li>
 			</ul>
 			<hr>
 		</section>
+		<!-- Additional Details -->
 		<p><u>Additional Details</u></p>
 		<dda_textarea
 			:textProperty='character.notes'
@@ -263,31 +300,35 @@
 			@change='updateProperty($event, "notes")'
 		/>
 		<hr>
+		<!-- Qualities -->
+		<p><u>Qualities</u></p>
 		<p>
-			<u>Qualities</u>
-			<button @click='showQualities'>Add Quality</button>
-			<table
-				v-if='Object.keys(character.qualities).length'
-				class='digimonQualityTable'
-			>
-				<thead>
-					<tr class='qualityRow'>
-						<th>Quality</th>
-						<th>Rank</th>
-						<th>Details</th>
-						<th></th>
-					</tr>
-				</thead>
-				<tbody v-for='(rank, quality) in character.qualities' :key='quality'>
-					<tr class='qualityRow'>
-						<td>{{quality}}</td>
-						<td>{{rank}}</td>
-						<td>{{library.qualities[quality].text}}</td>
-						<td><button @click='removeQuality(quality)'>Remove</button></td>
-					</tr>
-				</tbody>
-			</table>
+			<button @click='showQualities()'>Add Quality</button>
+			<button @click='showQualities("optimization")'>Add Optimization+ Quality</button>
+			<button @click='showQualities("area")'>Add Area Attack Quality</button>
+			<button @click='showQualities("effect")'>Add Attack Effect Quality</button>
+			<button @click='showQualities("feature")'>Add Attack Feature Quality</button>
+			<button @click='showQualities("modifier")'>Add Attack Modifier Quality</button>
 		</p>
+		<table v-if='Object.keys(character.qualities).length' class='digimonQualityTable'>
+			<thead>
+				<tr class='qualityRow'>
+					<th>Quality</th>
+					<th>Rank</th>
+					<th>Details</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody v-for='(rank, quality) in character.qualities' :key='quality'>
+				<tr class='qualityRow'>
+					<td>{{quality}}</td>
+					<td>{{rank}}</td>
+					<td>{{library.getQuality(quality).text}}</td>
+					<td><button @click='removeQuality(quality)'>Remove</button></td>
+				</tr>
+			</tbody>
+		</table>
+		<!-- Modals -->
 		<dda_modal ref='modal'/>
 		<dda_qualities ref='qualities' @purchase='addQuality'/>
 	</div>
@@ -296,26 +337,33 @@
 <script>
 import DDA_Attack from './DDA_Attack';
 import DDA_Qualities from './DDA_Qualities';
-let library = require('./library');
 export default {
 	name: 'DDA_Digimon',
-	props: ['data'],
+	props: ['digimon_data'],
 	data: function () {
 		return {
 			library: null,
 			character: {
+				// Basic character information
 				name: null,
+				size: null,
+				attribute: null,
+				digimonType: null,
+				family: null,
+				notes: null,
+				image: null,
+				specialDigivolution: '',
 				creationComplete: false,
+				// XP tracking
 				currentPoints: 0,
 				bonusPoints: 0,
 				bonusTotal: 0,
 				burstModifier: 0,
-				specialDigivolution: '',
+				// Health tracking
 				startingWoundBoxes: 0,
-				size: null,
-				attribute: null,
-				family: null,
-				digimonType: null,
+				currentWoundBoxes: 0,
+				temporaryWoundBoxes: 0,
+				// Combat Stats
 				stats: {
 					'Health': 1,
 					'Accuracy': 1,
@@ -323,22 +371,42 @@ export default {
 					'Dodge': 1,
 					'Armor': 1,
 				},
+				// Stat Modifiers
 				modifiers: {
-					derivedMovement: 0,
+					// Modifiers that users can change
 					statAccuracy: 0,
 					statDamage: 0,
 					statDodge: 0,
 					statArmor: 0,
+					derivedMovement: 0,
+					// Invisible modifiers provided by qualities
+					qualityWoundBoxes: 0,
+					baseMovement: 0,
+					derivedAgility: 0,
+					derivedBody: 0,
+					derivedBrains: 0,
+					specRAM: 0,
+					specCPU: 0,
+					specBIT: 0,
+					qualityMovement: 0,
+					qualityAccuracy: 0,
+					qualityDamage: 0,
+					qualityDodge: 0,
+					qualityArmor: 0,
 				},
-				'Wound Boxes': 0,
-				temporary: 0,
+				// Attacks and tags for Attacks
 				attacks: {},
 				freeAreaTags: {},
 				freeEffectTags: {},
 				freeFeatureTags: {},
+				// Qualities and quality flags
 				qualities: {},
-				notes: null,
-				image: null,
+				digizoidWeapon: false,
+				digizoidArmor: false,
+				optimization: false,
+				specialization: 0,
+				hybridPoints: 0,
+				// List of effects on the character
 				effects: {
 					positive: [
 						{ name: '', duration: 0 },
@@ -351,26 +419,10 @@ export default {
 						{ name: '', duration: 0 },
 					],
 				},
+				// Flag for whether we are on beneficial terrain
 				terrainStatus: 'No',
-				digizoidWeapon: false,
-				digizoidArmor: false,
 			},
-			combatStats: {
-				statAccuracy: 'Accuracy',
-				statDamage: 'Damage',
-				statDodge: 'Dodge',
-				statArmor: 'Armor',
-			},
-			derivedStats: {
-				derivedAgility: 'Agility',
-				derivedBody: 'Body',
-				derivedBrains: 'Brains',
-			},
-			specStats: {
-				specRAM: 'RAM [Agility]',
-				specCPU: 'CPU [Body]',
-				specBIT: 'BIT [Brains]',
-			},
+			// Lookup array of the proper names of each of these stats
 			statsLookup: {
 				derivedMovement: 'Movement',
 				movementJumpHeight: 'Jump Height',
@@ -384,233 +436,275 @@ export default {
 				specCPU: 'CPU',
 				specBIT: 'BIT',
 			},
-			burstScaling: {
-				startingDP: 15,
-				baseMovement: 2,
-				woundBoxes: 4,
-				brains: 3,
-				specValues: 1,
-			},
-			specialDigivolutions: [
-				'',
-				'Dark',
-				'DNA',
-				'Hybrid',
-				'Armor',
-			],
+			// Bool options for Elemental Terrain
 			elementalTerrain: [
 				'No',
 				'Yes',
 			],
-			sizes: [
-				'Tiny',
-				'Small',
-				'Medium',
-				'Large',
-				'Huge',
-				'Gigantic',
-			],
-			sizeLookup: {
-				'Tiny': {
-					'agilityMod': 2,
-					'bodyMod': -2,
-				},
-				'Small': {
-					'agilityMod': 1,
-					'bodyMod': -1,
-				},
-				'Medium': {
-					'agilityMod': 0,
-					'bodyMod': 0,
-				},
-				'Large': {
-					'agilityMod': -1,
-					'bodyMod': 1,
-				},
-				'Huge': {
-					'agilityMod': -1,
-					'bodyMod': 2,
-				},
-				'Gigantic': {
-					'agilityMod': -2,
-					'bodyMod': 3,
-				},
-			},
-			attributes: [
-				'Vaccine',
-				'Virus',
-				'Data',
-				'Free',
-			],
-			families: [
-				"Dragon's Roar",
-				'Deep Savers',
-				'Nature Spirits',
-				'Wind Guardians',
-				'Jungle Troopers',
-				'Metal Empire',
-				'Virus Busters',
-				'Nightmare Soldiers',
-				'Dark Area',
-				'Unknown',
-			],
-			stages: [
-				'Fresh',
-				'In-Training',
-				'Rookie',
-				'Champion',
-				'Ultimate',
-				'Mega',
-				'Burst',
-			],
+			// Flag for whether to allow character to propagate to DDA_Container
 			allowUpdate: true,
+			// List of currently selected attack modifiers
 			currentAttackModifiers: [],
 		};
 	},
 	computed: {
+		baseMovement: function () {
+			// Base Movement is composed of the baseMovement property
+			// the baseMovement modifier
+			// and an extra amount dependant on the burstModifier
+			let value = (
+				this.character.baseMovement +
+				this.getModifier('baseMovement') +
+				(this.character.burstModifier * this.library.burstScaling.baseMovement)
+			);
+
+			return value;
+		},
 		derivedMovement: function () {
-			let value = this.character.baseMovement + (this.character.burstModifier * this.burstScaling.baseMovement) + this.getModifier('derivedMovement');
-			return value > 0 ? value : 0;
-		},
-		statHealth: function () {
-			return this.character.stats['Health'];
-		},
-		statAccuracy: function () {
-			let value = this.character.stats['Accuracy'] + this.character.modifiers['statAccuracy'];
-			return value > 0 ? value : 0;
-		},
-		statDamage: function () {
-			let value = this.character.stats['Damage'] + this.character.modifiers['statDamage'];
-			return value > 0 ? value : 0;
-		},
-		statDodge: function () {
-			let value = this.character.stats['Dodge'] + this.character.modifiers['statDodge'];
-			return value > 0 ? value : 0;
-		},
-		statArmor: function () {
-			let value = this.character.stats['Armor'] + this.character.modifiers['statArmor'];
-			return value > 0 ? value : 0;
+			// Derived Movement is the baseMovement plus temporary (derivedMovement) and quality (qualityMovement) modifiers
+			let value = this.baseMovement + this.getModifier('derivedMovement') + this.getModifier('qualityMovement');
+
+			return value;
 		},
 		movementJumpHeight: function () {
+			// If we have the Extra Movement - Jumper quality
+			if (this.character.qualities['Extra Movement - Jumper']) {
+				// If we have the Advanced Mobility - Jumper quality, we add 3*CPU to the return value
+				let advancedMod = this.character.qualities['Advanced Mobility - Jumper'] ? (3 * this.specCPU) : 0
+				return this.derivedMovement + advancedMod;
+			}
+			// Otherwise return half of our Movement (rounded down)
 			return Math.floor(this.derivedMovement / 2);
 		},
 		movementJumpLength: function () {
+			// If we have the Extra Movement - Jumper quality
+			if (this.character.qualities['Extra Movement - Jumper']) {
+				// If we have the Advanced Mobility - Jumper quality, we add CPU to the return value
+				let advancedMod = this.character.qualities['Advanced Mobility - Jumper'] ? this.specCPU : 0
+				return this.derivedMovement + advancedMod;
+			}
+			// Otherwise return half of our Movement (rounded down)
 			return Math.floor(this.derivedMovement / 2);
 		},
 		movementSwimSpeed: function () {
+			// If we have the Extra Movement - Swimmer quality
+			if (this.character.qualities['Extra Movement - Swimmer']) {
+				// If we have the Advanced Mobility - Swimmer quality, we add RAM to the return value
+				let advancedMod = this.character.qualities['Advanced Mobility - Swimmer'] ? this.specRAM : 0
+				return this.derivedMovement + advancedMod;
+			}
+			// Otherwise return half of our Movement (rounded down)
 			return Math.floor(this.derivedMovement / 2);
 		},
+		movementFlightSpeed: function () {
+			// If we have the Extra Movement - Flight quality
+			if (this.character.qualities['Extra Movement - Flight']) {
+				// If we have the Advanced Mobility - Flight quality, we add RAM to the return value
+				let advancedMod = this.character.qualities['Advanced Mobility - Flight'] ? this.specRAM : 0
+				return this.derivedMovement + advancedMod;
+			}
+			// Otherwise return 0
+			return 0;
+		},
+		movementDigSpeed: function () {
+			// If we have the Extra Movement - Digger quality
+			if (this.character.qualities['Extra Movement - Digger']) {
+				// If we have the Advanced Mobility - Digger quality, we add RAM to the return value
+				let advancedMod = this.character.qualities['Advanced Mobility - Digger'] ? this.specRAM : 0
+				return this.derivedMovement + advancedMod;
+			}
+			// Otherwise return 0
+			return 0;
+		},
+		movementClimbSpeed: function () {
+			// If we have the Extra Movement - Wallclimber quality
+			if (this.character.qualities['Extra Movement - Wallclimber']) {
+				// If we have the Advanced Mobility - Wallclimber quality, we add RAM to the return value
+				let advancedMod = this.character.qualities['Advanced Mobility - Wallclimber'] ? this.specRAM : 0
+				return this.derivedMovement + advancedMod;
+			}
+			// Otherwise return 0
+			return 0;
+		},
+		movementTeleportSpeed: function () {
+			// If we have the Teleport quality
+			if (this.character.qualities['Teleport']) {
+				// If we have the Transporter quality, we add 4 to the return value, otherwise 2
+				let modifier = this.character.qualities['Transporter'] ? 4 : 2
+				return this.baseMovement + modifier;
+			}
+			// Otherwise return 0
+			return 0;
+		},
+		statHealth: function () {
+			// the Health stat is the character Health stat plus quality (qualityWoundBoxes)
+			return this.character.stats['Health'] + this.getModifier('qualityWoundBoxes');
+		},
+		qualityAccuracy: function () {
+			// It is beneficial to have a computed property of the Accuracy stat without user modifiers (statAccuracy)
+			return this.character.stats['Accuracy'] + this.getModifier('qualityAccuracy');
+		},
+		qualityDamage: function () {
+			// It is beneficial to have a computed property of the Damage stat without user modifiers (statDamage)
+			return this.character.stats['Damage'] + this.getModifier('qualityDamage');
+		},
+		qualityDodge: function () {
+			// It is beneficial to have a computed property of the Dodge stat without user modifiers (statDodge)
+			return this.character.stats['Dodge'] + this.getModifier('qualityDodge');
+		},
+		qualityArmor: function () {
+			// It is beneficial to have a computed property of the Armor stat without user modifiers (statArmor)
+			return this.character.stats['Armor'] + this.getModifier('qualityArmor');
+		},
+		statAccuracy: function () {
+			return this.qualityAccuracy + this.getModifier('statAccuracy');
+		},
+		statDamage: function () {
+			return this.qualityDamage + this.getModifier('statDamage');
+		},
+		statDodge: function () {
+			return this.qualityDodge + this.getModifier('statDodge');
+		},
+		statArmor: function () {
+			return this.qualityArmor + this.getModifier('statArmor');
+		},
 		derivedWoundBoxes: function () {
-			return this.character.startingWoundBoxes + this.character.stats['Health'] + (this.character.burstModifier * this.burstScaling.woundBoxes);
+			// The sum total of Wound Boxes is the startingWoundBoxes count
+			// plus the Health stat
+			// plus the qualityWoundBoxes modiifer
+			// plus an extra amount dependant on the burstModifier
+			return (
+				this.character.startingWoundBoxes +
+				this.character.stats['Health'] +
+				this.getModifier('qualityWoundBoxes') +
+				(this.library ? (this.character.burstModifier * this.library.burstScaling.woundBoxes) : 0)
+			);
 		},
 		derivedAgility: function () {
-			let sizeMod = this.character.size in this.sizeLookup ? this.sizeLookup[this.character.size].agilityMod : 0;
-			let agility = Math.floor((this.character.stats['Accuracy'] + this.character.stats['Dodge']) / 2) + sizeMod;
-			return agility > 0 ? agility : 0;
+			// Get the size modifier for Agility
+			let sizeMod = this.character.size in this.library.sizeLookup ? this.library.sizeLookup[this.character.size].agilityMod : 0;
+			// Base Agility is (Accuracy + Dodge) / 2 (rounded down)
+			let baseAgility = Math.floor((this.character.stats['Accuracy'] + this.character.stats['Dodge']) / 2);
+			// Agility is baseAgility plus sizeMod plus the quality (derivedAgility) modifier
+			return baseAgility + sizeMod + this.getModifier('derivedAgility');
 		},
 		derivedBody: function () {
-			let sizeMod = this.character.size in this.sizeLookup ? this.sizeLookup[this.character.size].bodyMod : 0;
-			let body = Math.floor((this.character.stats['Health'] + this.character.stats['Damage'] + this.character.stats['Armor']) / 3) + sizeMod;
-			return body > 0 ? body : 0;
+			// Get the size modifier for Body
+			let sizeMod = this.character.size in this.library.sizeLookup ? this.library.sizeLookup[this.character.size].bodyMod : 0;
+			// Base Body is (Health + Damage + Armor) / 3 (rounded down)
+			let baseBody = Math.floor((this.character.stats['Health'] + this.character.stats['Damage'] + this.character.stats['Armor']) / 3);
+			// Body is baseBody plus sizeMod plus the quality (derivedBody) modifier
+			return baseBody + sizeMod + this.getModifier('derivedBody');
 		},
 		derivedBrains: function () {
-			let brains = Math.floor(this.character.stats['Accuracy'] / 2) + this.character.brainsMod + (this.character.burstModifier * this.burstScaling.brains);
-			return brains > 0 ? brains : 0;
+			// Base Brains is Accuracy / 2 (rounded down)
+			let baseBrains = Math.floor(this.character.stats['Accuracy'] / 2);
+			// Burst Brains is the burstModifier * the burstScaling brains
+			let burstBrains = (this.character.burstModifier * this.library.burstScaling.brains);
+			// Brains is baseBrains + the character brainsMod (stage) + the burst brains modifier + the quality (derivedBrains) modifier
+			return baseBrains + this.character.brainsMod + burstBrains + this.getModifier('derivedBrains');
 		},
 		specRAM: function () {
-			return Math.floor(this.derivedAgility / 10) + this.character.specMod + (this.character.burstModifier * this.burstScaling.specValues);
+			// Base RAM is Agility / 10
+			let baseRAM = Math.floor(this.derivedAgility / 10);
+			// Burst RAM is the burstModifier * the burstScaling specValues
+			let burstRAM = (this.character.burstModifier * this.library.burstScaling.specValues);
+			// RAM is baseRAM + the character specMod (stage) + the burst RAM modifier + the quality (specRAM) modifier
+			return baseRAM + this.character.specMod + burstRAM + this.getModifier('specRAM');
 		},
 		specCPU: function () {
-			return Math.floor(this.derivedBody / 10) + this.character.specMod + (this.character.burstModifier * this.burstScaling.specValues);
+			// Base CPU is Body / 10
+			let baseCPU = Math.floor(this.derivedBody / 10);
+			// Burst CPU is the burstModifier * the burstScaling specValues
+			let burstCPU = (this.character.burstModifier * this.library.burstScaling.specValues);
+			// CPU is baseCPU + the character specMod (stage) + the burst CPU modifier + the quality (specCPU) modifier
+			return baseCPU + this.character.specMod + burstCPU + this.getModifier('specCPU');
 		},
 		specBIT: function () {
-			return Math.floor(this.derivedBrains / 10) + this.character.specMod + (this.character.burstModifier * this.burstScaling.specValues);
+			// Base BIT is Brains / 10
+			let baseBIT = Math.floor(this.derivedBrains / 10);
+			// Burst BIT is the burstModifier * the burstScaling specValues
+			let burstBIT = (this.character.burstModifier * this.library.burstScaling.specValues);
+			// BIT is baseBIT + the character specMod (stage) + the burst BIT modifier + the quality (specBIT) modifier
+			return baseBIT + this.character.specMod + burstBIT + this.getModifier('specBIT');
 		},
 		passivePerception: function () {
 			// We have to hard-code a Tracker check here, I don't think there's a good way to update this otherwise
 			let base = this.character.qualities.hasOwnProperty('Tracker') ? 12 : 9;
+			// Passive perception is base + BIT
 			return base + this.specBIT;
 		},
 		burstRadius: function () {
+			// Burst radius is the radius of the Burst Area circle from user
+			// 0.5 for user, 1 for adjacent, half BIT (rounded down) for bonus length
 			return 1.5 + Math.floor(this.specBIT / 2);
 		},
-		availableQualities: function () {
-			let availableQualities = {};
-			for (let quality in this.library.qualities) {
-				if (
-					!this.character.qualities.hasOwnProperty(quality) ||
-					this.character.qualities[quality] < this.library.qualities[quality].ranks
-				) {
-					let approved = true;
-					for (let prerequisite in this.library.qualities[quality].prerequisites) {
-						if (prerequisite === 'Stage') {
-							let stage = this.library.qualities[quality].prerequisites[prerequisite];
-							approved = this.stages.indexOf(this.character.type) >= this.stages.indexOf(stage);
-						} else {
-							let qualityRank = this.character.qualities.hasOwnProperty(prerequisite) ? this.character.qualities[prerequisite] : 0;
-							if (this.library.qualities[quality].prerequisites[prerequisite] > qualityRank) {
-								approved = false;
-							}
-						}
-					}
-
-					// single Digizoid Weapon check
-					if (this.library.qualities[quality].type === 'digizoidWeapon' && this.character.digizoidWeapon) {
-						approved = false;
-					}
-
-					// single Digizoid Armor check
-					if (this.library.qualities[quality].type === 'digizoidArmor' && this.character.digizoidArmor) {
-						approved = false;
-					}
-
-					if (approved) {
-						availableQualities[quality] = this.library.qualities[quality];
-					}
-				}
-			}
-			return availableQualities;
-		},
 		attackModifiers: function () {
+			// The attack modifiers list is a quality => text object detailing the available attack modifiers
 			let modifiers = {};
-			let types = [
-				'modifier',
-				'digizoidWeapon',
-			];
+			// We loop all qualities on the character
 			for (let quality in this.character.qualities) {
-				let qualityObject = this.library.qualities[quality];
-				if (types.indexOf(qualityObject.type) !== -1) {
-					modifiers[quality] = '[' + quality + '] | ' + qualityObject.text;
+				// get the object for each and check the type
+				let qualityObject = this.library.getQuality(quality);
+				if (qualityObject.type === 'modifier') {
+					// and if the type is modifier, add it to the list (object)
+					modifiers[quality] = qualityObject.text;
 				}
 			}
 			return modifiers;
 		},
 		modifierNegatives: function () {
-			let negatives = [];
+			// The negatives list is the list of negative effects on a character from their modifiers
+			let negatives = {};
+			// Loop qualities
 			for (let quality in this.character.qualities) {
-				let qualityObject = this.library.qualities[quality];
+				let qualityObject = this.library.getQuality(quality);
+				// If the quality is a modifier and has a negative
 				if (qualityObject.type === 'modifier' && qualityObject.hasOwnProperty('negative')) {
-					negatives.push('[' + quality + '] | ' + qualityObject.negative);
+					// We add the negative to the list
+					negatives[quality] = qualityObject.negative;
 				}
 			}
 			return negatives;
 		},
 		specialFeatures: function () {
-			let features = [];
+			// The special features list is the list of unique abilities a Digimon has
+			let features = {};
+			// Loop qualities
 			for (let quality in this.character.qualities) {
-				let qualityObject = this.library.qualities[quality];
+				let qualityObject = this.library.getQuality(quality);
+				// If it's a special quality
 				if (qualityObject.type === 'special') {
-					features.push('[' + quality + '] | ' + qualityObject.text);
+					// Add it to the list
+					features[quality] = qualityObject.text;
 				}
 			}
 			return features;
 		},
-		specialActions: function () {
-			let actions = [];
+		passiveQualities: function () {
+			// The passive qualities list is the list of qualities that always affect a Digimon
+			let passives = {};
+			// Loop qualities
 			for (let quality in this.character.qualities) {
-				let qualityObject = this.library.qualities[quality];
+				let qualityObject = this.library.getQuality(quality);
+				// If it's a passive quality
+				if (qualityObject.type === 'passive') {
+					// Add it to the list
+					passives[quality] = qualityObject.text;
+				}
+			}
+			return passives;
+		},
+		specialActions: function () {
+			// The special actions list is all of the unique actions a Digimon can take
+			let actions = {};
+			// Loop
+			for (let quality in this.character.qualities) {
+				let qualityObject = this.library.getQuality(quality);
+				// Action
 				if (qualityObject.type === 'action') {
-					actions.push('[' + quality + '] | ' + qualityObject.text);
+					// Add
+					actions[quality] = qualityObject.text;
 				}
 			}
 			return actions;
@@ -619,29 +713,42 @@ export default {
 	watch: {
 		character: {
 			handler: function () {
+				// If allowUpdate is true, we send the character data to the DDA_Container component
 				if (this.allowUpdate) {
 					this.$emit('updateCharacter', this.character);
 				}
+				// We set allowUpdate to true after this check, so it can only be false once
 				this.allowUpdate = true;
 			},
 			deep: true,
 		},
 		'character.terrainStatus': function () {
+			// When terrain status changes, we are either adding or removing 2 from the four combat stats
 			let modifier = this.character.terrainStatus === 'Yes' ? 2 : -2;
-			this.character.modifiers.statAccuracy += modifier;
-			this.character.modifiers.statDamage += modifier;
-			this.character.modifiers.statDodge += modifier;
-			this.character.modifiers.statArmor += modifier;
+			// Change the quality mods, stat mods are only for user changed mods
+			this.character.modifiers.qualityAccuracy += modifier;
+			this.character.modifiers.qualityDamage += modifier;
+			this.character.modifiers.qualityDodge += modifier;
+			this.character.modifiers.qualityArmor += modifier;
 		},
-		data: function () {
+		digimon_data: function () {
+			// If digimon_data is changed, we have received it from the DDA_Container parent
+			// We do not want to update the parent when we assign digimon_data to the character object
 			this.allowUpdate = false;
-			this.character = Object.assign(this.character, this.data);
+			// Assigning is to set this data from the parent
+			this.character = Object.assign(this.character, this.digimon_data);
 		},
 		derivedWoundBoxes: function () {
+			// If we are not loading the character, when derivedWoundBoxes (total health) changes, we refill currentWoundBoxes
 			if (!this.character.loadCharacter) {
-				this.$set(this.character, 'Wound Boxes', this.derivedWoundBoxes);
+				this.$set(this.character, 'currentWoundBoxes', this.derivedWoundBoxes);
 			}
+			// Then we specify that the character is loaded
 			this.loadCharacter = true;
+		},
+		'character.modifiers.qualityWoundBoxes': function () {
+			// If the qualityWoundBoxes modifier changes (a quality has been purchased), we refill currentWoundBoxes
+			this.$set(this.character, 'currentWoundBoxes', this.derivedWoundBoxes);
 		},
 	},
 	methods: {
@@ -669,254 +776,377 @@ export default {
 		* Getters
 		*/
 		getDerivedStat: function (stat) {
+			// Necessary for lookups of computed properties in loops
 			return this[stat];
 		},
 		rollStat: function (stat) {
+			// If the modifier is 0, we instead use -1
 			let modifier = this[stat] > 0 ? '+' + this[stat] : '-1';
+			// Send the roll details to the modal
 			this.$refs.modal.activateModal(this.statsLookup[stat] + ' Roll: 3d6' + modifier);
 		},
 		poolCheck: function (stat) {
+			// Send the pool check details to the modal
 			this.$refs.modal.activateModal(stat + ' Pool Check: ' + this.character.stats[stat] + 'd6, [Roll20: ' + this.character.stats[stat] + 'd6>5]');
 		},
-		showQualities: function () {
-			this.$refs.qualities.activateModal(this.availableQualities);
+		showQualities: function (qualityType) {
+			// Get Quality List based on type requested
+			let qualitiesList = this.library.qualities;
+			switch (qualityType) {
+				case 'optimization':
+					qualitiesList = this.library.optimizationQualities;
+					break;
+				case 'area':
+					qualitiesList = this.library.areaQualities;
+					break;
+				case 'effect':
+					qualitiesList = this.library.effectQualities;
+					break;
+				case 'feature':
+					qualitiesList = this.library.featureQualities;
+					break;
+				case 'modifier':
+					qualitiesList = this.library.modifierQualities;
+					break;
+			}
+
+			// We will build a list of the qualities available for purchase
+			let availableQualities = {};
+			for (let quality in qualitiesList) {
+				// Get the quality object
+				let qualityObject = qualitiesList[quality];
+				// If we do not have the quality already
+				// or the quality has unlimited ranks
+				// or the quality has more ranks than we have purchased of it, it is okay to buy
+				if (
+					!this.character.qualities.hasOwnProperty(quality) ||
+					qualityObject.ranks === 0 ||
+					this.character.qualities[quality] < qualityObject.ranks
+				) {
+					// We approve by default, then filter out approvals based on certain conditions
+					let approved = true;
+
+					// If the digizoidWeapon flag is true and this quality is a digizoidWeapon, approved is marked as false
+					// If the digizoidArmor flag is true and this quality is a digizoidArmor, approved is marked as false
+					// If the quality is an optimization and we have already purchased an optimization, approved is marked as false
+					// If the quality is a specialization and we have already purchased a specialization
+					// we check if the character can purchase a specialization
+					if (
+						(qualityObject.digizoidWeapon && this.character.digizoidWeapon) ||
+						(qualityObject.digizoidArmor && this.character.digizoidArmor) ||
+						(qualityObject.optimization && this.character.optimization) ||
+						(qualityObject.specialization && this.checkSpecialization())
+					) {
+						approved = false;
+					} else if (qualityObject.specialization && this.character.optimization && this.character.hybridPoints) {
+						// If we have an optimization, and any hybridPoints
+						// we consider ourselves to be Ultimate stage because that is needed to buy hybrid drive
+						// and so we waive the specialization requirements
+						approved = !this.checkSpecialization();
+					} else {
+						// If approval does not fail via flags, we check all the prerequisities for purchasing this quality
+						for (let prerequisite in qualityObject.prerequisites) {
+							// If the prerequisite is a stage
+							if (prerequisite === 'Stage') {
+								let stage = qualityObject.prerequisites[prerequisite];
+								// We check that the index of our stage is equal to or greater than the index of the required stage
+								approved = this.library.stages.indexOf(this.character.type) >= this.library.stages.indexOf(stage);
+							} else {
+								// Otherwise, we get the number of ranks we have in that prerequisite quality
+								let qualityRank = this.character.qualities.hasOwnProperty(prerequisite) ? this.character.qualities[prerequisite] : 0;
+								// and if we have less ranks than is required of that prerequisite quality, approved is marked as false
+								if (qualityObject.prerequisites[prerequisite] > qualityRank) {
+									approved = false;
+								}
+							}
+						}
+					}
+
+					// If after all of these checks approved is still true, we add this quality to the list of available qualities
+					if (approved) {
+						availableQualities[quality] = qualityObject;
+					}
+				}
+			}
+
+			// Send the list of available qualities to the qualities modal
+			this.$refs.qualities.activateModal(availableQualities);
 		},
 		getModifier: function (value) {
+			// Returns the requested modifier if it is a number, otherwise 0
 			return Number.isInteger(this.character.modifiers[value]) ? this.character.modifiers[value] : 0;
 		},
 		doAttack: function (attack) {
+			// This method prepares a text description of a Digimon Attack
+			// Each line will be stored in the details array
 			let details = [];
+			// The attackObject is a shorthand for referring to the attack defined in the character
 			let attackObject = this.character.attacks[attack];
 
 			if (attackObject) {
+				// First add the Attack Name
 				details.push('<b><u>' + attackObject.name + '</u></b>');
 
-				// Accuracy Information
+				// Then the general Accuracy for the Digimon
 				details.push('<u>Accuracy:</u> ' + this.statAccuracy);
 
-				// Damage Information
+				// Then the general Damage for the Digimon
 				if (attackObject.damage) {
 					details.push('<u>Damage:</u> ' + this.statDamage);
 				}
 
-				// Range Information
+				// Next we detail the Attack's range.
 				if (attackObject.type) {
+					// We will build a range string to append to the details array
 					let range = '';
+					// If the attack has an area tag
 					if (attackObject.area) {
+						// We need to prepare arguments for that quality's special method
 						let args = [];
-						let quality = this.library.qualities[attackObject.area];
-						for (let i in quality.args) {
+						// We get the quality object
+						let qualityObject = this.library.getQuality(attackObject.area);
+						// loop through its arguments
+						for (let i in qualityObject.args) {
+							// And prepare a value for tht argument
 							let value = false;
-							if (quality.args[i] in this) {
-								value = this[quality.args[i]];
-							} else if (quality.args[i] in this.character) {
-								value = this.character[quality.args[i]];
+							if (qualityObject.args[i] in this) {
+								// If the argument request is in the DDA_Digimon container, we set it as the value
+								value = this[qualityObject.args[i]];
+							} else if (qualityObject.args[i] in this.character) {
+								// If the argument request is in the character object, we set it as the value
+								value = this.character[qualityObject.args[i]];
 							}
+							// Then append the value to the args
 							args.push(value);
 						}
-						range = quality.method(attackObject.type, args);
+						// With our args list complete, we pass the attack type (melee/range) and args to the quality's method
+						// and get back a string defining the Attack dimensions
+						range = qualityObject.method(attackObject.type, args);
 					} else if (attackObject.type === 'Range') {
+						// if there is no area attack and the attack type is Range, we append the following
 						range = 'Single target. 2 to ' + (2 * this.specBIT) + ' Units';
 					} else {
+						// if there is no area attack and the attack tpye is Melee, we append the following
 						range = 'Single target. ' + 1 + ' Unit';
 					}
 
+					// Add the range string to the details array
 					details.push('<u>Range:</u> ' + range);
 				}
 
-				// Effect Information
+				// Next we need to fill out the attack effect if there is one
 				if (attackObject.effect) {
+					// As with area attack, we prepare a list of arguments and pass them to teh quality method
 					let args = [];
-					let quality = this.library.qualities[attackObject.effect];
-					for (let i in quality.args) {
+					let qualityObject = this.library.getQuality(attackObject.effect);
+					for (let i in qualityObject.args) {
 						let value = false;
-						if (quality.args[i] in this) {
-							value = this[quality.args[i]];
-						} else if (quality.args[i] in this.character) {
-							value = this.character[quality.args[i]];
+						if (qualityObject.args[i] in this) {
+							value = this[qualityObject.args[i]];
+						} else if (qualityObject.args[i] in this.character) {
+							value = this.character[qualityObject.args[i]];
 						}
 						args.push(value);
 					}
-					let note = attackObject.damage && quality.type === 'effect' ? ' Apply at least 2 damage to trigger. ' : ' ';
-					details.push('<u>' + attackObject.effect + ':</u>' + note + ' ' + quality.method(args));
+					// If the attack does damage and the quality is not a stance, we append extra information
+					let note = (attackObject.damage && !qualityObject.stance) ? ' Apply at least 2 damage to trigger. ' : ' ';
+					// Then we use the arguments to send all this info to the quality method and add the response to details
+					details.push('<u>' + attackObject.effect + ':</u>' + note + qualityObject.method(args));
 				}
 
-				// Feature Information
+				// We can have multiple features, due to signature move, so we must loop through them
 				for (let i in attackObject.features) {
+					// But once inside the loop, things play out the same as for area attack and attack effect
 					if (attackObject.features[i]) {
 						let args = [];
-						let quality = this.library.qualities[attackObject.features[i]];
-						for (let j in quality.args) {
+						let qualityObject = this.library.getQuality(attackObject.features[i]);
+						for (let j in qualityObject.args) {
 							let value = false;
-							if (quality.args[j] === 'ranks') {
+							// However we have two new checks.
+							if (qualityObject.args[j] === 'ranks') {
+								// First if the argument is ranks, we check how many ranks of that quality we have
 								value = this.character.qualities[attackObject.features[i]];
-							} else if (quality.args[j] in this) {
-								value = this[quality.args[j]];
-							} else if (quality.args[j] in this.character) {
-								value = this.character[quality.args[j]];
-							} else if (quality.args[j] in this.character.qualities) {
+							} else if (qualityObject.args[j] in this) {
+								value = this[qualityObject.args[j]];
+							} else if (qualityObject.args[j] in this.character) {
+								value = this.character[qualityObject.args[j]];
+							} else if (qualityObject.args[j] in this.character.qualities) {
+								// and if the argument is checking whether we have a quality and we do, we set value to true
 								value = true;
 							}
 							args.push(value);
 						}
-						details.push('<u>' + attackObject.features[i] + ':</u> ' + quality.method(args));
+						// Each feature is added to the details array
+						details.push('<u>' + attackObject.features[i] + ':</u> ' + qualityObject.method(args));
 					}
 				}
 
-				// Modifier Information
+				// We can have up to three modifiers applied to an attack as well
+				// Uses select modifiers from a list by checking boxes on each modifier to be used
+				// We loop through the modifiers in currentAttackModifiers
 				for (let i in this.currentAttackModifiers) {
+					// And play out the same logic as preparing a quality's method call as before
 					let args = [];
-					let quality = this.library.qualities[this.currentAttackModifiers[i]];
-					for (let j in quality.args) {
+					let qualityObject = this.library.getQuality(this.currentAttackModifiers[i]);
+					for (let j in qualityObject.args) {
 						let value = false;
-						if (quality.args[j] in this) {
-							value = this[quality.args[j]];
-						} else if (quality.args[j] in this.character) {
-							value = this.character[quality.args[j]];
-						} else if (quality.args[j] in this.character.qualities) {
+						if (qualityObject.args[j] in this) {
+							value = this[qualityObject.args[j]];
+						} else if (qualityObject.args[j] in this.character) {
+							value = this.character[qualityObject.args[j]];
+						} else if (qualityObject.args[j] in this.character.qualities) {
 							value = true;
 						}
 						args.push(value);
 					}
-					details.push('<u>' + this.currentAttackModifiers[i] + ':</u> ' + quality.method(args));
+					details.push('<u>' + this.currentAttackModifiers[i] + ':</u> ' + qualityObject.method(args));
 				}
 
+				// Special Qualities are qualities that grant abilities that change attacks
+				for (let quality in this.specialFeatures) {
+					details.push('<u>' + quality + ':</u> ' + this.specialFeatures[quality]);
+				}
+
+				// Finally, we join the details array with two linebreaks per line and send this block to the modal
 				this.$refs.modal.activateModal(details.join('<br><br>'));
 			}
+		},
+		checkSpecialization: function () {
+			let stageIndex = this.library.stages.indexOf(this.character.type);
+			// If the character's stage is below Burst, they can only purchase one specialization
+			if (this.character.specialization) {
+				return this.character.specialization === 2 || (stageIndex < this.library.stages.indexOf('Burst'));
+			}
+			return false;
 		},
 		/**
 		* Setters
 		*/
 		changeBonus: function (attribute, modifier) {
+			// Modifier can be 0 or 1. 0 for reduce, 1 for increase
 			if (modifier) {
 				this.character.bonusPoints++;
 				this.character.bonusTotal++;
-			} else if (!modifier && this.character.bonusPoints > 0) {
+			} else if (this.character.bonusPoints > 0) {
+				// If we're lowering the modifier, we must have at least one bonusPoint to reduce with it
 				this.character.bonusPoints--;
 				this.character.bonusTotal--;
 			}
 		},
 		changeBurst: function (attribute, modifier) {
+			// Modifier can be 0 or 1. 0 for reduce, 1 for increase
 			if (modifier) {
+				// When raising the burstModifier, we must raise the currentPoints and startingPoints for the character
 				this.character.burstModifier++;
-				this.character.currentPoints += this.burstScaling.startingDP;
-				this.character.startingPoints += this.burstScaling.startingDP;
-			} else if (!modifier && this.character.burstModifier > 0 && this.character.currentPoints >= this.burstScaling.startingDP) {
-				this.character.currentPoints -= this.burstScaling.startingDP;
-				this.character.startingPoints -= this.burstScaling.startingDP;
+				this.character.currentPoints += this.library.burstScaling.startingDP;
+				this.character.startingPoints += this.library.burstScaling.startingDP;
+			} else if (
+				this.character.burstModifier > 0 &&
+				this.character.currentPoints >= this.library.burstScaling.startingDP
+			) {
+				// If we're lowering the modifier, we must have as many startingDP granted by it free to reduce
+				this.character.currentPoints -= this.library.burstScaling.startingDP;
+				this.character.startingPoints -= this.library.burstScaling.startingDP;
 				this.character.burstModifier--;
 			}
 		},
 		changeHealth: function (index) {
-			this.character['Wound Boxes'] += index <= this.character['Wound Boxes'] ? -1 : 1;
+			// Index indicates which wound box was clicked on
+			// If the index is less than or equal to the currentWoundBoxes, we reduce currentWoundBoxes, otherwise increase
+			this.character.currentWoundBoxes += (index <= this.character.currentWoundBoxes ? -1 : 1);
 		},
 		addTemporary: function () {
+			// we prompt the user for a number of temporary wound boxes to enter
+			// and use parseInt to insist it is a number
 			let input = Number.parseInt(prompt('Add X Temporary Wound Boxes:', 0));
+			// if it is a number, and the input is less than 50 (arbitary maximum)
 			if (Number.isInteger(input) && input < 50) {
-				this.$set(this.character, 'temporary', input);
+				// We set the temporaryWoundBoxes for the character to this value
+				this.$set(this.character, 'temporaryWoundBoxes', input);
 			}
 		},
 		markTemporary: function () {
-			this.character.temporary -= 1;
+			// When a temporary wound box is clicked, we simply reduce the total by 1
+			this.character.temporaryWoundBoxes -= 1;
 		},
 		updateProperty: function (value, property) {
+			// basic updater. We receive a property of the character and a value to change it to, and then we do
 			this.$set(this.character, property, value);
 		},
 		changeStat: function (stat, modifier) {
-			if (this.character.creationComplete) {
-				if (modifier && this.character.bonusPoints > 0) {
-					this.character.stats[stat]++;
-					this.character.bonusPoints -= 1;
-				} else if (!modifier && this.character.stats[stat] > 0) {
-					this.character.stats[stat]--;
-					this.character.bonusPoints += 1;
-				}
-			} else {
-				if (modifier && this.character.currentPoints > 0) {
-					this.character.stats[stat]++;
-					this.character.currentPoints--;
-				} else if (!modifier && this.character.stats[stat] > 0) {
-					this.character.stats[stat]--;
-					this.character.currentPoints++;
-				}
+			// If character has been completed, we change stats using bonusPoints
+			// If character has not been completed, we change stats using currentPoints
+			let pointsToUse = this.character.creationComplete ? 'bonusPoints' : 'currentPoints';
+
+			// Modifier can be 0 or 1. 0 for reduce, 1 for increase
+			if (modifier && this.character[pointsToUse] > 0) {
+				// Must have points to raise stats
+				this.character.stats[stat]++;
+				this.character[pointsToUse]--;
+			} else if (!modifier && this['quality' + stat] > 0 && this.character.stats[stat] > 0) {
+				// Stat must be above 0 to lower stat
+				this.character.stats[stat]--;
+				this.character[pointsToUse]++;
 			}
 		},
-		updateAttack: function (data, attack) {
-			// Check if area tag is in use
-			if (data.area && this.character.freeAreaTags.hasOwnProperty(data.area)) {
-				this.character.freeAreaTags[data.area] = true;
-			}
-
-			// Check if area tag is not in use
-			if (this.character.attacks[attack] && this.character.attacks[attack].area !== data.area) {
-				this.character.freeAreaTags[this.character.attacks[attack].area] = false;
-			}
-
-			// Check if effect tag is in use
-			if (data.effect && this.character.freeEffectTags.hasOwnProperty(data.effect)) {
-				this.character.freeEffectTags[data.effect] = true;
-			}
-
-			// Check if effect tag is not in use
-			if (this.character.attacks[attack] && this.character.attacks[attack].effect !== data.effect) {
-				this.character.freeEffectTags[this.character.attacks[attack].effect] = false;
-			}
-
-			for (let i in data.features) {
-				// Check if feature tag is in use
-				if (data.features[i] && this.character.freeFeatureTags.hasOwnProperty(data.features[i])) {
-					this.character.freeFeatureTags[data.features[i]] = true;
-				}
-
-				// Check if feature tag is not in use
-				if (this.character.attacks[attack] && this.character.attacks[attack].features[i] !== data.features[i]) {
-					this.character.freeFeatureTags[this.character.attacks[attack].features[i]] = false;
-				}
-			}
-
-			this.character.attacks[attack] = Object.assign({}, data);
+		changeMod: function (value, type) {
+			// We ensure the modifier is an integer
+			let modifier = Number.parseInt(value);
+			// If the modifier is an integer, we set it as this modifier, otherwise 0
+			this.character.modifiers[type] = (Number.isInteger(modifier) ? modifier : 0);
 		},
 		addQuality: function (quality) {
-			let qualityObject = this.library.qualities[quality];
+			// When adding a new quality, first we get the qualityObject from the library
+			let qualityObject = this.library.getQuality(quality);
 
-			if (this.character.creationComplete) {
-				if (qualityObject.cost > this.character.bonusPoints) {
-					alert('Could not afford Quality: ' + quality);
-					return;
-				}
-				this.character.bonusPoints -= qualityObject.cost;
-			} else {
-				if (qualityObject.cost > this.character.currentPoints) {
-					alert('Could not afford Quality: ' + quality);
-					return;
-				}
-				this.character.currentPoints -= qualityObject.cost;
+			// If creation is complete, we buy qualities with bonusPoints
+			// If creation is not complete, we buy qualities with currentPoints
+			let pointsToUse = this.character.creationComplete ? 'bonusPoints' : 'currentPoints';
+			// If the quality cost is higher than our remaining points
+			if (qualityObject.cost > this.character[pointsToUse]) {
+				// We alert a failure to buy and return
+				alert('Could not afford Quality: ' + quality);
+				return;
 			}
 
-			if (this.character.qualities.hasOwnProperty(quality)) {
-				this.$set(this.character.qualities, quality, this.character.qualities[quality] + 1);
-			} else {
-				this.$set(this.character.qualities, quality, 1);
+			// If the qualityObject has statMods (changes stats)
+			// we loop over them first to ensure that none of these mods would bring a stat below 0
+			// If they do, it's a fail
+			if (qualityObject.hasOwnProperty('statMods')) {
+				// We loop over the statMods
+				for (let stat in qualityObject.statMods) {
+					if (this[stat] + qualityObject.statMods[stat] < 0) {
+						alert('A Quality that would lower a Stat below 0 cannot be taken.');
+						return;
+					}
+				}
 			}
 
-			// Adds quality to freeAreaTags
+			// Otherwise we subtract the cost from our points
+			this.character[pointsToUse] -= qualityObject.cost;
+
+			// Next, if the quality is in our list of qualities already
+			// We increase the rank of that quality by 1
+			// Otherwise we set the rank of the quality to 1
+			let qualityRank = this.character.qualities.hasOwnProperty(quality) ? this.character.qualities[quality] + 1 : 1;
+			this.$set(this.character.qualities, quality, qualityRank);
+
+			// If the quality is an area quality, we add it to freeAreaTags
+			// If the quality is an effect quality, we add it to freeEffectTags
+			// If the quality is a feature quality, we add it to freeFeatureTags
 			if (qualityObject.type === 'area') {
 				this.$set(this.character.freeAreaTags, quality, false);
-			}
-
-			// Adds quality to freeEffectTags
-			if (qualityObject.type === 'effect' || qualityObject.type === 'stance') {
+			} else if (qualityObject.type === 'effect') {
 				this.$set(this.character.freeEffectTags, quality, false);
-			}
-
-			// Adds quality to freeFeatureTags
-			if (qualityObject.type === 'feature') {
+			} else if (qualityObject.type === 'feature') {
 				this.$set(this.character.freeFeatureTags, quality, false);
 			}
 
-			// Signature Move handler
+			// If the quality is Signature Move
 			if (quality === 'Signature Move') {
+				// If the character's first attack does not exist
 				if (!this.character.attacks[1]) {
+					// We create a blank attack with 2 features
 					this.character.attacks[1] = {
 						name: null,
 						type: null,
@@ -926,124 +1156,234 @@ export default {
 						features: ['', ''],
 					}
 				} else {
+					// Otherwise we add a feature to the character's first attack
 					this.character.attacks[1].features.push('');
 				}
 			}
 
-			// Digizoid handlers
-			if (qualityObject.type === 'digizoidWeapon') {
+			if (qualityObject.digizoidWeapon) {
+				// If the qualityObject has the digizoidWeapon flag, we set the character digizoidWeapon flag
 				this.character.digizoidWeapon = true;
-			}
-
-			if (qualityObject.type === 'digizoidArmor') {
+			} else if (qualityObject.digizoidArmor) {
+				// If the qualityObject has the digizoidArmor flag, we set the character digizoidArmor flag
 				this.character.digizoidArmor = true;
+			} else if (qualityObject.optimization) {
+				// If the qualityObject has the optimization flag, we set the character optimization flag
+				this.character.optimization = quality;
+			} else if (qualityObject.specialization) {
+				// if the quality is a specialization not of the optimization we purchased decrement hybridPoints
+				if (!(this.character.optimization in qualityObject.prerequisites)) {
+					this.character.hybridPoints--;
+				}
+				// if the quality has the specialization flag, we increment the specialization count
+				this.character.specialization++;
+			} else if (quality === 'Hybrid Drive') {
+				// if the quality is Hybrid Drive, we increment the hybridPoints count
+				this.character.hybridPoints++;
 			}
 
+			// If the qualityObject has statMods (changes stats)
+			if (qualityObject.hasOwnProperty('statMods')) {
+				// We loop over the statMods
+				for (let stat in qualityObject.statMods) {
+					// and add each mod to their appropriate stat
+					this.character.modifiers[stat] += qualityObject.statMods[stat];
+				}
+			}
+
+			// Finally we close the qualities modal we purchased this quality from
 			this.$refs.qualities.closeModal();
 		},
 		removeQuality: function (quality) {
-			let qualityObject = this.library.qualities[quality];
+			// When removing a quality, first we get the qualityObject from the library
+			let qualityObject = this.library.getQuality(quality);
 
+			// Next we check if the qualityObject has any unlocks
 			if (qualityObject.unlocks.length) {
+				// If it does, we loop over those
 				for (let index in qualityObject.unlocks) {
+					// and if the character has any of those qualities dependant on this one, removing fails
 					if (this.character.qualities.hasOwnProperty(qualityObject.unlocks[index])) {
+						// We alert the failure and return
 						alert('Cannot remove ' + quality + ' while Digimon has dependant quality: ' + qualityObject.unlocks[index]);
 						return;
 					}
 				}
 			}
 
-			// Prevents area tag in use from being removed
 			if (qualityObject.type === 'area' && this.character.freeAreaTags[quality] && this.character.qualities[quality] === 1) {
+				// If an area quality, we check whether that area quality is in use, and if so prevent removal
 				alert('Cannot remove ' + quality + ' as it is being used by an attack. Remove the Tag from the attack before removing Quality.');
+				return;
+			} else if (qualityObject.type === 'effect' && this.character.freeEffectTags[quality] && this.character.qualities[quality] === 1) {
+				// If an effect quality, we check whether that effect quality is in use, and if so prevent removal
+				alert('Cannot remove ' + quality + ' as it is being used by an attack. Remove the Tag from the attack before removing Quality.');
+				return;
+			} else if (qualityObject.type === 'feature' && this.character.freeFeatureTags[quality] && this.character.qualities[quality] === 1) {
+				// If a feature quality, we check whether that feature quality is in use, and if so prevent removal
+				alert('Cannot remove ' + quality + ' as it is being used by an attack. Remove the Tag from the attack before removing Quality.');
+				return;
+			} else if (quality === 'Hybrid Drive' && this.character.hybridPoints === 0) {
+				// If the Hybrid Drive quality and we are using all our Hybrid Drives, we cannot remove
+				alert('Cannot remove ' + quality + ' as we are using it to purchase a Data Specialization. Remove the Specialization before removing this Quality.');
+				return;
+			} else if (qualityObject.optimization && this.character.specialization) {
+				// If we are removing an optimization, and we have any data specializations, prevent doing so
+				alert('Cannot remove ' + quality + ' while character has any Data Specializations. Remove the Specialization before removing this Quality.');
 				return;
 			}
 
-			// Prevents effect tag in use from being removed
-			if ((qualityObject.type === 'effect' || qualityObject.type === 'stance') && this.character.freeEffectTags[quality] && this.character.qualities[quality] === 1) {
-				alert('Cannot remove ' + quality + ' as it is being used by an attack. Remove the Tag from the attack before removing Quality.');
-				return;
-			}
-
-			// Prevents feature tag in use from being removed
-			if (qualityObject.type === 'feature' && this.character.freeFeatureTags[quality] && this.character.qualities[quality] === 1) {
-				alert('Cannot remove ' + quality + ' as it is being used by an attack. Remove the Tag from the attack before removing Quality.');
-				return;
-			}
-
-			// Signature Move handler
 			if (quality === 'Signature Move') {
+				// If the quality is signature move, we remove the last feature in the first attack features array
 				let feature = this.character.attacks[1].features.pop();
-				// this.$set(this.character.attacks[1], 'features', this.character.attacks[1].features);
 				if (feature) {
+					// and if we did remove an existing feature, we allow it to be chosen again via the freeFeatureTag
 					this.$set(this.character.freeFeatureTags, feature, false);
 				}
+			} else if (quality === 'Hybrid Drive') {
+				// if the quality is Hybrid Drive, we decrement the hybridPoints count
+				this.character.hybridPoints--;
 			}
 
+			// If the quality changed stat modifiers
+			if (qualityObject.hasOwnProperty('statMods')) {
+				// Loop over those stat modifiers
+				for (let stat in qualityObject.statMods) {
+					// And remove each from the character's modifiers
+					this.character.modifiers[stat] -= qualityObject.statMods[stat];
+				}
+			}
+
+			// If the character only has one rank of this quality, they are removing it entirely
 			if (this.character.qualities[quality] === 1) {
+				// Remove the quality from the qualities list
 				this.$delete(this.character.qualities, quality);
 
-				// Removes area tag from freeAreaTags
 				if (qualityObject.type === 'area') {
+					// if the quality is area, remove it from freeAreaTags
 					this.$delete(this.character.freeAreaTags, quality);
-				}
-
-				// Removes effect tag from freeEffectTags
-				if (qualityObject.type === 'effect' || qualityObject.type === 'stance') {
+				} else if (qualityObject.type === 'effect') {
+					// if the quality is effect, remove it from freeEffectTags
 					this.$delete(this.character.freeEffectTags, quality);
-				}
-
-				// Removes effect tag from freeFeatureTags
-				if (qualityObject.type === 'feature') {
+				} else if (qualityObject.type === 'feature') {
+					// if the quality is feature, remove it from freeEffectTags
 					this.$delete(this.character.freeFeatureTags, quality);
 				}
 
-				// Digizoid handlers
-				if (qualityObject.type === 'digizoidWeapon') {
+				if (qualityObject.digizoidWeapon) {
+					// if the quality has the digizoidWeapon flag, we set the character digizoidWeapon flag to false
 					this.character.digizoidWeapon = false;
-				}
-
-				if (qualityObject.type === 'digizoidArmor') {
+				} else if (qualityObject.digizoidArmor) {
+					// if the quality has the digizoidArmor flag, we set the character digizoidArmor flag to false
 					this.character.digizoidArmor = false;
+				} else if (qualityObject.optimization) {
+					// if the quality has the optimization flag, we set the character optimization flag to false
+					this.character.optimization = false;
+				} else if (qualityObject.specialization) {
+					// if the quality is a specialization not of the optimization we purchased increment hybridPoints
+					if (!(this.character.optimization in qualityObject.prerequisites)) {
+						this.character.hybridPoints++;
+					}
+					// if the quality has the specialization flag, we decrement the specialization count
+					this.character.specialization--;
 				}
 
+				// if the quality exists in the ecurrentAttackModifiers list
 				let attackModIndex = this.currentAttackModifiers.indexOf(quality);
 				if (attackModIndex !== -1) {
+					// We remove it from that list
 					this.currentAttackModifiers.splice(attackModIndex, 1);
 				}
 			} else {
+				// If we're not removing the quality entirely, we just reduce its rank by 1
 				this.$set(this.character.qualities, quality, this.character.qualities[quality] - 1);
 			}
 
-			if (this.character.creationComplete) {
-				this.character.bonusPoints += qualityObject.cost;
-			} else {
-				this.character.currentPoints += qualityObject.cost;
-			}
+			// If creation is complete, we refund bonusPoints
+			// If creation is not complete, we refund currentPoints
+			let pointsToUse = this.character.creationComplete ? 'bonusPoints' : 'currentPoints';
+			this.character[pointsToUse] += qualityObject.cost;
 		},
-		changeMod: function (value, type) {
-			let modifier = Number.parseInt(value);
-			this.character.modifiers[type] = Number.isInteger(modifier) ? modifier : 0;
+		updateAttack: function (newAttackData, attack) {
+			// If the changed attack has an area tag and this tag is specified in freeAreaTags, we set it to used (true)
+			if (newAttackData.area && this.character.freeAreaTags.hasOwnProperty(newAttackData.area)) {
+				this.character.freeAreaTags[newAttackData.area] = true;
+			}
+
+			// If the current attack exists, and its area tag is different to the new attack's area tag
+			if (
+				this.character.attacks[attack] &&
+				this.character.attacks[attack].area &&
+				(this.character.attacks[attack].area !== newAttackData.area)
+			) {
+				// we set the current area tag as unused (false)
+				this.character.freeAreaTags[this.character.attacks[attack].area] = false;
+			}
+
+			// If the changed attack has an effect tag and this tag is specified in freeEffectTags, we set it to used (true)
+			if (newAttackData.effect && this.character.freeEffectTags.hasOwnProperty(newAttackData.effect)) {
+				this.character.freeEffectTags[newAttackData.effect] = true;
+			}
+
+			// If the current attack exists, and its effect tag is different to the new attack's effect tag
+			if (
+				this.character.attacks[attack] &&
+				this.character.attacks[attack].effect &&
+				(this.character.attacks[attack].effect !== newAttackData.effect)
+			) {
+				// we set the current effect tag as unused (false)
+				this.character.freeEffectTags[this.character.attacks[attack].effect] = false;
+			}
+
+			// For each feature on the changed attack
+			for (let i in newAttackData.features) {
+				// If the changed attack has a feature tags and this tag is specified in freeFeaturesTag, we set it to used (true)
+				if (newAttackData.features[i] && this.character.freeFeatureTags.hasOwnProperty(newAttackData.features[i])) {
+					this.character.freeFeatureTags[newAttackData.features[i]] = true;
+				}
+
+				// If the current attack exists, and this feature tag is different to the new attack's feature tag
+				if (
+					this.character.attacks[attack] &&
+					this.character.attacks[attack].features[i] &&
+					(this.character.attacks[attack].features[i] !== newAttackData.features[i])
+				) {
+					// we set the current feature tag as unused (false)
+					this.character.freeFeatureTags[this.character.attacks[attack].features[i]] = false;
+				}
+			}
+
+			// Finally we assign the newAttackData over the existing attack
+			this.character.attacks[attack] = Object.assign({}, newAttackData);
 		},
 		applyModifier: function (evt) {
+			// If the checkbox for the modifier was checked
 			if (evt.target.checked) {
+				// We see if we have a total of 3 modifiers already
 				if (this.currentAttackModifiers.length === 3) {
+					// If we do, we alert this, and reset the checkbox and return
 					alert('No more than 3 Attack Modifiers can be applied at one time.');
 					evt.target.checked = false;
 					return;
 				}
+				// Otherwise we add the modifier to the currentAttackModifiers list
 				this.currentAttackModifiers.push(evt.target.name);
 			} else {
+				// if the checkbox is unchecked we get the index of the modifier in currentAttackModifiers
 				let index = this.currentAttackModifiers.indexOf(evt.target.name);
 				if (index > -1) {
+					// and if the index exists, we just remove that modifier from the list
 					this.currentAttackModifiers.splice(index, 1);
 				}
 			}
 		},
 	},
 	created: function () {
-		this.library = library;
-		this.character = Object.assign(this.character, this.data);
+		// retrieve the library data
+		this.library = require('./library');
+		// set the character for the first time
+		this.character = Object.assign(this.character, this.digimon_data);
+		// send an update signal to the parent to standardise this data on btoh sides
 		this.$emit('updateCharacter', this.character);
 	},
 	components: {
@@ -1074,33 +1414,9 @@ export default {
 		flex-grow: 1;
 	}
 
-	span.roller {
-		cursor: pointer;
-	}
-
 	img.characterImage {
 		max-width: 400px;
 		max-height: 450px;
-	}
-
-	label.textareaLongTag {
-		width: 200px;
-		display: inline-block;
-		text-align: center;
-		margin-left: 5px;
-		font-weight: bold;
-		float: left;
-		position: relative;
-		margin-top: 20px;
-	}
-
-	span.deleteButton {
-		color: red;
-		cursor: pointer;
-		margin-top: 20px;
-		margin-right: 50px;
-		float: right;
-		position: relative;
 	}
 
 	table.digimonQualityTable {
@@ -1120,10 +1436,5 @@ export default {
 
 	li.specialList {
 		padding-bottom: 10px;
-	}
-
-	input.terrainCheckbox {
-		margin-left: 50px;
-		margin-left: 50px;
 	}
 </style>

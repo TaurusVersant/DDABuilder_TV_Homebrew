@@ -45,13 +45,13 @@
 				<!-- Wound Boxes Count -->
 				<dda_span
 					:inputName='"Wound Boxes"'
-					:textProperty='(this.character["Wound Boxes"] + this.character.temporary) + "/" + this.derivedWoundBoxes'
+					:textProperty='(this.character.woundBoxes + this.character.temporary) + "/" + this.derivedWoundBoxes'
 				/>
 				<!-- Add Temporary Wound Boxes Button -->
 				<button :disabled='character.temporary > 0' @click='addTemporary'>Add Temporary Wound Boxes</button>
 				<!-- Wound Boxes Display -->
 				<dda_woundbox
-					:current='character["Wound Boxes"]'
+					:current='character.woundBoxes'
 					:total='derivedWoundBoxes'
 					:temporary='character.temporary'
 					@changeHealth='changeHealth'
@@ -286,7 +286,7 @@ export default {
 					'Bravery': 0,
 				},
 				skillTotal: 0,
-				'Wound Boxes': 2,
+				woundBoxes: 2,
 				temporary: 0,
 				belowZero: 0,
 				'Sanity Drain': 0,
@@ -424,7 +424,7 @@ export default {
 		},
 		derivedWoundBoxes: function () {
 			if (!this.character.loadCharacter) {
-				this.$set(this.character, 'Wound Boxes', this.derivedWoundBoxes);
+				this.$set(this.character, 'woundBoxes', this.derivedWoundBoxes);
 			}
 			this.loadCharacter = true;
 		},
@@ -568,7 +568,7 @@ export default {
 			}
 		},
 		changeHealth: function (index) {
-			this.character['Wound Boxes'] += index <= this.character['Wound Boxes'] ? -1 : 1;
+			this.character.woundBoxes += (index <= this.character.woundBoxes ? -1 : 1);
 		},
 		addTemporary: function () {
 			let input = Number.parseInt(prompt('Add X Temporary Wound Boxes:', 0));
