@@ -28,9 +28,7 @@ export default {
 	name: 'DDA_WoundBox',
 	props: ['current', 'total', 'temporary'],
 	data: function () {
-		return {
-			markings: [],
-		}
+		return {}
 	},
 	computed: {},
 	watch: {

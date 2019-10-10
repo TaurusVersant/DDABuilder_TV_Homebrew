@@ -1,5 +1,5 @@
 <template>
-	<p>
+	<span>
 		<!-- Label -->
 		<label
 			class='labelTag'
@@ -13,7 +13,7 @@
 			v-model='textValue'
 			@change='$emit("change", textValue)'
 		/>
-	</p>
+	</span>
 </template>
 
 <script>

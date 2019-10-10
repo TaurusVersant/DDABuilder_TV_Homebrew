@@ -20,7 +20,7 @@
 				/>
 			</section>
 			<section v-if='character.characterClass === "Digimon"'>
-				<h3><u>{{character.name}}</u>: {{character.woundBoxes + character.temporary}}/{{digimonWoundBoxes(index)}}</h3>
+				<h3><u>{{character.name}}</u>: {{character.currentWoundBoxes + character.temporaryWoundBoxes}}/{{digimonWoundBoxes(index)}}</h3>
 				<div>
 					<u>Stage</u>: {{character.type}} |&nbsp;
 					<u>Attribute</u>: {{character.attribute}} |&nbsp;

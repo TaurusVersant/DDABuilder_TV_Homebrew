@@ -7,7 +7,6 @@ module.exports.burstScaling = {
 };
 
 module.exports.specialDigivolutions = [
-	'',
 	'Dark',
 	'DNA',
 	'Hybrid',
@@ -447,10 +446,11 @@ module.exports.areaQualities = {
 		prerequisites: {},
 		args: ['specBIT'],
 		method: function (type, args) {
+			// the last entries in args will always be the Range Modifier (1 or 2) and Melee Modifier (0 or 1)
 			if (type === 'Range') {
-				let radius = (1 + Math.floor(args[0] / 2)) + '.5 Units';
-				let range = (2 * args[0]) + ' Units';
-				return 'Circle with radius ' + radius + ' centered within 2 to ' + range + '.';
+				let radius = ((1 + Math.floor(args[0] / 2)) * args[1]) + '.5 Units';
+				let range = (2 * args[0] * args[1]) + ' Units';
+				return 'Circle with radius ' + radius + ' centered within ' + (1 + args[1]) + ' to ' + range + '.';
 			}
 			return 'Cannot apply Area Attack - Blast to [Melee] Attacks.';
 		},
@@ -464,10 +464,18 @@ module.exports.areaQualities = {
 		prerequisites: {},
 		args: ['specBIT'],
 		method: function (type, args) {
+			// the last entries in args will always be the Range Modifier (1 or 2) and Melee Modifier (0 or 1)
 			if (type === 'Range') {
-				let radius = (1 + Math.floor(args[0] / 2)) + '.5 Units';
-				return 'Circle with radius ' + radius + ' centered around user. Does not affect adjacent Units.';
+				let radius = ((1 + Math.floor(args[0] / 2)) * args[1]) + '.5 Units';
+				let origin = args[1] === 2 ? ' from 2 Units' : ' from adjacent Unit';
+				return 'Circle with radius ' + radius + origin + ' centered around user. Does not affect adjacent Units.';
 			}
+
+			if (args[2]) {
+				let radius = ((1 + Math.floor(args[0] / 2)) * args[1]) + '.5 Units';
+				return 'Circle with radius ' + radius + ' from adjacent Unit centered around user.';
+			}
+
 			return 'All adjacent Units to user.';
 		},
 	},
@@ -480,10 +488,18 @@ module.exports.areaQualities = {
 		prerequisites: {},
 		args: ['specBIT'],
 		method: function (type, args) {
+			// the last entries in args will always be the Range Modifier (1 or 2) and Melee Modifier (0 or 1)
 			if (type === 'Range') {
-				let diameter = (3 + Math.floor(args[0] / 2)) + ' Units';
-				return 'Circle with diameter ' + diameter + ' from diagonal adjacent to user. Does not affect adjacent Unit.';
+				let diameter = ((3 + Math.floor(args[0] / 2)) * args[1]) + ' Units';
+				let origin = args[1] === 2 ? '2 Units.' : 'Unit.';
+				return 'Circle with diameter ' + diameter + ' from diagonal adjacent to user. Does not affect adjacent ' + origin;
 			}
+
+			if (args[2]) {
+				let diameter = ((3 + Math.floor(args[0] / 2)) * args[1]) + ' Units';
+				return 'Circle with diameter ' + diameter + ' from diagonal adjacent to user.';
+			}
+
 			return 'Circle with diameter 3 Units from diagonal adjacent to user.';
 		},
 	},
@@ -496,10 +512,18 @@ module.exports.areaQualities = {
 		prerequisites: {},
 		args: ['specBIT'],
 		method: function (type, args) {
+			// the last entries in args will always be the Range Modifier (1 or 2) and Melee Modifier (0 or 1)
 			if (type === 'Range') {
-				let length = (3 + Math.floor(args[0] / 2)) + ' Units';
-				return 'Cone with length ' + length + '  horizontally/vertically from user. Does not affect adjacent Unit.';
+				let length = ((3 + Math.floor(args[0] / 2)) * args[1]) + ' Units';
+				let origin = args[1] === 2 ? '2 Units.' : 'Unit.';
+				return 'Cone with length ' + length + '  horizontally/vertically from user. Does not affect adjacent ' + origin;
 			}
+
+			if (args[2]) {
+				let length = ((3 + Math.floor(args[0] / 2)) * args[1]) + ' Units';
+				return 'Cone with length ' + length + '  horizontally/vertically from user.';
+			}
+
 			return 'Cone with length 3 Units horizontally/vertically from user.';
 		},
 	},
@@ -512,11 +536,19 @@ module.exports.areaQualities = {
 		prerequisites: {},
 		args: ['specBIT', 'size'],
 		method: function (type, args) {
+			// the last entries in args will always be the Range Modifier (1 or 2) and Melee Modifier (0 or 1)
 			let width = (args[1] === 'Gigantic' ? 3 : args[1] === 'Huge' ? 2 : 1) + ' Units';
 			if (type === 'Range') {
-				let length = (5 + args[0]) + ' Units';
-				return 'Line with length ' + length + ', width ' + width + ' horizontally/vertically from user. Does not affect adjacent Units.';
+				let length = ((5 + args[0]) * args[2]) + ' Units';
+				let origin = args[2] === 2 ? '2 Units.' : 'Unit.';
+				return 'Line with length ' + length + ', width ' + width + ' horizontally/vertically from user. Does not affect adjacent ' + origin;
 			}
+
+			if (args[2]) {
+				let length = ((5 + args[0]) * args[2]) + ' Units';
+				return 'Line with length ' + length + ', width ' + width + ' horizontally/vertically from user.';
+			}
+
 			return 'Line with length 5 Units, width ' + width + ' horizontally/vertically from user.';
 		},
 	},
@@ -529,10 +561,11 @@ module.exports.areaQualities = {
 		prerequisites: {},
 		args: ['specBIT'],
 		method: function (type, args) {
+			// the last entries in args will always be the Range Modifier (1 or 2) and Melee Modifier (0 or 1)
 			if (type === 'Range') {
-				let radius = (1 + Math.floor((args[0] - 1) / 2)) + '.5 Units';
+				let radius = ((1 + Math.floor((args[0] - 1) / 2)) * args[1]) + '.5 Units';
 				let range = (2 * args[0]) + ' Units';
-				return 'Circle with radius ' + radius + ' centered within 2 to ' + range + '.';
+				return 'Circle with radius ' + radius + ' centered within ' + (1 + args[1]) + ' to ' + range + '.';
 			}
 			return 'Cannot apply Area Attack - Linger to [Melee] Attacks.';
 		},
@@ -546,9 +579,11 @@ module.exports.areaQualities = {
 		prerequisites: {},
 		args: ['specBIT'],
 		method: function (type, args) {
+			// the last entries in args will always be the Range Modifier (1 or 2) and Melee Modifier (0 or 1)
 			if (type === 'Range') {
-				let radius = (1 + Math.floor((args[0]) / 2)) + '.5 Units';
-				return 'Three targets within circle with radius ' + radius + ' centered around user. Does not affect adjacent Units.';
+				let radius = ((1 + Math.floor((args[0]) / 2)) * args[1]) + '.5 Units';
+				let origin = args[1] === 2 ? '2 Units.' : 'Unit.';
+				return 'Three targets within circle with radius ' + radius + ' centered around user. Does not affect adjacent ' + origin;
 			}
 			return 'Cannot apply Area Attack - Missile to [Melee] Attacks.';
 		},
@@ -562,6 +597,7 @@ module.exports.areaQualities = {
 		prerequisites: {},
 		args: ['specRAM', 'derivedMovement'],
 		method: function (type, args) {
+			// the last entries in args will always be the Range Modifier (1 or 2) and Melee Modifier (0 or 1)
 			if (type === 'Melee') {
 				return 'Move in a straight line between ' + args[0] + ' and ' + args[1] + ' Units. Each target in this line is affected by this attack. This uses a Complex Action without Charge or Retreat.';
 			}
@@ -577,6 +613,7 @@ module.exports.areaQualities = {
 		prerequisites: {},
 		args: [],
 		method: function (type, args) {
+			// the last entries in args will always be the Range Modifier (1 or 2) and Melee Modifier (0 or 1)
 			if (type === 'Melee') {
 				return 'The dimensions of this attack are all connected Elemental Terrain Units to the Elemental Terrain Unit adjacent to the user. Increase Accuracy by 1 per Unit affected.';
 			}
@@ -1401,7 +1438,7 @@ module.exports.modifierQualities = {
 		},
 	},
 	'Slayer': {
-		type: 'quality',
+		type: 'passive',
 		cost: 2,
 		ranks: 1,
 		text: 'When you take this Quality, select and record a Digimon Attribute. You automatically know if any Digimon you encounter is of that Attribute. When making an Attack Roll against a target with that Attribute, add your BIT to your Accuracy. This Attack Modifier stacks with Hunter: you may apply both these Qualities as one Attack Modifier. If the combination of Hunter and Slayer matches exactly to a target Digimon (Attribute, Family, and Type match), and after this attack deals damage the target has less than half health remaining, the target is immediately destroyed. Digimon with any Boss Qualities are immune to this specific effect. Digimon of the target Attribute will react extremely negatively to the presence of this Digimon.',
@@ -2034,6 +2071,14 @@ module.exports.qualities = {
 			'Quick Healer': 1,
 		},
 	},
+	'Reach': {
+		type: 'special',
+		cost: 3,
+		ranks: 0,
+		text: 'The range at which this Digimon can use [Melee] Attacks and initiate Clashes increases by 1 for each Rank the Digimon has in Reach. For example, a Digimon with 3 Ranks in Reach can perform a [Melee] attack on a target up to 4 Units away from the Digimon. If the Digimon uses a [Melee] Attack with an Area Tag, they may have the point of origin be anywhere within its reach.',
+		unlocks: [],
+		prerequisities: {},
+	},
 	'Resistant': {
 		type: 'passive',
 		cost: 3,
@@ -2153,10 +2198,10 @@ module.exports.qualities = {
 		prerequisites: {},
 	},
 	/*
-	 * Create Arguments for Special Qualities
+	 * Create Methods for all qualities that return custom text based on arguments
 	 *
 	 * TO ADD
-	 * Combat Awareness - you need to rewrite this
+	 * Combat Awareness - thoughts: rank 2, add double to dodge (persisted), rank 3, free digivolution of one stage at initative time
 	 *
 	 * Conjurer - unique ability
 	 * Summoner - unique ability
@@ -2164,15 +2209,11 @@ module.exports.qualities = {
 	 * Minion Explosion - summoning
 	 * Mixed Summoner - summoning
 	 *
-	 * Data Specializations - Fistful of Force/Sniper changing range
-	 *
 	 * Mode Change - very complex, maybe build a thing for it
 	 * Mode Change x.0 - ditto
 	 *
 	 * Rage - another thing to build a section for
 	 * Berserker - would love to see a rage bar tbh
 	 * Focused rage - put it all together
-	 *
-	 * Reach - this will change ranges
 	 */
 };
