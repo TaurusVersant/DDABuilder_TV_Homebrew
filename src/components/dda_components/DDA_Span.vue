@@ -69,7 +69,7 @@ export default {
 
 	span.labelValue {
 		margin-left: 26px;
-		width: 20px;
+		width: 50px;
 		display: inline-block;
 	}
 

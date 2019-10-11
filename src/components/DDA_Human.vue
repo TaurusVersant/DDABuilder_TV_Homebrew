@@ -237,6 +237,18 @@
 			:widthProperty='91'
 			@change='updateProperty($event, "notes")'
 		/>
+		<!-- Inventory -->
+		<section>
+			<p><u>Inventory</u> | <button @click='addInventory'>Add Item</button></p>
+			<p v-for='(item, index) in character.inventory' :key='index'>
+				<dda_textarea
+					:textProperty='item'
+					:widthProperty='90'
+					@change='updateInventory($event, index)'
+				/>
+			<span class='deleteButton' @click='removeInventory(index)'>X</span>
+			</p>
+		</section>
 		<dda_modal ref='modal'/>
 	</div>
 </template>
@@ -310,6 +322,7 @@ export default {
 						{ name: '', duration: 0 },
 					],
 				},
+				inventory: [],
 			},
 			derivedStats: {
 				derivedWoundBoxes: 'Wound Boxes',
@@ -641,6 +654,15 @@ export default {
 		changeMod: function (value, type) {
 			let modifier = Number.parseInt(value);
 			this.character.modifiers[type] = Number.isInteger(modifier) ? modifier : 0;
+		},
+		addInventory: function () {
+			this.character.inventory.push('');
+		},
+		removeInventory: function (index) {
+			this.$delete(this.character.inventory, index);
+		},
+		updateInventory: function (value, index) {
+			this.$set(this.character.inventory, index, value);
 		},
 	},
 	created: function () {

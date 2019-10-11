@@ -1,9 +1,3 @@
-/*
- * Quality List
- * Special Stage qualities (Boss included)
- * colour code your qualities
- * Digimon Total Stat Caps?
- */
 <template>
 	<div>
 		<h1 id='characterTitle'>{{character.name}}</h1>
@@ -92,7 +86,6 @@
 		<div class='divRow'>
 			<!-- Wound Boxes Display -->
 			<dda_woundbox
-				ref='digimonWoundBoxes'
 				:current='character.currentWoundBoxes'
 				:total='derivedWoundBoxes'
 				:temporary='character.temporaryWoundBoxes'
@@ -200,6 +193,7 @@
 					:stat='stat'
 					:value='getDerivedStat(value)'
 					:modifier='getModifier(value)'
+					:disabled='character.modeChangeActive || character.modeChangeActiveX0'
 					@changeStat='changeStat'
 					@changeMod='changeMod($event, value)'
 				/>
@@ -254,6 +248,62 @@
 		<!-- Current Effects -->
 		<dda_effects :effects='character.effects'/>
 		<hr>
+		<!-- Mode Change -->
+		<section v-if='"Mode Change" in character.qualities'>
+			<p><u>Mode Change</u></p>
+			<span id='modeChangeSpan'>
+				Swap
+				<select class='labelInput' v-model='character.modeChange[0]'>
+					<option v-for='stat in combatStats' :key='stat'>{{stat}}</option>
+				</select>
+				with
+				<select class='labelInput' v-model='character.modeChange[1]'>
+					<option v-for='stat in combatStats' :key='stat'>{{stat}}</option>
+				</select>
+				<button v-if='character.modeChangeActive' @click='doModeChange'>Deactivate Mode Change</button>
+				<button v-else @click='doModeChange'>Activate Mode Change</button>
+			</span>
+			<section v-if='"Mode Change X.0" in character.qualities'>
+				<p><u>Mode Change X.0</u></p>
+				<p>
+					<label class='labelTag'>Change Accuracy with:</label>
+					<select class='labelInput' v-model='character.modeChangeX0["Accuracy"]'>
+						<option v-for='stat in combatStats' :key='stat'>{{stat}}</option>
+					</select>
+				</p>
+				<p>
+					<label class='labelTag'>Change Damage with:</label>
+					<select class='labelInput' v-model='character.modeChangeX0["Damage"]'>
+						<option v-for='stat in combatStats' :key='stat'>{{stat}}</option>
+					</select>
+				</p>
+				<p>
+					<label class='labelTag'>Change Dodge with:</label>
+					<select class='labelInput' v-model='character.modeChangeX0["Dodge"]'>
+						<option v-for='stat in combatStats' :key='stat'>{{stat}}</option>
+					</select>
+				</p>
+				<p>
+					<label class='labelTag'>Change Armor with:</label>
+					<select class='labelInput' v-model='character.modeChangeX0["Armor"]'>
+						<option v-for='stat in combatStats' :key='stat'>{{stat}}</option>
+					</select>
+				</p>
+				<button v-if='character.modeChangeActiveX0' @click='doModeChangeX0'>Deactivate Mode Change X.0</button>
+				<button v-else @click='doModeChangeX0'>Activate Mode Change X.0</button>
+			</section>
+			<hr>
+		</section>
+		<!-- Rage -->
+		<section v-if='"Rage" in character.qualities'>
+			<p><u>Rage Meter</u> | {{character.currentRage}}/{{totalRage}}</p>
+			<dda_box
+				:current='character.currentRage'
+				:total='totalRage'
+				@change='changeRage($event)'
+			/>
+			<hr>
+		</section>
 		<section v-if='Object.keys(modifierNegatives).length'>
 			<p><u>Modifier Negatives</u></p>
 			<ul>
@@ -261,6 +311,96 @@
 					<span><b>[{{quality}}]</b> | {{qualityText}}</span>
 				</li>
 			</ul>
+			<hr>
+		</section>
+		<!-- Conjurer -->
+		<section v-if='"Conjurer" in character.qualities'>
+			<p><u>Conjurer</u> | {{character.summoning.currentPoints}}/{{summonPool}} | <button @click='conjure'>Conjure Object</button></p>
+			<div v-for='(object, index) in this.character.summoning.objects' :key='index' class='summonDiv'>
+				<p>
+					<u><b>Conjured Object {{intToChar(object.identifier)}}</b></u>
+					<span class='deleteButton' @click='destroySummon("objects", index)'>X</span>
+				</p>
+				<dda_span
+					:inputName='"Cost"'
+					:textProperty='object.cost'
+				/>
+				<dda_span
+					:inputName='"Wound Boxes"'
+					:textProperty='object.currentWoundBoxes + "/" + object.totalWoundBoxes'
+				/>
+				<dda_span
+					:inputName='"Dodge"'
+					:textProperty='object.Dodge'
+				/>
+				<dda_span
+					:inputName='"Armor"'
+					:textProperty='object.Armor'
+				/>
+				<dda_span
+					:inputName='"Size"'
+					:textProperty='object.size'
+				/>
+				<!-- Wound Boxes Display -->
+				<dda_woundbox
+					:current='object.currentWoundBoxes'
+					:total='object.totalWoundBoxes'
+					@changeHealth='changeSummonHealth($event, "objects", index)'
+				/>
+			</div>
+			<br>
+			<hr>
+		</section>
+		<!-- Summoner -->
+		<section v-if='"Summoner" in character.qualities'>
+			<p><u>Summoner</u> | {{character.summoning.currentPoints}}/{{summonPool}} | <button @click='summon'>Summon Minion</button></p>
+			<div v-for='(minion, index) in this.character.summoning.minions' :key='index' class='summonDiv'>
+				<p>
+					<u><b>Summoned Minion {{intToChar(minion.identifier)}}</b></u>
+					<span class='deleteButton' @click='destroySummon("minions", index)'>X</span>
+				</p>
+				<dda_span
+					:inputName='"Cost"'
+					:textProperty='minion.cost'
+				/>
+				<dda_span
+					:inputName='"Wound Boxes"'
+					:textProperty='minion.currentWoundBoxes + "/" + minion.totalWoundBoxes'
+				/>
+				<dda_span
+					:inputName='"Accuracy"'
+					:textProperty='minion.Accuracy'
+					:roll='true'
+					@rollStat='minionAttack(index)'
+				/>
+				<dda_span
+					:inputName='"Damage"'
+					:textProperty='minion.Damage'
+				/>
+				<dda_span
+					:inputName='"Dodge"'
+					:textProperty='minion.Dodge'
+				/>
+				<dda_span
+					:inputName='"Armor"'
+					:textProperty='minion.Armor'
+				/>
+				<dda_span
+					:inputName='"Flight Speed"'
+					:textProperty='minion.movement'
+				/>
+				<dda_span
+					:inputName='"Size"'
+					:textProperty='minion.size'
+				/>
+				<!-- Wound Boxes Display -->
+				<dda_woundbox
+					:current='minion.currentWoundBoxes'
+					:total='minion.totalWoundBoxes'
+					@changeHealth='changeSummonHealth($event, "minions", index)'
+				/>
+			</div>
+			<br>
 			<hr>
 		</section>
 		<p><u>Digimon Attacks</u></p>
@@ -449,6 +589,28 @@ export default {
 				},
 				// Flag for whether we are on beneficial terrain
 				terrainStatus: 'No',
+				// Rage Tracker
+				currentRage: 0,
+				// Mode Change Tracker
+				modeChangeActive: false,
+				modeChangeActiveX0: false,
+				modeChange: ['', ''],
+				modeChangeX0: {
+					'Accuracy': '',
+					'Damage': '',
+					'Dodge': '',
+					'Armor': '',
+				},
+				// Summoner Tracker
+				summoning: {
+					minions: [],
+					objects: [],
+					currentPoints: null,
+					summoner: false,
+					conjurer: false,
+					mixed: false,
+					elemental: false,
+				},
 				// Digivolution flags
 				darkDigivolution: false,
 				dnaDigivolution: false,
@@ -479,6 +641,13 @@ export default {
 			allowUpdate: true,
 			// List of currently selected attack modifiers
 			currentAttackModifiers: [],
+			// Combat Stats Array
+			combatStats: [
+				'Accuracy',
+				'Damage',
+				'Dodge',
+				'Armor',
+			],
 		};
 	},
 	computed: {
@@ -591,16 +760,16 @@ export default {
 			return this.character.stats['Armor'] + this.getModifier('qualityArmor');
 		},
 		statAccuracy: function () {
-			return this.qualityAccuracy + this.getModifier('statAccuracy') + (this.character.terrainStatus === 'Yes' ? 2 : 0);
+			return this.qualityAccuracy + this.getModifier('statAccuracy') + (this.character.terrainStatus === 'Yes' ? 2 : 0) - this.rageModifier('Rage', false);
 		},
 		statDamage: function () {
-			return this.qualityDamage + this.getModifier('statDamage') + (this.character.terrainStatus === 'Yes' ? 2 : 0);
+			return this.qualityDamage + this.getModifier('statDamage') + (this.character.terrainStatus === 'Yes' ? 2 : 0) + this.rageModifier('Rage', true);
 		},
 		statDodge: function () {
-			return this.qualityDodge + this.getModifier('statDodge') + (this.character.terrainStatus === 'Yes' ? 2 : 0);
+			return this.qualityDodge + this.getModifier('statDodge') + (this.character.terrainStatus === 'Yes' ? 2 : 0) - this.rageModifier('Berserker', false);
 		},
 		statArmor: function () {
-			return this.qualityArmor + this.getModifier('statArmor') + (this.character.terrainStatus === 'Yes' ? 2 : 0);
+			return this.qualityArmor + this.getModifier('statArmor') + (this.character.terrainStatus === 'Yes' ? 2 : 0) + this.rageModifier('Berserker', true);
 		},
 		derivedWoundBoxes: function () {
 			// The sum total of Wound Boxes is the startingWoundBoxes count
@@ -634,7 +803,7 @@ export default {
 			// Base Brains is Accuracy / 2 (rounded down)
 			let baseBrains = Math.floor(this.character.stats['Accuracy'] / 2);
 			// Burst Brains is the burstModifier * the burstScaling brains
-			let burstBrains = (this.character.burstModifier * this.library.burstScaling.brains);
+			let burstBrains = this.library ? (this.character.burstModifier * this.library.burstScaling.brains) : 0;
 			// Brains is baseBrains + the character brainsMod (stage) + the burst brains modifier + the quality (derivedBrains) modifier
 			return baseBrains + this.character.brainsMod + burstBrains + this.getModifier('derivedBrains');
 		},
@@ -658,7 +827,7 @@ export default {
 			// Base BIT is Brains / 10
 			let baseBIT = Math.floor(this.derivedBrains / 10);
 			// Burst BIT is the burstModifier * the burstScaling specValues
-			let burstBIT = (this.character.burstModifier * this.library.burstScaling.specValues);
+			let burstBIT = this.library ? (this.character.burstModifier * this.library.burstScaling.specValues) : 0;
 			// BIT is baseBIT + the character specMod (stage) + the burst BIT modifier + the quality (specBIT) modifier
 			return baseBIT + this.character.specMod + burstBIT + this.getModifier('specBIT');
 		},
@@ -743,6 +912,14 @@ export default {
 			}
 			return actions;
 		},
+		totalRage: function () {
+			// Determines the maximum rage a Digimon can have
+			return 'Berserker' in this.character.qualities ? 12 : 6;
+		},
+		summonPool: function () {
+			let modifier = 'Mixed Summoner' in this.character.qualities ? 2 : 3;
+			return this.specBIT * modifier;
+		},
 	},
 	watch: {
 		character: {
@@ -774,6 +951,18 @@ export default {
 		'character.modifiers.qualityWoundBoxes': function () {
 			// If the qualityWoundBoxes modifier changes (a quality has been purchased), we refill currentWoundBoxes
 			this.$set(this.character, 'currentWoundBoxes', this.derivedWoundBoxes);
+		},
+		summonPool: function () {
+			// When the summonPool total changes, we unmake and refund all existing summons
+			let summonTypes = ['minions', 'objects'];
+			for (let index in summonTypes) {
+				for (let i in this.character.summoning[summonTypes[index]]) {
+					this.character.summoning.currentPoints += this.character.summoning[summonTypes[index]][i].cost;
+				}
+				this.character.summoning[summonTypes[index]] = [];
+			}
+
+			this.character.summoning.currentPoints = this.summonPool;
 		},
 	},
 	methods: {
@@ -868,23 +1057,34 @@ export default {
 						// we consider ourselves to be Ultimate stage because that is needed to buy hybrid drive
 						// and so we waive the specialization requirements
 						approved = !this.checkSpecialization();
+					} else if (['Summoner', 'Conjurer'].indexOf(quality) !== -1) {
+						// let option = quality === 'Summoner' ? 'conjurer' : 'summoner';
+						approved = !this.character.summoning[quality === 'Summoner' ? 'conjurer' : 'summoner'];
 					} else {
-						// If approval does not fail via flags, we check all the prerequisities for purchasing this quality
-						for (let prerequisite in qualityObject.prerequisites) {
-							// If the prerequisite is a stage
-							if (prerequisite === 'Stage') {
-								let stage = qualityObject.prerequisites[prerequisite];
-								// We check that the index of our stage is equal to or greater than the index of the required stage
-								approved = this.library.stages.indexOf(this.character.type) >= this.library.stages.indexOf(stage);
-							} else {
-								// Otherwise, we get the number of ranks we have in that prerequisite quality
-								let qualityRank = this.character.qualities.hasOwnProperty(prerequisite) ? this.character.qualities[prerequisite] : 0;
-								// and if we have less ranks than is required of that prerequisite quality, approved is marked as false
-								if (qualityObject.prerequisites[prerequisite] > qualityRank) {
-									approved = false;
+						// convert to array of objects so we can do OR checks
+						let prerequisites = Array.isArray(qualityObject.prerequisites) ? qualityObject.prerequisites : [qualityObject.prerequisites];
+						let orFlag = false;
+						for (let index in prerequisites) {
+							// If approval does not fail via flags, we check all the prerequisities for purchasing this quality
+							for (let prerequisite in prerequisites[index]) {
+								// If the prerequisite is a stage
+								if (prerequisite === 'Stage') {
+									let stage = prerequisites[index][prerequisite];
+									// We check that the index of our stage is equal to or greater than the index of the required stage
+									approved = this.library.stages.indexOf(this.character.type) >= this.library.stages.indexOf(stage);
+								} else {
+									// Otherwise, we get the number of ranks we have in that prerequisite quality
+									let qualityRank = this.character.qualities.hasOwnProperty(prerequisite) ? this.character.qualities[prerequisite] : 0;
+									// and if we have less ranks than is required of that prerequisite quality, approved is marked as false
+									if (prerequisites[index][prerequisite] > qualityRank) {
+										approved = false;
+									} else {
+										orFlag = true;
+									}
 								}
 							}
 						}
+						approved = approved || orFlag;
 					}
 
 					// If after all of these checks approved is still true, we add this quality to the list of available qualities
@@ -1016,6 +1216,53 @@ export default {
 				this.$refs.modal.activateModal(details.join('<br><br>'));
 			}
 		},
+		minionAttack: function (index) {
+			let minion = this.character.summoning.minions[index];
+			let details = [];
+
+			// First add the Attack Name
+			details.push('<b><u>Minion ' + this.intToChar(minion.identifier) + ' Attack</u></b>');
+
+			// Then the general Accuracy for the Minion
+			details.push('<u>Accuracy:</u> ' + minion.Accuracy);
+
+			// Then the general Damage for the Minion
+			details.push('<u>Damage:</u> ' + minion.Damage);
+
+			let range = '';
+			if (this.character.qualities['Reach']) {
+				// If there is no area attack and the attack type is Melee and we have the Reach quality
+				// we append the following
+				range = 'Single target. ' + 1 + ' to ' + (1 + this.character.qualities['Reach']) + ' Units';
+			} else {
+				// if we do not have the Reach Quality, we return this
+				range = 'Single target. ' + 1 + ' Unit';
+			}
+
+			// Add the range string to the details array
+			details.push('<u>Range:</u> ' + range);
+
+			// We can have up to three modifiers applied to an attack as well
+			// Uses select modifiers from a list by checking boxes on each modifier to be used
+			// We loop through the modifiers in currentAttackModifiers
+			for (let i in this.currentAttackModifiers) {
+				// And play out the same logic as preparing a quality's method call as before
+				let args = [];
+				let qualityObject = this.library.getQuality(this.currentAttackModifiers[i]);
+				for (let j in qualityObject.args) {
+					args.push(this.getAttackArgument(qualityObject.args[j]));
+				}
+				details.push('<u>' + this.currentAttackModifiers[i] + ':</u> ' + qualityObject.method(args));
+			}
+
+			// Special Qualities are qualities that grant abilities that change attacks
+			for (let quality in this.specialFeatures) {
+				details.push('<u>' + quality + ':</u> ' + this.specialFeatures[quality]);
+			}
+
+			// Finally, we join the details array with two linebreaks per line and send this block to the modal
+			this.$refs.modal.activateModal(details.join('<br><br>'));
+		},
 		getAttackArgument: function (arg) {
 			if (arg in this) {
 				// If the argument request is in the DDA_Digimon container, we set it as the value
@@ -1037,6 +1284,15 @@ export default {
 				return this.character.specialization === 2 || (stageIndex < this.library.stages.indexOf('Burst'));
 			}
 			return false;
+		},
+		rageModifier: function (rageType, modifier) {
+			if (this.currentAttackModifiers.indexOf('Rage') !== -1) {
+				let focusedRage = 'Focused Rage' in this.character.qualities;
+				if (rageType in this.character.qualities) {
+					return focusedRage && !modifier ? Math.floor(this.character.currentRage / 2) : this.character.currentRage;
+				}
+			}
+			return 0;
 		},
 		/**
 		* Setters
@@ -1178,9 +1434,7 @@ export default {
 					// Otherwise we add a feature to the character's first attack
 					this.character.attacks[1].features.push('');
 				}
-			}
-
-			if (qualityObject.digizoidWeapon) {
+			} else if (qualityObject.digizoidWeapon) {
 				// If the qualityObject has the digizoidWeapon flag, we set the character digizoidWeapon flag
 				this.character.digizoidWeapon = true;
 			} else if (qualityObject.digizoidArmor) {
@@ -1199,6 +1453,15 @@ export default {
 			} else if (quality === 'Hybrid Drive') {
 				// if the quality is Hybrid Drive, we increment the hybridPoints count
 				this.character.hybridPoints++;
+			} else if (qualityObject.summoning) {
+				// if the quality is a summoning quality, we set the relevant flag to true
+				this.character.summoning[qualityObject.summoning] = true;
+
+				if (quality === 'Mixed Summoner') {
+					// If we are adding Mixed Summoner, we acquire Conjurer/Summoner for free if we have the other
+					this.$set(this.character.qualities, this.character.summoning.summoner ? 'Conjurer' : 'Summoner', 1);
+					this.character.summoning[this.character.summoning.summoner ? 'conjurer' : 'summoner'] = true;
+				}
 			}
 
 			// If the qualityObject has statMods (changes stats)
@@ -1217,8 +1480,27 @@ export default {
 			// When removing a quality, first we get the qualityObject from the library
 			let qualityObject = this.library.getQuality(quality);
 
+			// If creation is complete, we refund bonusPoints
+			// If creation is not complete, we refund currentPoints
+			let pointsToUse = this.character.creationComplete ? 'bonusPoints' : 'currentPoints';
+
+			// Special handling for Summoning Qualities
+			let pass = false;
+			if ((quality === 'Conjurer' || quality === 'Summoner') && 'Elemental Summoner' in this.character.qualities) {
+				// Summoner and Conjurer can be removed if the other exists while we have Elemental Summoner
+				pass = this.character.summoning.summoner && this.character.summoning.conjurer;
+			} else if ((quality === 'Conjurer' || quality === 'Summoner') && 'Mixed Summoner' in this.character.qualities) {
+				// Summoner and Conjurer can be removed if the other exists while we have Mixed Summoner
+				pass = this.character.summoning.summoner && this.character.summoning.conjurer;
+				// We also lower the DP to balance out the refund of removing it as it was a free purchase with Mixed Summoner
+				this.character[pointsToUse] -= qualityObject.cost;
+			} else if (quality === 'Mixed Summoner' && (this.character.summoning.summoner && this.character.summoning.conjurer)) {
+				alert('Cannot remove ' + quality + ' while Digimon has both Conjurer and Summoner');
+				return;
+			}
+
 			// Next we check if the qualityObject has any unlocks
-			if (qualityObject.unlocks.length) {
+			if (!pass && qualityObject.unlocks.length) {
 				// If it does, we loop over those
 				for (let index in qualityObject.unlocks) {
 					// and if the character has any of those qualities dependant on this one, removing fails
@@ -1262,6 +1544,15 @@ export default {
 			} else if (quality === 'Hybrid Drive') {
 				// if the quality is Hybrid Drive, we decrement the hybridPoints count
 				this.character.hybridPoints--;
+			} else if (qualityObject.summoning) {
+				// if the quality is a summoning quality, we set the relevant flag to false
+				this.character.summoning[qualityObject.summoning] = false;
+
+				let summonType = qualityObject.summoning === 'summoner' ? 'minions' : 'objects';
+				for (let i in this.character.summoning[summonType]) {
+					this.character.summoning.currentPoints += this.character.summoning[summonType][i].cost;
+				}
+				this.character.summoning[summonType] = [];
 			}
 
 			// If the quality changed stat modifiers
@@ -1318,9 +1609,7 @@ export default {
 				this.$set(this.character.qualities, quality, this.character.qualities[quality] - 1);
 			}
 
-			// If creation is complete, we refund bonusPoints
-			// If creation is not complete, we refund currentPoints
-			let pointsToUse = this.character.creationComplete ? 'bonusPoints' : 'currentPoints';
+			// Refund cost of quality
 			this.character[pointsToUse] += qualityObject.cost;
 		},
 		updateAttack: function (newAttackData, attack) {
@@ -1396,6 +1685,131 @@ export default {
 				}
 			}
 		},
+		changeRage: function (index) {
+			this.character.currentRage += (index <= this.character.currentRage ? -1 : 1);
+		},
+		doModeChange: function () {
+			let statOne = this.character.stats[this.character.modeChange[0]];
+			let statTwo = this.character.stats[this.character.modeChange[1]];
+			if (this.character.modeChangeActive) {
+				this.character.modifiers['quality' + this.character.modeChange[0]] += (statOne - statTwo);
+				this.character.modifiers['quality' + this.character.modeChange[1]] += (statTwo - statOne);
+			} else {
+				this.character.modifiers['quality' + this.character.modeChange[0]] += (statTwo - statOne);
+				this.character.modifiers['quality' + this.character.modeChange[1]] += (statOne - statTwo);
+			}
+
+			this.character.modeChangeActive = !this.character.modeChangeActive;
+		},
+		doModeChangeX0: function () {
+			let reassignments = {
+				'Accuracy': 0,
+				'Damage': 0,
+				'Dodge': 0,
+				'Armor': 0,
+			};
+			for (let stat in reassignments) {
+				if (this.character.modeChangeX0[stat] && this.character.modeChangeX0[stat] !== stat) {
+					let statOne = this.character.stats[stat];
+					let statTwo = this.character.stats[this.character.modeChangeX0[stat]];
+					if (this.character.modeChangeActiveX0) {
+						reassignments[stat] = (statOne - statTwo);
+					} else {
+						reassignments[stat] = (statTwo - statOne);
+					}
+				}
+			}
+
+			for (let stat in reassignments) {
+				this.character.modifiers['quality' + stat] += reassignments[stat];
+			}
+
+			this.character.modeChangeActiveX0 = !this.character.modeChangeActiveX0;
+		},
+		conjure: function () {
+			let points = Number.parseInt(prompt('Enter a number of Summoning Points to spend between 1 and ' + (1 + this.specBIT)));
+			if (!Number.isInteger(points) || !(points > 0 && points <= (1 + this.specBIT))) {
+				alert('Incorrect number of Summoning Points spent');
+				return;
+			} else if (points > this.character.summoning.currentPoints) {
+				alert('More than remaining Summoning Points spent');
+				return;
+			}
+
+			this.character.summoning.currentPoints -= points;
+
+			let bonus = points - 1;
+			let size = 1 + Math.floor(bonus / 2);
+
+			// Building an identifier
+			let options = Object.keys(this.character.summoning.objects);
+			options.push(options.length);
+			for (let i in this.character.summoning.objects) {
+				let optIndex = options.indexOf(this.character.summoning.objects[i].identifier.toString());
+				if (optIndex !== -1) {
+					options.splice(optIndex, 1);
+				}
+			}
+
+			// Adding the conjured object
+			this.character.summoning.objects.push({
+				identifier: options[0],
+				cost: points,
+				currentWoundBoxes: this.specBIT + (2 * bonus),
+				totalWoundBoxes: this.specBIT + (2 * bonus),
+				Armor: (this.specBIT * 2),
+				Dodge: 0,
+				size: size + ' x ' + size,
+			});
+		},
+		summon: function () {
+			let points = Number.parseInt(prompt('Enter a number of Summoning Points to spend between 2 and ' + (2 + this.specBIT)));
+			if (!Number.isInteger(points) || !(points > 1 && points <= (2 + this.specBIT))) {
+				alert('Incorrect number of Summoning Points spent');
+				return;
+			} else if (points > this.character.summoning.currentPoints) {
+				alert('More than remaining Summoning Points spent');
+				return;
+			}
+
+			this.character.summoning.currentPoints -= points;
+
+			let bonus = points - 2;
+
+			// Building an identifier
+			let options = Object.keys(this.character.summoning.minions);
+			options.push(options.length);
+			for (let i in this.character.summoning.minions) {
+				let optIndex = options.indexOf(this.character.summoning.minions[i].identifier.toString());
+				if (optIndex !== -1) {
+					options.splice(optIndex, 1);
+				}
+			}
+
+			// Adding the summoned minion
+			this.character.summoning.minions.push({
+				identifier: options[0],
+				cost: points,
+				currentWoundBoxes: this.specBIT + bonus,
+				totalWoundBoxes: this.specBIT + bonus,
+				Armor: this.specBIT,
+				Dodge: 0,
+				Accuracy: this.specBIT + bonus,
+				Damage: 1 + bonus,
+				size: '1 x 1',
+				movement: this.derivedBrains,
+			});
+		},
+		changeSummonHealth (value, type, index) {
+			this.character.summoning[type][index].currentWoundBoxes += (value <= this.character.summoning[type][index].currentWoundBoxes ? -1 : 1);
+		},
+		destroySummon: function (type, index) {
+			this.character.summoning.currentPoints += this.character.summoning[type][index].cost;
+			this.$delete(this.character.summoning[type], index);
+		},
+		intToChar: function (n) {
+			return String.fromCharCode(65 + Number.parseInt(n));
+		},
 	},
 	created: function () {
 		// retrieve the library data
@@ -1455,5 +1869,43 @@ export default {
 
 	li.specialList {
 		padding-bottom: 10px;
+	}
+
+	label.labelTag {
+		min-width: 200px;
+		display: inline-block;
+		text-align: center;
+		margin-left: 5px;
+		font-weight: bold;
+		min-height: 30px;
+	}
+
+	select.labelInput {
+		min-width: 169px;
+		margin-bottom: 10px;
+		text-align: center;
+	}
+
+	span.deleteButton {
+		color: red;
+		cursor: pointer;
+		float: right;
+		position: relative;
+	}
+
+	div.summonDiv {
+		min-width: 250px;
+		display: inline-block;
+		margin-right: 10px;
+		margin-left: 30px;
+		margin-bottom: 30px;
+		padding: 10px;
+		border-style: solid;
+	}
+
+	span.roller {
+		cursor: pointer;
+		float: right;
+		position: relative;
 	}
 </style>

@@ -53,13 +53,18 @@ export default {
 		closeModal: function () {
 			document.getElementById('ddaQualities').style.display = 'none';
 		},
-		getPrerequisities: function (prerequisities) {
-			let list = [];
-			for (let key in prerequisities) {
-				list.push(key + ': ' + prerequisities[key]);
+		getPrerequisities: function (prerequisites) {
+			let orList = [];
+			let prereqList = Array.isArray(prerequisites) ? prerequisites : [prerequisites];
+			for (let index in prereqList) {
+				let list = [];
+				for (let key in prereqList[index]) {
+					list.push(key + ': ' + prereqList[index][key]);
+				}
+				orList.push(list.join(', '));
 			}
 
-			return list.join(', ');
+			return orList.join(' or ');
 		},
 	},
 	created: function () {},

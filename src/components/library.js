@@ -1186,6 +1186,16 @@ module.exports.featureQualities = {
 			return 'Spend one Simple Action from your next turn when an opponent misses you with an Attack. Make this Attack against that opponent, reducing their Dodge Stat by ' + args[0] + ' for the length of this Attack. Do not apply an Area Attack Quality if this Attack has one.' + counterblow;
 		},
 	},
+	'Counterblow': {
+		type: 'quality',
+		cost: 2,
+		ranks: 1,
+		text: 'When using a [Counter] tagged attack through the Counter quality, reduce the target\'s Armor stat by the attacker\'s CPU.',
+		unlocks: [],
+		prerequisites: {
+			'Feature - Counter': 1
+		},
+	},
 	'Feature - Critical': {
 		type: 'feature',
 		cost: 1,
@@ -1459,6 +1469,38 @@ module.exports.modifierQualities = {
 			return 'When an ally is adjacent to the target, add ' + args[0] + ' to the Accuracy of this Attack.';
 		},
 	},
+	'Rage': {
+		type: 'modifier',
+		cost: 2,
+		ranks: 1,
+		text: 'The Digimon gains a Rage Meter, measured by a singular D6 (1 to 6). As a Simple Action, the Digimon may activate its Rage Meter, starting its Rage at 1. The Rage Meter deactivates when it reaches Rage 0. It can only be activated once per Short Rest. Rage increases by 1 whenever the Digimon takes Damage, or misses an Attack. Rage decreases by 4 at the end of a turn if the Digimon has not taken Damage or used an Attack since the end of its last turn. You cannot use a [Clash] Tagged Attack while Raging. Increase your Damage Stat by the number of points of Rage you have, and decrease your Accuracy by the same. At the end of its turn after this Digimon reaches 6 Rage, the Rage Meter deactivates and the Digimon must use a Complex Action in its next turn to recover.',
+		unlocks: ['Berserker'],
+		prerequisites: {},
+		args: ['currentRage'],
+		method: function (args) {
+			return 'The Damage of this Attack has been increased by ' + args[0] + ' and the Accuracy of this Attack has been decreased by ' + args[0] + ' due to the effects of Rage.';
+		},
+	},
+	'Berserker': {
+		type: 'passive',
+		cost: 2,
+		ranks: 1,
+		text: 'Increase the number of dice used to measure the Digimon’s Rage Meter to 2D6 (2 to 12). The Digimon’s Rage now begins at 2. Instead of deactivating, when the Digimon reaches maximum Rage, it will go on a rampage, and become GM-controlled. The Rage Meter may then be deactivated as a Simple Action involving a TN 5+(Rage) Persuade Check from the Tamer or another Ally. The Rage Meter will decrease as normal during GM-control. In addition to the bonus to Damage and penalty to Accuracy, a Digimon with the Berserker Quality adds its Rage points to Armor, and subtracts them from Dodge.',
+		unlocks: ['Focused Rage'],
+		prerequisites: {
+			'Rage': 1,
+		},
+	},
+	'Focused Rage': {
+		type: 'passive',
+		cost: 2,
+		ranks: 1,
+		text: 'The Digimon will only take a penalty of half its Rage (rounded down) to Accuracy and Dodge.',
+		unlocks: [],
+		prerequisites: {
+			'Berserker': 1,
+		},
+	},
 	'Reckless': {
 		type: 'modifier',
 		cost: 3,
@@ -1527,15 +1569,65 @@ module.exports.qualities = {
 		unlocks: [],
 		prerequisites: {},
 	},
-	'Counterblow': {
-		type: 'quality',
+	'Combat Awareness': {
+		type: 'passive',
 		cost: 2,
 		ranks: 1,
-		text: 'When using a [Counter] tagged attack through the Counter quality, reduce the target\'s Armor stat by the attacker\'s CPU.',
+		text: 'A Digimon with the Combat Awareness Quality adds +3 to their Initiative Checks and cannot be surprised in combat. This Digimon treats Surprise Rounds triggered against it as a normal round of combat.',
+		unlocks: [],
+		prerequisites: {},
+	},
+	'Conjurer': {
+		type: 'action',
+		summoning: 'conjurer',
+		cost: 3,
+		ranks: 1,
+		text: 'You may not take this Quality if you have the Summoner Quality except through the effect of Mixed Summoner. Upon taking this Quality, the Digimon gains Summoning Points equal to its BIT Value x3. As a Simple Action, a Digimon with this Quality may create Objects of Medium Size at a cost of 1 Summoning Point per Object. The design and possibilities of these Objects must be declared when taking this Quality, as they cannot be changed later. Each summoned Object has a number of Wound Boxes equal to the user’s BIT, Armor equal to the user’s BITx2, and zero Dodge. An Object counts as solid terrain, and cannot be moved through. When an Object’s Wound Boxes are reduced to 0, the Object is destroyed. In addition to these starting Stats, an Object can be strengthened by spending more Summoning Points at creation. When spending additional Summon Points (up to a maximum of BIT per Summon), increase the Object’s Wound Boxes by 2 for each Point, and its Size class by 1 for every 2 Points. When an Object is destroyed, the Summoning Points used to create it return to the user. The Summoning Action cannot be used two rounds in a row. Summoned Objects must be created and placed within the user’s [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent not included].',
+		unlocks: ['Elemental Summoner', 'Mixed Summoner'],
+		prerequisites: {},
+	},
+	'Summoner': {
+		type: 'action',
+		summoning: 'summoner',
+		cost: 3,
+		ranks: 1,
+		text: 'You may not take this Quality and Conjurer if you have the Conjurer Quality except through the effect of Mixed Summoner. Upon taking this Quality, the Digimon gains Summoning Points equal to its BIT Value x3. As a Simple Action, a Digimon with this Quality may create Minions of Small Size at a cost of 2 Summoning Points per Minion. The design and possibilities of these Minions must be declared when taking this Quality, as they cannot be changed later. Each summoned Minion has a number of Wound Boxes equal to the user’s BIT, Armor equal to the user’s BIT, zero Dodge, and are capable of flying a number of Units equal to the user’s Brains value in a round. When a Minion’s Wound Boxes are reduced to 0, the Minion is destroyed. In addition to these starting Stats, a Minion can be strengthened by spending more Summoning Points at creation. When spending additional Summon Points (up to a maximum of BIT per Summon), increase the Mininon’s Wound Boxes, Accuracy, and Damage by 1 for each Point. As a Complex Action, Summoned Minions may move and Attack by using the user’s BIT Value for Accuracy, and 1 for Damage. Their Attack is a [Melee][Damage] Attack with no Effects or Features, but may benefit from Attack Modifiers. When a Minion is destroyed, the Summoning Points used to create it return to the user. The Summoning Action cannot be used two rounds in a row. Summoned Minions must be created and placed within the user’s [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent not included].',
+		unlocks: ['Elemental Summoner', 'Mixed Summoner', 'Minion Explosion'],
+		prerequisites: {},
+	},
+	'Elemental Summoner': {
+		type: 'passive',
+		summoning: 'elemental',
+		cost: 2,
+		ranks: 1,
+		text: 'When performing a Summon Action, create Elemental Terrain matching your Family beneath each Summoned Object or Minion. Summoned Objects and Minions do not have a Family and do not benefit from Elemental Terrain.',
+		unlocks: [],
+		prerequisites: [
+			{ 'Conjurer': 1, },
+			{ 'Summoner': 1, }
+		],
+	},
+	'Minion Explosion': {
+		type: 'passive',
+		cost: 2,
+		ranks: 1,
+		text: 'When a Minion is reduced to zero Wound Boxes and destroyed, you may immediately make a [Burst][Melee][Damage] Attack using that Minion’s statistics. This Attack is not affected by any of your Qualities.',
 		unlocks: [],
 		prerequisites: {
-			'Feature - Counter': 1
+			'Summoner': 1,
 		},
+	},
+	'Mixed Summoner': {
+		type: 'action',
+		summoning: 'mixed',
+		cost: 2,
+		ranks: 1,
+		text: 'Mixed Summoner can only be taken when the user has either the Conjurer or Summoner Quality. When you take this Quality, you gain the opposite Quality (Summoner if Conjurer, Conjurer if Summoner) for free. Recalculate the user’s Summoning Points as BITx2. When performing a Summoning Simple Action, the user may summon both Objects and Minions within the same Action.',
+		unlocks: [],
+		prerequisites: [
+			{ 'Conjurer': 1, },
+			{ 'Summoner': 1, }
+		],
 	},
 	'Chrome Digizoid Armor': {
 		type: 'quality',
@@ -1829,6 +1921,24 @@ module.exports.qualities = {
 			derivedBrains: 1,
 		},
 	},
+	'Mode Change': {
+		type: 'action',
+		cost: 2,
+		ranks: 1,
+		text: 'When you take Mode Change, pick two Stats from Accuracy, Damage, Dodge, and Armor. As a Simple Action, you can swap these two Stats around. Use only the Base Stat when doing the math, it is not changed by things like Stances or Directing. This rearrangement does not recalculate Derived or Spec Stats.',
+		unlocks: ['Mode Change X.0'],
+		prerequisites: {},
+	},
+	'Mode Change X.0': {
+		type: 'action',
+		cost: 2,
+		ranks: 1,
+		text: 'When you take Mode Change X.0, define a rearrangement of your Accuracy, Damage, Dodge, and Armor Stats. As a Simple Action, you can change between your regular Stat spread and this rearranged Stat spread. Again, only Base Stats are used in this situation, bonuses do not change from the Stat they apply to. This rearrangement does not recalculate Derived or Spec Stats.',
+		unlocks: [],
+		prerequisites: {
+			'Mode Change': 1,
+		},
+	},
 	'Nature Territory': {
 		type: 'action',
 		cost: 1,
@@ -2077,7 +2187,7 @@ module.exports.qualities = {
 		ranks: 0,
 		text: 'The range at which this Digimon can use [Melee] Attacks and initiate Clashes increases by 1 for each Rank the Digimon has in Reach. For example, a Digimon with 3 Ranks in Reach can perform a [Melee] attack on a target up to 4 Units away from the Digimon. If the Digimon uses a [Melee] Attack with an Area Tag, they may have the point of origin be anywhere within its reach.',
 		unlocks: [],
-		prerequisities: {},
+		prerequisites: {},
 	},
 	'Resistant': {
 		type: 'passive',
@@ -2198,22 +2308,7 @@ module.exports.qualities = {
 		prerequisites: {},
 	},
 	/*
-	 * Create Methods for all qualities that return custom text based on arguments
-	 *
 	 * TO ADD
-	 * Combat Awareness - thoughts: rank 2, add double to dodge (persisted), rank 3, free digivolution of one stage at initative time
-	 *
-	 * Conjurer - unique ability
-	 * Summoner - unique ability
-	 * Elemental Summoner - there needs to be a summoner section
-	 * Minion Explosion - summoning
-	 * Mixed Summoner - summoning
-	 *
-	 * Mode Change - very complex, maybe build a thing for it
-	 * Mode Change x.0 - ditto
-	 *
-	 * Rage - another thing to build a section for
-	 * Berserker - would love to see a rage bar tbh
-	 * Focused rage - put it all together
+	 * Armor, DNA, Hybrid, Dark Qualities
 	 */
 };

@@ -8,6 +8,7 @@
 			>{{stat}}:</label>
 			<!-- Lower Stat Button -->
 			<button
+				:disabled='disabled'
 				@click="$emit('changeStat', stat, 0)"
 			>-</button>
 			<!-- Value -->
@@ -17,6 +18,7 @@
 			>{{value}}{{totalModifier}}</span>
 			<!-- Raise Stat Button -->
 			<button
+				:disabled='disabled'
 				@click="$emit('changeStat', stat, 1)"
 			>+</button>
 			<!-- Modifier -->
@@ -42,7 +44,7 @@
 <script>
 export default {
 	name: 'DDA_Stat',
-	props: ['stat', 'value', 'total_stat', 'modifier', 'roll'],
+	props: ['stat', 'value', 'total_stat', 'modifier', 'roll', 'disabled'],
 	data: function () {
 		return {
 			modifierValue: 0,

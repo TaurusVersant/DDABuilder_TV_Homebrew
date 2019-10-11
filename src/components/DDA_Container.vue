@@ -1,8 +1,8 @@
 /*
- * Digivice Builder
- * Item Builder
- * Human Inventory
  * FAQ
+ * Create Methods for all qualities that return custom text based on arguments
+ * colour code your qualities
+ * Special Stage qualities
  */
 <template>
 	<div>
