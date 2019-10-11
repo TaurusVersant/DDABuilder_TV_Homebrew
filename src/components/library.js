@@ -1260,7 +1260,7 @@ module.exports.featureQualities = {
 		type: 'feature',
 		cost: 1,
 		ranks: 3,
-		text: 'An Attack with the [Pierce] Tag ignores up to X points that any defending Digimon has in Armor, where X is double the Ranks you have of Armor Piercing.',
+		text: 'An Attack with the [Pierce] Tag ignores up to X points that any defending Digimon has in Armor, where X is double the Ranks you have of Pierce.',
 		unlocks: [],
 		prerequisites: {},
 		args: ['ranks'],
@@ -1396,7 +1396,7 @@ module.exports.modifierQualities = {
 		digizoidWeapon: true,
 		cost: 3,
 		ranks: 1,
-		text: 'The Digimon’s Attack gains 2 bonus Damage when used and 1 bonus Accuracy. Additionally, treat the Attack as having an Attack Feature of an extra rank in Armor Piercing, even if the Attack already had Armor Piercing.',
+		text: 'The Digimon’s Attack gains 2 bonus Damage when used and 1 bonus Accuracy. Additionally, treat the Attack as having an Attack Feature of an extra rank in Pierce, even if the Attack already had Pierce.',
 		unlocks: [],
 		prerequisites: {
 			Stage: 'Mega',

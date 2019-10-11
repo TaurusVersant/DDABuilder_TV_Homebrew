@@ -1283,7 +1283,7 @@ export default {
 			if (this.character.specialization) {
 				return this.character.specialization === 2 || (stageIndex < this.library.stages.indexOf('Burst'));
 			}
-			return false;
+			return stageIndex < this.library.stages.indexOf('Ultimate');
 		},
 		rageModifier: function (rageType, modifier) {
 			if (this.currentAttackModifiers.indexOf('Rage') !== -1) {
