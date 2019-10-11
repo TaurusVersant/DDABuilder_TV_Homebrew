@@ -437,6 +437,7 @@ export default {
 	}
 
 	div.characterBlock {
+		height: 19px;
 	}
 
 	span.characterTile {
@@ -455,7 +456,7 @@ export default {
 	}
 
 	span.gmTile {
-		margin-left: 15px;
+		margin-left: 16px;
 	}
 
 	span.deleteButton {
