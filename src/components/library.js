@@ -910,7 +910,7 @@ module.exports.effectQualities = {
 		prerequisites: {},
 		args: ['specBIT'],
 		method: function (args) {
-			return 'Duration = Remaining Accuracy Dice, minimum 1 Round. Decrease Accuracy by ' + args[0] + '. If the target was Clashing with the user, the Clash ends, and it may not initiate clashes with the user for the duration.';
+			return 'Duration = Remaining Accuracy Dice, minimum 1 Round. Decrease Accuracy by ' + args[0] + ' when targeting User. If the target was Clashing with the user, the Clash ends, and it may not initiate clashes with the user for the duration.';
 		},
 	},
 	'Negative Effect - Immobilize': {
