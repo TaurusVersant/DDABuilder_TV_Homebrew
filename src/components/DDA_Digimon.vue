@@ -478,6 +478,10 @@
 			<button @click='showQualities("effect")'>Add Attack Effect Quality</button>
 			<button @click='showQualities("feature")'>Add Attack Feature Quality</button>
 			<button @click='showQualities("modifier")'>Add Attack Modifier Quality</button>
+			<button v-if='character.darkDigivolution' @click='showQualities("dark")'>Add Dark Digivolution Quality</button>
+			<button v-if='character.dnaDigivolution' @click='showQualities("dna")'>Add DNA Digivolution Quality</button>
+			<button v-if='character.hybridDigivolution' @click='showQualities("hybrid")'>Add Hybrid Digivolution Quality</button>
+			<button v-if='character.armorDigivolution' @click='showQualities("armor")'>Add Armor Digivolution Quality</button>
 		</p>
 		<table v-if='Object.keys(character.qualities).length' class='digimonQualityTable'>
 			<thead>
@@ -497,6 +501,18 @@
 				</tr>
 			</tbody>
 		</table>
+		<!-- Custom Qualities -->
+		<section v-if='character.bossDigivolution'>
+			<p><u>Custom Qualities</u> | <button @click='addCustomQuality'>Add Quality</button></p>
+			<p v-for='(quality, index) in character.customQualities' :key='index'>
+				<dda_textarea
+					:textProperty='quality'
+					:widthProperty='90'
+					@change='updateCustomQuality($event, index)'
+				/>
+			<span class='deleteButton' @click='removeCustomQuality(index)'>X</span>
+			</p>
+		</section>
 		<!-- Modals -->
 		<dda_modal ref='modal'/>
 		<dda_qualities ref='qualities' @purchase='addQuality'/>
@@ -617,6 +633,8 @@ export default {
 				hybridDigivolution: false,
 				armorDigivolution: false,
 				bossDigivolution: false,
+				// Custom Qualities
+				customQualities: [],
 			},
 			// Lookup array of the proper names of each of these stats
 			statsLookup: {
@@ -1022,6 +1040,18 @@ export default {
 				case 'modifier':
 					qualitiesList = this.library.modifierQualities;
 					break;
+				case 'dark':
+					qualitiesList = this.library.darkQualities;
+					break;
+				case 'dna':
+					qualitiesList = this.library.dnaQualities;
+					break;
+				case 'hybrid':
+					qualitiesList = this.library.hybridQualities;
+					break;
+				case 'armor':
+					qualitiesList = this.library.armorQualities;
+					break;
 			}
 
 			// We will build a list of the qualities available for purchase
@@ -1060,6 +1090,11 @@ export default {
 					} else if (['Summoner', 'Conjurer'].indexOf(quality) !== -1) {
 						// let option = quality === 'Summoner' ? 'conjurer' : 'summoner';
 						approved = !this.character.summoning[quality === 'Summoner' ? 'conjurer' : 'summoner'];
+					} else if (
+						(qualityObject.digizoidWeapon && 'Digizoid Weapon' in this.character.qualities) ||
+						(qualityObject.digizoidArmor && 'Digizoid Armor' in this.character.qualities)
+					) {
+						approved = true;
 					} else {
 						// convert to array of objects so we can do OR checks
 						let prerequisites = Array.isArray(qualityObject.prerequisites) ? qualityObject.prerequisites : [qualityObject.prerequisites];
@@ -1810,6 +1845,15 @@ export default {
 		intToChar: function (n) {
 			return String.fromCharCode(65 + Number.parseInt(n));
 		},
+		addCustomQuality: function () {
+			this.character.customQualities.push('');
+		},
+		removeCustomQuality: function (index) {
+			this.$delete(this.character.customQualities, index);
+		},
+		updateCustomQuality: function (value, index) {
+			this.$set(this.character.customQualities, index, value);
+		},
 	},
 	created: function () {
 		// retrieve the library data
@@ -1891,6 +1935,8 @@ export default {
 		cursor: pointer;
 		float: right;
 		position: relative;
+		margin-right: 20px;
+		margin-top: 10px;
 	}
 
 	div.summonDiv {

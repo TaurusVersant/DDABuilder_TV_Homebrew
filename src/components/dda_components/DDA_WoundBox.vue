@@ -17,7 +17,8 @@
 				ref='tempWoundBoxes'
 				type='checkbox'
 				:key='index'
-				@change='$emit("markTemporary", index)'
+				:disabled='handlingTemporary'
+				@change='markTemporary(index)'
 			/>
 		</span>
 	</div>
@@ -28,7 +29,9 @@ export default {
 	name: 'DDA_WoundBox',
 	props: ['current', 'total', 'temporary'],
 	data: function () {
-		return {}
+		return {
+			handlingTemporary: false,
+		}
 	},
 	computed: {},
 	watch: {
@@ -39,6 +42,7 @@ export default {
 			for (let i in this.$refs['tempWoundBoxes']) {
 				this.$refs['tempWoundBoxes'][i].checked = false;
 			}
+			this.handlingTemporary = false;
 		},
 	},
 	methods: {
@@ -46,6 +50,11 @@ export default {
 			for (let i in this.$refs['woundBoxes']) {
 				this.$refs['woundBoxes'][i].checked = i >= this.current;
 			}
+		},
+		markTemporary: function (index) {
+			this.handlingTemporary = true;
+			let self = this;
+			setTimeout(function () { self.$emit('markTemporary', index); }, 200);
 		},
 	},
 	mounted: function () {

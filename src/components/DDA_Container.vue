@@ -2,8 +2,6 @@
  * FAQ
  * Create Methods for all qualities that return custom text based on arguments
  * colour code your qualities
- * Special Stage qualities
- * temporary disable of wound boxes when clicking
  */
 <template>
 	<div>

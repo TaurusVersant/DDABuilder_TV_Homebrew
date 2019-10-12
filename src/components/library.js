@@ -102,21 +102,24 @@ module.exports.sizeLookup = {
 module.exports.getQuality = function (quality) {
 	if (quality in this.qualities) {
 		return this.qualities[quality];
-	}
-	if (quality in this.areaQualities) {
+	} else if (quality in this.areaQualities) {
 		return this.areaQualities[quality];
-	}
-	if (quality in this.effectQualities) {
+	} else if (quality in this.effectQualities) {
 		return this.effectQualities[quality];
-	}
-	if (quality in this.featureQualities) {
+	} else if (quality in this.featureQualities) {
 		return this.featureQualities[quality];
-	}
-	if (quality in this.modifierQualities) {
+	} else if (quality in this.modifierQualities) {
 		return this.modifierQualities[quality];
-	}
-	if (quality in this.optimizationQualities) {
+	} else if (quality in this.optimizationQualities) {
 		return this.optimizationQualities[quality];
+	} else if (quality in this.darkQualities) {
+		return this.darkQualities[quality];
+	} else if (quality in this.dnaQualities) {
+		return this.dnaQualities[quality];
+	} else if (quality in this.hybridQualities) {
+		return this.hybridQualities[quality];
+	} else if (quality in this.armorQualities) {
+		return this.armorQualities[quality];
 	}
 
 	return {};
@@ -2307,8 +2310,216 @@ module.exports.qualities = {
 		unlocks: [],
 		prerequisites: {},
 	},
-	/*
-	 * TO ADD
-	 * Armor, DNA, Hybrid, Dark Qualities
-	 */
 };
+
+module.exports.darkQualities = {
+	'Curse of Bleeding Life': {
+		type: 'passive',
+		cost: 0,
+		ranks: 1,
+		text: 'At the end of each of this Digimon’s turns, mark one Wound Box. Perform a 1 Damage [Range][Missile][Damage] attack with Attack Modifiers applied.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+	'Curse of Endless Rage': {
+		type: 'passive',
+		cost: 0,
+		ranks: 1,
+		text: 'This Dark Digivolved Digimon cannot be stopped by Willpower Checks from its partner.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+	'Curse of Linked Lives': {
+		type: 'passive',
+		cost: 0,
+		ranks: 1,
+		text: 'At the end of each of this Digimon’s turns, if it has any marked Wound Boxes, mark one Wound Box of the partner connected to this Digimon and recover one Wound Box of this Digimon. This effect can reduce a partner’s Wound Boxes to zero but not below.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+	'Curse of the Unavoidable': {
+		type: 'passive',
+		cost: 0,
+		ranks: 1,
+		text: 'Reroll all 6’s on Dodge Rolls. All Digimon this Digimon is attacking must reroll 5’s and 6’s of their Dodge Rolls. Subsequent rolls are not rerolled.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+	'Curse of the Untouchable': {
+		type: 'special',
+		cost: 0,
+		ranks: 1,
+		text: 'Reroll all 6’s on Accuracy Rolls. All Attacks targeting this Digimon must reroll all 5’s and 6’s of their Accuracy Rolls. Subsequent rolls are not rerolled.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+}
+
+module.exports.dnaQualities = {
+	'Get Back In There!': {
+		type: 'passive',
+		cost: 0,
+		ranks: 1,
+		text: 'When reduced to 0 Wound Boxes and defeated, component Digimon only drop to one Stage below Base Digivolution Stage, not two.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+	'Further Form': {
+		type: 'passive',
+		cost: 0,
+		ranks: 1,
+		text: 'Create a Digimon sheet one Stage higher than the DNA Digivolved Digimon, adding the same bonus DP as the DNA Digivolved Digimon receives. When reduced below half its Wound Boxes, the DNA Digivolved Digimon may use a Complex Action to transform into this higher Stage. When this higher Stage defuses, all component Digimon are reset to the Fresh Stage. If this higher Stage is reduced to zero Wound Boxes, all component Digimon are returned to Digitama. This effect is not changed by Get Back In There! Or Used To It.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+	'Quick Fusion': {
+		type: 'passive',
+		cost: 0,
+		ranks: 1,
+		text: 'If combat is not beginning with a Surprise Round against the characters, the characters that compose this Digimon may perform DNA Digivolution before Initiative Checks are made, even if the characters are below the Digivolution Stage involved in the DNA Digivolution. The resulting Digimon loses one Simple Action in its first round.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+	'Used To It': {
+		type: 'passive',
+		cost: 0,
+		ranks: 1,
+		text: 'When DNA Digivolution ends, revert to Base Digivolution Stage instead of one below. Stacks with Get Back In There! so that component Digimon revert to Base Digivolution Stage when the DNA Digivolved Digimon is defeated.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+	'Veteran': {
+		type: 'quality',
+		cost: 0,
+		ranks: 1,
+		text: 'When DNA Digivolving, add three times Stage DP instead of two times to the DP Total of the fusion.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+}
+
+module.exports.hybridQualities = {
+	'Emergency Fusion': {
+		type: 'passive',
+		cost: 0,
+		ranks: 1,
+		text: 'If the human partner is reduced to zero Wound Boxes, the partner Digimon may, from any range if not immobilized, move to an adjacent tile to their partner and initiate a Hybrid Digivolution. The Hybrid Digimon cannot act on their next turn. When the Hybrid Digimon defuses, the human is set to one Wound Box and conscious. If the Hybrid Digimon is reduced to zero Wound Boxes, the human dies. This is not affected by Safe Defusion.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+	'Our Lives on the Line!': {
+		type: 'passive',
+		cost: 0,
+		ranks: 1,
+		text: 'Create a Digimon sheet one Stage higher than the Hybrid Digivolved Digimon. This Digimon still gains the benefits of the human component’s Attributes and Skills, as well as three Simple Actions per turn. When the Hybrid Digimon is reduced below half its Wound Boxes, it may use a Complex Action to transform into this higher Stage. When this higher Stage defuses, the component Digimon is reset to the Fresh Stage and the human unconscious at 0 Wound Boxes. If this higher Stage is reduced to zero Wound Boxes, the component Digimon reverts to a Digitama and the human dies. This effect is not changed by Practised Ease Or Safe Defusion.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+	'Partner Sync': {
+		type: 'passive',
+		cost: 0,
+		ranks: 1,
+		text: 'If combat is not beginning with a Surprise Round against the characters, the characters that compose this Digimon may perform Hybrid Digivolution before Initiative Checks are made, even if the component Digimon is below the required Stage for Hybrid Digivolution. The resulting Digimon loses one Simple Action in its first round.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+	'Practised Ease': {
+		type: 'passive',
+		cost: 0,
+		ranks: 1,
+		text: 'When Hybrid Digivolution ends, revert to Base Digivolution Stage instead of one below. Stacks with Safe Defusion so that the component Digimon reverts to Base Digivolution Stage when the Hybrid Digivolved Digimon is defeated.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+	'Safe Defusion': {
+		type: 'special',
+		cost: 0,
+		ranks: 1,
+		text: 'When reduced to 0 Wound Boxes and defeated, the component Digimon only drops to one Stage below Base Digivolution Stage, not two, and the component human is left conscious at 1 Wound Box.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+}
+
+module.exports.armorQualities = {
+	'Armor Transformation': {
+		type: 'action',
+		cost: 0,
+		ranks: 1,
+		text: 'An Armor Digivolved Digimon may perform a transformation as a Complex Action to turn into equipment and attach to any adjacent character of the same or higher Size class as this Digimon. A character cannot wield more than one Armor Digimon at a time. The character may use this Armor Digimon’s Attacks in addition to their own, and increases their Combat Stats (Accuracy, Damage, Armor, Dodge) by the lowest of this Armor Digimon’s Spec Values (RAM, CPU, BIT).',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+	'Digizoid Armor': {
+		type: 'quality',
+		cost: 0,
+		ranks: 1,
+		text: 'This Digimon may take Digizoid Armor Qualities regardless of Stage.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+	'Digizoid Weapon': {
+		type: 'quality',
+		cost: 0,
+		ranks: 1,
+		text: 'This Digimon may take Digizoid Weapon Qualities regardless of Stage.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+	'Elemental Armor': {
+		type: 'passive',
+		cost: 0,
+		ranks: 1,
+		text: 'When this Digimon is occupying beneficial Elemental Terrain, Damage and Effect Duration can be reduced to zero when calculating such.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+	'Extra Shielding': {
+		type: 'passive',
+		cost: 0,
+		ranks: 1,
+		text: 'After each Long Rest, this Digimon gains Temporary Wound Boxes equal to its BIT Stat.',
+		unlocks: [],
+		prerequisites: {
+			Stage: 'Champion',
+		},
+	},
+}
