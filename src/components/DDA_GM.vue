@@ -54,7 +54,14 @@ export default {
 			return woundBoxTotal;
 		},
 		digimonWoundBoxes: function (index) {
-			return this.characters[index].startingWoundBoxes + this.characters[index].stats['Health'] + (this.characters[index].burstModifier * 4);
+			let qualityWoundBoxes = Number.isInteger(this.characters[index].modifiers['qualityWoundBoxes']) ? this.characters[index].modifiers['qualityWoundBoxes'] : 0;
+
+			return (
+				this.characters[index].startingWoundBoxes +
+				this.characters[index].stats['Health'] +
+				qualityWoundBoxes +
+				(this.characters[index].burstModifier * 4)
+			);
 		},
 		updateProperty: function (value, property, index) {
 			this.$set(this.characters[index], property, value);

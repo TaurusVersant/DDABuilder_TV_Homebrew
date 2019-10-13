@@ -951,6 +951,10 @@ export default {
 			},
 			deep: true,
 		},
+		'character.stats.Health': function () {
+			// If the health stat changes (a quality has been purchased), we refill currentWoundBoxes
+			this.$set(this.character, 'currentWoundBoxes', this.derivedWoundBoxes);
+		},
 		digimon_data: function () {
 			// If digimon_data is changed, we have received it from the DDA_Container parent
 			// We do not want to update the parent when we assign digimon_data to the character object
