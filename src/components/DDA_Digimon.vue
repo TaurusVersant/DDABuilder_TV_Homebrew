@@ -1766,8 +1766,8 @@ export default {
 			this.character.modeChangeActiveX0 = !this.character.modeChangeActiveX0;
 		},
 		conjure: function () {
-			let points = Number.parseInt(prompt('Enter a number of Summoning Points to spend between 1 and ' + (1 + this.specBIT)));
-			if (!Number.isInteger(points) || !(points > 0 && points <= (1 + this.specBIT))) {
+			let points = Number.parseInt(prompt('Enter a number of Summoning Points to spend from 1 to ' + this.specBIT));
+			if (!Number.isInteger(points) || !(points > 0 && points <= this.specBIT)) {
 				alert('Incorrect number of Summoning Points spent');
 				return;
 			} else if (points > this.character.summoning.currentPoints) {
@@ -1802,8 +1802,9 @@ export default {
 			});
 		},
 		summon: function () {
-			let points = Number.parseInt(prompt('Enter a number of Summoning Points to spend between 2 and ' + (2 + this.specBIT)));
-			if (!Number.isInteger(points) || !(points > 1 && points <= (2 + this.specBIT))) {
+			let max = this.specBIT > 2 ? this.specBIT : 2;
+			let points = Number.parseInt(prompt('Enter a number of Summoning Points to spend from 2 to ' + max));
+			if (!Number.isInteger(points) || !(points > 1 && points <= max)) {
 				alert('Incorrect number of Summoning Points spent');
 				return;
 			} else if (points > this.character.summoning.currentPoints) {

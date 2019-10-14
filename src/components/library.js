@@ -559,7 +559,7 @@ module.exports.areaQualities = {
 		type: 'area',
 		cost: 2,
 		ranks: 1,
-		text: 'Apply to a [Range] attack. Creates a Circle of Radius 1 + half [BIT - 1] (rounded down) within the user’s range (BITx2). The Linger will last 3 Rounds. When a character enters or ends their turn inside of this circle (only apply this effect once per character per round), make an Accuracy Roll at Accuracy-(number of times this Linger Circle has triggered). Then play out the Attack as normal. If the Accuracy of the Linger reaches 0 before the 3 Rounds are up, the Linger disappears.',
+		text: 'Apply to a [Range] attack. Creates a Circle of Radius 1 + half [BIT - 1] (rounded down) within the user’s range (BITx2). When a character enters or ends their turn inside of this circle (only apply this effect once per character per round), make an Accuracy Roll at Accuracy-(number of times this Linger Circle has triggered). Then play out the Attack as normal. A single character cannot maintain two Linger Circles at the same time. If using the Linger tagged Attack again, erase the original Linger Circle. When the Accuracy of the Linger reaches 0, the Linger disappears.',
 		unlocks: [],
 		prerequisites: {},
 		args: ['specBIT'],
@@ -708,30 +708,6 @@ module.exports.effectQualities = {
 		args: ['specCPU'],
 		method: function (args) {
 			return 'No Duration. Requires Damage to activate. Heal Wound Boxes equal to the damage dealt, maximum ' + args[0] + '.';
-		},
-	},
-	'Positive Effect - Power of David': {
-		type: 'effect',
-		cost: 1,
-		ranks: 1,
-		text: 'Increase Accuracy and Dodge by 2 for every size class you are below an attacking opponent.',
-		unlocks: [],
-		prerequisites: {},
-		args: [],
-		method: function (args) {
-			return 'Duration = Remaining Accuracy Dice, minimum 1 Round. Increase target Accuracy and Dodge by 2 for every size class they are below an attacking opponent.';
-		},
-	},
-	'Positive Effect - Power of Goliath': {
-		type: 'effect',
-		cost: 1,
-		ranks: 1,
-		text: 'Increase Damage and Armor by 1 for every size class you are above an opponent you are attacking.',
-		unlocks: [],
-		prerequisites: {},
-		args: [],
-		method: function (args) {
-			return 'Duration = Remaining Accuracy Dice, minimum 1 Round. Increase target Damage and Armor by 1 for every size class they are above an attacking opponent.';
 		},
 	},
 	'Positive Effect - Regenerate': {
@@ -1585,7 +1561,7 @@ module.exports.qualities = {
 		summoning: 'conjurer',
 		cost: 3,
 		ranks: 1,
-		text: 'You may not take this Quality if you have the Summoner Quality except through the effect of Mixed Summoner. Upon taking this Quality, the Digimon gains Summoning Points equal to its BIT Value x3. As a Simple Action, a Digimon with this Quality may create Objects of Medium Size at a cost of 1 Summoning Point per Object. The design and possibilities of these Objects must be declared when taking this Quality, as they cannot be changed later. Each summoned Object has a number of Wound Boxes equal to the user’s BIT, Armor equal to the user’s BITx2, and zero Dodge. An Object counts as solid terrain, and cannot be moved through. When an Object’s Wound Boxes are reduced to 0, the Object is destroyed. In addition to these starting Stats, an Object can be strengthened by spending more Summoning Points at creation. When spending additional Summon Points (up to a maximum of BIT per Summon), increase the Object’s Wound Boxes by 2 for each Point, and its Size class by 1 for every 2 Points. When an Object is destroyed, the Summoning Points used to create it return to the user. The Summoning Action cannot be used two rounds in a row. Summoned Objects must be created and placed within the user’s [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent not included].',
+		text: 'You may not take this Quality if you have the Summoner Quality except through the effect of Mixed Summoner. Upon taking this Quality, the Digimon gains Summoning Points equal to its BIT Value x3. As a Simple Action, a Digimon with this Quality may create Objects of Medium Size at a cost of 1 Summoning Point per Object. The design and possibilities of these Objects must be declared when taking this Quality, as they cannot be changed later. Each summoned Object has a number of Wound Boxes equal to the user’s BIT, Armor equal to the user’s BITx2, and zero Dodge. An Object counts as solid terrain, and cannot be moved through. When an Object’s Wound Boxes are reduced to 0, the Object is destroyed. In addition to these starting Stats, an Object can be strengthened by spending more Summoning Points at creation. When spending additional Summon Points (up to a maximum of BIT per Summon including summoning cost), increase the Object’s Wound Boxes by 2 for each Point, and its Size class by 1 for every 2 Points. A conjured Object cannot be affected by Attack Effects. When an Object is destroyed, the Summoning Points used to create it return to the user. The Summoning Action cannot be used two rounds in a row. Summoned Objects must be created and placed within the user’s [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent not included].',
 		unlocks: ['Elemental Summoner', 'Mixed Summoner'],
 		prerequisites: {},
 	},
@@ -1594,7 +1570,7 @@ module.exports.qualities = {
 		summoning: 'summoner',
 		cost: 3,
 		ranks: 1,
-		text: 'You may not take this Quality and Conjurer if you have the Conjurer Quality except through the effect of Mixed Summoner. Upon taking this Quality, the Digimon gains Summoning Points equal to its BIT Value x3. As a Simple Action, a Digimon with this Quality may create Minions of Small Size at a cost of 2 Summoning Points per Minion. The design and possibilities of these Minions must be declared when taking this Quality, as they cannot be changed later. Each summoned Minion has a number of Wound Boxes equal to the user’s BIT, Armor equal to the user’s BIT, zero Dodge, and are capable of flying a number of Units equal to the user’s Brains value in a round. When a Minion’s Wound Boxes are reduced to 0, the Minion is destroyed. In addition to these starting Stats, a Minion can be strengthened by spending more Summoning Points at creation. When spending additional Summon Points (up to a maximum of BIT per Summon), increase the Mininon’s Wound Boxes, Accuracy, and Damage by 1 for each Point. As a Complex Action, Summoned Minions may move and Attack by using the user’s BIT Value for Accuracy, and 1 for Damage. Their Attack is a [Melee][Damage] Attack with no Effects or Features, but may benefit from Attack Modifiers. When a Minion is destroyed, the Summoning Points used to create it return to the user. The Summoning Action cannot be used two rounds in a row. Summoned Minions must be created and placed within the user’s [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent not included].',
+		text: 'You may not take this Quality and Conjurer if you have the Conjurer Quality except through the effect of Mixed Summoner. Upon taking this Quality, the Digimon gains Summoning Points equal to its BIT Value x3. As a Simple Action, a Digimon with this Quality may create Minions of Small Size at a cost of 2 Summoning Points per Minion. The design and possibilities of these Minions must be declared when taking this Quality, as they cannot be changed later. Each summoned Minion has a number of Wound Boxes equal to the user’s BIT, Armor equal to the user’s BIT, zero Dodge, and are capable of flying a number of Units equal to the user’s Brains value in a round. When a Minion’s Wound Boxes are reduced to 0, the Minion is destroyed. In addition to these starting Stats, a Minion can be strengthened by spending more Summoning Points at creation. When spending additional Summon Points (up to a maximum of BIT per Summon including summoning cost), increase the Mininon’s Wound Boxes, Accuracy, and Damage by 1 for each Point. A summoned Minion cannot be affected by Attack Effects. As a Complex Action, Summoned Minions may move and Attack by using the user’s BIT Value for Accuracy, and 1 for Damage. Their Attack is a [Melee][Damage] Attack with no Effects or Features, but may benefit from Attack Modifiers. When a Minion is destroyed, the Summoning Points used to create it return to the user. The Summoning Action cannot be used two rounds in a row. Summoned Minions must be created and placed within the user’s [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent not included].',
 		unlocks: ['Elemental Summoner', 'Mixed Summoner', 'Minion Explosion'],
 		prerequisites: {},
 	},
