@@ -629,14 +629,14 @@ module.exports.areaQualities = {
 		type: 'area',
 		cost: 2,
 		ranks: 1,
-		text: 'The user must be adjacent to an Elemental Terrain Unit to use this attack. The Elemental Terrain Unit, and all connected Elemental Terrain Units, are the dimensions of this attack. Each Elemental Terrain Unit returns to a neutral Unit after the attack. The Accuracy of this Attack is 1 per Unit affected.',
+		text: 'The user must be adjacent to an Elemental Terrain Unit to use this attack. The Elemental Terrain Unit, and all connected Elemental Terrain Units, are the dimensions of this attack. Each Elemental Terrain Unit returns to a neutral Unit after the attack. The Accuracy of this Attack is not reduced by the number of targets.',
 		unlocks: [],
 		prerequisites: {},
 		args: [],
 		method: function (type, args) {
 			// the last entries in args will always be the Range Modifier (1 or 2) and Melee Modifier (0 or 1)
 			if (type === 'Melee') {
-				return 'The dimensions of this attack are all connected Elemental Terrain Units to the Elemental Terrain Unit adjacent to the user. The base Accuracy is 1 per Unit affected.';
+				return 'The dimensions of this attack are all connected Elemental Terrain Units to the Elemental Terrain Unit adjacent to the user. Accuracy is not reduced by Area Attack rule.';
 			}
 			return 'Cannot apply Area Attack - Suppress to [Range] Attacks.';
 		},
