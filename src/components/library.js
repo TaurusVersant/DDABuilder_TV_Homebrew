@@ -440,6 +440,24 @@ module.exports.optimizationQualities = {
 };
 
 module.exports.areaQualities = {
+	'Area Attack - Aura': {
+		type: 'area',
+		cost: 2,
+		ranks: 1,
+		text: 'Apply to a [Range] attack. Creates a Circle of Radius 1 + half BIT (rounded down) surrounding the user. When a character enters or ends their turn inside of this circle (only apply this effect once per character per round, does not affect user), make an Accuracy Roll at Accuracy-(number of times this Aura Circle has triggered). Then play out the Attack as normal. A single character cannot maintain two Aura Circles at the same time. If using the Aura tagged Attack again, erase the original Aura Circle. When the Accuracy of the Aura reaches 0, the Aura disappears.',
+		unlocks: [],
+		prerequisites: {},
+		args: ['specBIT'],
+		method: function (type, args) {
+			// the last entries in args will always be the Range Modifier (1 or 2) and Melee Modifier (0 or 1)
+			if (type === 'Range') {
+				let radius = ((1 + Math.floor(args[0] / 2)) * args[1]) + '.5 Units';
+				let origin = args[1] === 2 ? ' from 2 Units' : ' from adjacent Unit';
+				return 'Circle with radius ' + radius + origin + ' centered around user. Does not affect adjacent Units.';
+			}
+			return 'Cannot apply Area Attack - Aura to [Melee] Attacks.';
+		},
+	},
 	'Area Attack - Blast': {
 		type: 'area',
 		cost: 2,
@@ -559,14 +577,14 @@ module.exports.areaQualities = {
 		type: 'area',
 		cost: 2,
 		ranks: 1,
-		text: 'Apply to a [Range] attack. Creates a Circle of Radius 1 + half [BIT - 1] (rounded down) within the user’s range (BITx2). When a character enters or ends their turn inside of this circle (only apply this effect once per character per round), make an Accuracy Roll at Accuracy-(number of times this Linger Circle has triggered). Then play out the Attack as normal. A single character cannot maintain two Linger Circles at the same time. If using the Linger tagged Attack again, erase the original Linger Circle. When the Accuracy of the Linger reaches 0, the Linger disappears.',
+		text: 'Apply to a [Range] attack. Creates a Circle of Radius 1 + half BIT (rounded down) within the user’s range (BITx2). When a character enters or ends their turn inside of this circle (only apply this effect once per character per round), make an Accuracy Roll at Accuracy-(number of times this Linger Circle has triggered). Then play out the Attack as normal. A single character cannot maintain two Linger Circles at the same time. If using the Linger tagged Attack again, erase the original Linger Circle. When the Accuracy of the Linger reaches 0, the Linger disappears.',
 		unlocks: [],
 		prerequisites: {},
 		args: ['specBIT'],
 		method: function (type, args) {
 			// the last entries in args will always be the Range Modifier (1 or 2) and Melee Modifier (0 or 1)
 			if (type === 'Range') {
-				let radius = ((1 + Math.floor((args[0] - 1) / 2)) * args[1]) + '.5 Units';
+				let radius = ((1 + Math.floor(args[0] / 2)) * args[1]) + '.5 Units';
 				let range = (2 * args[0]) + ' Units';
 				return 'Circle with radius ' + radius + ' centered within ' + (1 + args[1]) + ' to ' + range + '.';
 			}
@@ -1537,8 +1555,18 @@ module.exports.qualities = {
 		cost: 2,
 		ranks: 1,
 		text: 'At the beginning of a Short or Long Rest (before Dedigivolving if you are above your Base Digivolution Stage), you can make a Survival Check using your Brains Stat to create a safe environment for resting and to gather/prepare food for consumption. You may also use your Brains Stat for Survival Checks when attempting to locate plants or food, and your Brains Stat for Knowledge Checks regarding the usages of plants and the like.',
-		unlocks: [],
+		unlocks: ['Carrier'],
 		prerequisites: {},
+	},
+	'Carrier': {
+		type: 'passive',
+		cost: 1,
+		ranks: 1,
+		text: 'This Digimon may apply its Camper property and allow other characters to rest while being carried by this Digimon. A Digimon may carry characters equal to its carrying capacity (see the Falling subsection of Section 5: Combat).',
+		unlocks: [],
+		prerequisites: {
+			Camper: 1,
+		},
 	},
 	'Cleanse Self': {
 		type: 'action',
@@ -1561,8 +1589,8 @@ module.exports.qualities = {
 		summoning: 'conjurer',
 		cost: 3,
 		ranks: 1,
-		text: 'You may not take this Quality if you have the Summoner Quality except through the effect of Mixed Summoner. Upon taking this Quality, the Digimon gains Summoning Points equal to its BIT Value x3. As a Simple Action, a Digimon with this Quality may create Objects of Medium Size at a cost of 1 Summoning Point per Object. The design and possibilities of these Objects must be declared when taking this Quality, as they cannot be changed later. Each summoned Object has a number of Wound Boxes equal to the user’s BIT, Armor equal to the user’s BITx2, and zero Dodge. An Object counts as solid terrain, and cannot be moved through. When an Object’s Wound Boxes are reduced to 0, the Object is destroyed. In addition to these starting Stats, an Object can be strengthened by spending more Summoning Points at creation. When spending additional Summon Points (up to a maximum of BIT per Summon including summoning cost), increase the Object’s Wound Boxes by 2 for each Point, and its Size class by 1 for every 2 Points. A conjured Object cannot be affected by Attack Effects. When an Object is destroyed, the Summoning Points used to create it return to the user. The Summoning Action cannot be used two rounds in a row. Summoned Objects must be created and placed within the user’s [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent not included].',
-		unlocks: ['Elemental Summoner', 'Mixed Summoner'],
+		text: 'You may not take this Quality if you have the Summoner Quality except through the effect of Mixed Summoner. Upon taking this Quality, the Digimon gains Summoning Points equal to its BIT Value x3. As a Simple Action, a Digimon with this Quality may create Objects of Medium Size at a cost of 1 Summoning Point per Object. The design and possibilities of these Objects must be declared when taking this Quality, as they cannot be changed later. Each summoned Object has a number of Wound Boxes equal to the user’s BIT, Armor equal to the user’s BITx2, and zero Dodge. An Object counts as solid terrain, and cannot be moved through. When an Object’s Wound Boxes are reduced to 0, the Object is destroyed. Objects count as Difficult Terrain for moving over. In addition to these starting Stats, an Object can be strengthened by spending more Summoning Points at creation. When spending additional Summon Points (up to a maximum of BIT per Summon including summoning cost), increase the Object’s Wound Boxes by 2 for each Point, and its Size class by 1 for every 2 Points. A conjured Object cannot be affected by Attack Effects. When an Object is destroyed, the Summoning Points used to create it return to the user. The Summoning Action cannot be used two rounds in a row. Summoned Objects must be created and placed within the user’s [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent not included].',
+		unlocks: ['Elemental Summoner', 'Mixed Summoner', 'Firewall'],
 		prerequisites: {},
 	},
 	'Summoner': {
@@ -1585,6 +1613,16 @@ module.exports.qualities = {
 			{ 'Conjurer': 1, },
 			{ 'Summoner': 1, }
 		],
+	},
+	'Firewall': {
+		type: 'passive',
+		cost: 2,
+		ranks: 1,
+		text: 'When a conjured object is dealt damage by an Attack, deal the conjurer\'s BIT (reduced by Armor) damage to the attacker. This effect does not trigger if the conjured object is destroyed.',
+		unlocks: [],
+		prerequisites: {
+			'Conjurer': 1,
+		},
 	},
 	'Minion Explosion': {
 		type: 'passive',
@@ -1835,7 +1873,7 @@ module.exports.qualities = {
 		type: 'special',
 		cost: 3,
 		ranks: 1,
-		text: 'The Digimon may re-roll any dice that show up as 1’s when making an Accuracy roll. The Digimon does not reroll and subsequent 1’s.',
+		text: 'The Digimon may re-roll any dice that show up as 1’s when making an Accuracy roll. The Digimon does not reroll any subsequent 1’s.',
 		unlocks: ['Overkill'],
 		prerequisites: {},
 	},
@@ -2139,8 +2177,18 @@ module.exports.qualities = {
 		cost: 2,
 		ranks: 1,
 		text: 'Digimon with this Quality may apply their full Brains score when making Persuasion and Performance Skill Checks.',
-		unlocks: [],
+		unlocks: ['Illusionist'],
 		prerequisites: {},
+	},
+	'Illusionist': {
+		type: 'action',
+		cost: 2,
+		ranks: 1,
+		text: 'A Digimon with this Quality may apply its full Brains score when making Manipulate Skill Checks. As a Simple Action, this Digimon may create up to BIT incorporeal duplicates of itself, occupying adjacent Units around the Digimon. The illusions are identical at a glance, but scrutiny can reveal which is the real Digimon. When this Digimon is targeted by a single-target attack (non-area attack), the Digimon may dismiss a number of its duplicates and reduce the Accuracy of the incoming attack by that number. This Digimon cannot create more than BIT duplicates of itself, no matter how many times it uses this Action.',
+		unlocks: [],
+		prerequisites: {
+			'Performance Training': 1,
+		},
 	},
 	'Quick Healer': {
 		type: 'passive',

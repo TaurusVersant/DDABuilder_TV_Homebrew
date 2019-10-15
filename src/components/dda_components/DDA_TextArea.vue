@@ -19,7 +19,8 @@ export default {
 	computed: {
 		height: function () {
 			let modifier = Math.floor(1700 / this.widthProperty);
-			let rows = this.textValue ? Math.floor(this.textValue.length / 128) + this.textValue.split(/\r\n|\r|\n/).length : 2;
+			let lineBreaks = this.textValue.split(/\r\n|\r|\n/).length;
+			let rows = this.textValue ? Math.floor(this.textValue.length / (128 + lineBreaks * 4)) + lineBreaks : 2;
 			return (rows > 2 ? rows : 2) * modifier + 'px';
 		},
 		textAreaStyle: function () {

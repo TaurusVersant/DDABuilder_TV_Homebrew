@@ -442,6 +442,7 @@ export default {
 	span.characterTile {
 		border: 1px solid;
 		margin-bottom: -1px;
+		margin-left: 1px;
 		text-align: center;
 		min-height: 18px;
 		background: #eeeeee;

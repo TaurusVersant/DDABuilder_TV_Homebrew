@@ -75,7 +75,7 @@
 					:textProperty='(character.currentWoundBoxes + character.temporaryWoundBoxes) + "/" + derivedWoundBoxes'
 				/>
 				<!-- Add Temporary Wound Boxes Button -->
-				<button :disabled='character.temporaryWoundBoxes > 0' @click='addTemporary'>Add Temporary Wound Boxes</button>
+				<button @click='addTemporary'>Add Temporary Wound Boxes</button>
 			</div>
 			<div className='secondColumn'>
 				<p><u>Digimon Picture</u></p>
