@@ -34,7 +34,7 @@ export default {
 	},
 	methods: {},
 	created: function () {
-		this.textValue = this.textProperty;
+		this.textValue = this.textProperty ? this.textProperty : '';
 	},
 	components: {},
 }
