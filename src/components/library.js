@@ -444,7 +444,7 @@ module.exports.areaQualities = {
 		type: 'area',
 		cost: 2,
 		ranks: 1,
-		text: 'Apply to a [Range] attack. Creates a Circle of Radius 1 + half BIT (rounded down) surrounding the user. When a character enters or ends their turn inside of this circle (only apply this effect once per character per round, does not affect user), make an Accuracy Roll at Accuracy-(number of times this Aura Circle has triggered). Then play out the Attack as normal. A single character cannot maintain two Aura Circles at the same time. If using the Aura tagged Attack again, erase the original Aura Circle. When the Accuracy of the Aura reaches 0, the Aura disappears.',
+		text: 'Apply to a [Range] attack. Creates a Circle of Radius 1 + half BIT (rounded down) surrounding the user. When a character ends their turn inside of this circle (only apply this effect once per character per round, does not affect user), make an Accuracy Roll at Accuracy-(number of times this Aura Circle has triggered). Then play out the Attack as normal. A single character cannot maintain two Aura Circles at the same time. If using the Aura tagged Attack again, erase the original Aura Circle. When the Accuracy of the Aura reaches 0, the Aura disappears.',
 		unlocks: [],
 		prerequisites: {},
 		args: ['specBIT'],
