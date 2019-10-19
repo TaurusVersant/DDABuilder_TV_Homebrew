@@ -48,7 +48,7 @@
 					:textProperty='(this.character.woundBoxes + this.character.temporary) + "/" + this.derivedWoundBoxes'
 				/>
 				<!-- Add Temporary Wound Boxes Button -->
-				<button :disabled='character.temporary > 0' @click='addTemporary'>Add Temporary Wound Boxes</button>
+				<button @click='addTemporary'>Add Temporary Wound Boxes</button>
 				<!-- Wound Boxes Display -->
 				<dda_woundbox
 					:current='character.woundBoxes'
