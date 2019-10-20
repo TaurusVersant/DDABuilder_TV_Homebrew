@@ -424,7 +424,7 @@ module.exports.optimizationQualities = {
 		},
 		args: ['specRAM'],
 		method: function (args) {
-			return 'When the difference between your rolled Accuracy and your opponent\'s rolled Dodge is ' + args[0] + ' or higher, add ' + args[0] + ' to the Damage of this Attack.';
+			return "When the difference between your rolled Accuracy and your opponent's rolled Dodge is " + args[0] + ' or higher, add ' + args[0] + ' to the Damage of this Attack.';
 		},
 	},
 	'Hybrid Drive': {
@@ -444,7 +444,7 @@ module.exports.areaQualities = {
 		type: 'area',
 		cost: 2,
 		ranks: 1,
-		text: 'Apply to a [Range] attack. Creates a Circle of Radius 1 + half BIT (rounded down) surrounding the user. When a character ends their turn inside of this circle (only apply this effect once per character, does not affect user), make an Accuracy Roll at Accuracy-(2xnumber of times this Aura Circle has triggered). This Attack does not benefit from Attack Modifiers. Then play out the Attack as normal. A single character cannot maintain two Aura Circles at the same time. If using the Aura tagged Attack again, erase the original Aura Circle. When the Accuracy of the Aura reaches 0, the Aura disappears.',
+		text: 'Apply to a [Range] attack. When used, apply [Status Effect Aura] to user for 1 + half BIT (rounded down) Rounds. While user has this Aura active, any character that ends their turn within Burst Radius (1 + half BIT [rounded down]) of the user has an Attack Roll of the selected Attack made against them. This Attack Roll does not benefit from Attack Modifiers. After each Attack Roll, decrease the Effect Duration by 1. An Attack tagged with [Aura] cannot be used while the character has [Status Effect Aura].',
 		unlocks: [],
 		prerequisites: {},
 		args: ['specBIT'],
@@ -453,7 +453,8 @@ module.exports.areaQualities = {
 			if (type === 'Range') {
 				let radius = ((1 + Math.floor(args[0] / 2)) * args[1]) + '.5 Units';
 				let origin = args[1] === 2 ? ' from 2 Units' : ' from adjacent Unit';
-				return 'Circle with radius ' + radius + origin + ' centered around user. Does not affect adjacent Units.';
+				let duration = 1 + Math.floor(args[0] / 2);
+				return 'Circle with radius ' + radius + origin + ' centered around user for ' + duration + ' rounds. Does not affect adjacent Units.';
 			}
 			return 'Cannot apply Area Attack - Aura to [Melee] Attacks.';
 		},
@@ -577,7 +578,7 @@ module.exports.areaQualities = {
 		type: 'area',
 		cost: 2,
 		ranks: 1,
-		text: 'Apply to a [Range] attack. Creates a Circle of Radius 1 + half BIT (rounded down) within the user’s range (BITx2). When a character enters or ends their turn inside of this circle (only apply this effect once per character), make an Accuracy Roll at Accuracy-(2xnumber of times this Linger Circle has triggered). This Attack does not benefit from Attack Modifiers. Then play out the Attack as normal. A single character cannot maintain two Linger Circles at the same time. If using the Linger tagged Attack again, erase the original Linger Circle. When the Accuracy of the Linger reaches 0, the Linger disappears.',
+		text: 'Apply to a [Range] attack. When used, select a location and create a Blast Circle (1 + half BIT [rounded down] radius) within the user’s range (BITx2), then apply [Status Effect Linger] to user for 1 + half BIT (rounded down) Rounds. While user has this Linger active, any character that enters or ends their turn within its dimensions has an Attack Roll of the selected Attack made against them. This Attack Roll does not benefit from Attack Modifiers. After each Attack Roll, decrease the Effect Duration by 1. An Attack tagged with [Linger] cannot be used while the character has [Status Effect Linger].',
 		unlocks: [],
 		prerequisites: {},
 		args: ['specBIT'],
@@ -586,7 +587,8 @@ module.exports.areaQualities = {
 			if (type === 'Range') {
 				let radius = ((1 + Math.floor(args[0] / 2)) * args[1]) + '.5 Units';
 				let range = (2 * args[0]) + ' Units';
-				return 'Circle with radius ' + radius + ' centered within ' + (1 + args[1]) + ' to ' + range + '.';
+				let duration = 1 + Math.floor(args[0] / 2);
+				return 'Circle with radius ' + radius + ' centered within ' + (1 + args[1]) + ' to ' + range + ' for ' + duration + ' rounds.';
 			}
 			return 'Cannot apply Area Attack - Linger to [Melee] Attacks.';
 		},
@@ -738,7 +740,7 @@ module.exports.effectQualities = {
 		args: ['specBIT'],
 		method: function (args) {
 			let boxes = args[0] === 1 ? 'Wound Box' : 'Wound Boxes';
-			return 'Duration = Remaining Accuracy Dice, minimum 1 Round. At the end of target\'s turn, recover ' + args[0] + ' ' + boxes + '. Target also reduces all incoming effects by 4 (to their minimum).';
+			return "Duration = Remaining Accuracy Dice, minimum 1 Round. At the end of target's turn, recover " + args[0] + ' ' + boxes + '. Target also reduces all incoming effects by 4 (to their minimum).';
 		},
 	},
 	'Positive Effect - Shield': {
@@ -835,7 +837,7 @@ module.exports.effectQualities = {
 		prerequisites: {},
 		args: [],
 		method: function (args) {
-			return 'Duration = Remaining Accuracy Dice, minimum 1 Round. User takes control of target\'s actions at the cost of a complex action from their next turn. Effect ends when damaged by user\'s allies. Check Quality for more details.';
+			return "Duration = Remaining Accuracy Dice, minimum 1 Round. User takes control of target's actions at the cost of a complex action from their next turn. Effect ends when damaged by user's allies. Check Quality for more details.";
 		},
 	},
 	'Negative Effect - Confuse': {
@@ -871,7 +873,7 @@ module.exports.effectQualities = {
 		prerequisites: {},
 		args: [],
 		method: function (args) {
-			return 'Duration = Remaining Accuracy Dice, minimum 1 Round. Select an Attack by name from a list of the target\'s Attacks. The target cannot use that Attack for the duration of this Effect.';
+			return "Duration = Remaining Accuracy Dice, minimum 1 Round. Select an Attack by name from a list of the target's Attacks. The target cannot use that Attack for the duration of this Effect.";
 		},
 	},
 	'Negative Effect - Distract': {
@@ -968,7 +970,7 @@ module.exports.effectQualities = {
 		args: ['specBIT'],
 		method: function (args) {
 			let boxes = args[0] === 1 ? 'Wound Box' : 'Wound Boxes';
-			return 'Duration = Remaining Accuracy Dice, minimum 3 Rounds. At the end of target\'s turn, deal ' + args[0] + ' ' + boxes + ' damage.';
+			return "Duration = Remaining Accuracy Dice, minimum 3 Rounds. At the end of target's turn, deal " + args[0] + ' ' + boxes + ' damage.';
 		},
 	},
 	'Negative Effect - Stun': {
@@ -1052,12 +1054,12 @@ module.exports.effectQualities = {
 		stance: true,
 		cost: 1,
 		ranks: 1,
-		text: 'After the Attack resolves, apply [Courageous Stance]. While in Courageous Stance, increase your Accuracy and Dodge by 1 for each Positive Attack Effect applied to you. This Stance does not count for this calculation.',
+		text: 'After the Attack resolves, apply [Courageous Stance]. While in Courageous Stance, increase your Accuracy and Dodge by 2 for each Positive Attack Effect applied to you. This Stance does not count for this calculation.',
 		unlocks: [],
 		prerequisites: {},
 		args: [],
 		method: function (args) {
-			return 'Increase your Accuracy and Dodge by 1 for each Positive Attack Effect applied to you. This Stance does not count for this calculation.';
+			return 'Increase your Accuracy and Dodge by 2 for each Positive Attack Effect applied to you. This Stance does not count for this calculation.';
 		},
 	},
 	'Stance - Gutsy Stance': {
@@ -1065,12 +1067,12 @@ module.exports.effectQualities = {
 		stance: true,
 		cost: 1,
 		ranks: 1,
-		text: 'After the Attack resolves, apply [Gutsy Stance]. While in Gutsy Stance, increase your Damage and Armor by 1 for each Negative Attack Effect applied to you.',
+		text: 'After the Attack resolves, apply [Gutsy Stance]. While in Gutsy Stance, increase your Damage and Armor by 2 for each Negative Attack Effect applied to you.',
 		unlocks: [],
 		prerequisites: {},
 		args: [],
 		method: function (args) {
-			return 'Increase your Damage and Armor by 1 for each Negative Attack Effect applied to you.';
+			return 'Increase your Damage and Armor by 2 for each Negative Attack Effect applied to you.';
 		},
 	},
 	'Stance - Swollen Stance': {
@@ -1119,7 +1121,7 @@ module.exports.featureQualities = {
 		prerequisites: {},
 		args: ['ranks'],
 		method: function (args) {
-			return 'Negate ' + args[0] + ' successful Dodge dice from opponent\'s Dodge roll.';
+			return 'Negate ' + args[0] + " successful Dodge dice from opponent's Dodge roll.";
 		},
 	},
 	'Feature - Charge': {
@@ -1179,7 +1181,7 @@ module.exports.featureQualities = {
 		prerequisites: {},
 		args: ['specRAM', 'Counterblow', 'specCPU'],
 		method: function (args) {
-			let counterblow = args[1] ? ' Also reduce your opponent\'s Armor Stat by ' + args[2] + '.' : '';
+			let counterblow = args[1] ? " Also reduce your opponent's Armor Stat by " + args[2] + '.' : '';
 			return 'Spend one Simple Action from your next turn when an opponent misses you with an Attack. Make this Attack against that opponent, reducing their Dodge Stat by ' + args[0] + ' for the length of this Attack. Do not apply an Area Attack Quality if this Attack has one.' + counterblow;
 		},
 	},
@@ -1187,7 +1189,7 @@ module.exports.featureQualities = {
 		type: 'quality',
 		cost: 2,
 		ranks: 1,
-		text: 'When using a [Counter] tagged attack through the Counter quality, reduce the target\'s Armor stat by the attacker\'s CPU.',
+		text: "When using a [Counter] tagged attack through the Counter quality, reduce the target's Armor stat by the attacker's CPU.",
 		unlocks: [],
 		prerequisites: {
 			'Feature - Counter': 1
@@ -1202,7 +1204,7 @@ module.exports.featureQualities = {
 		prerequisites: {},
 		args: ['specRAM'],
 		method: function (args) {
-			return 'When the difference between your rolled Accuracy and your opponent\'s rolled Dodge is ' + args[0] + ' or higher, add ' + args[0] + ' to the Damage of this Attack.';
+			return "When the difference between your rolled Accuracy and your opponent's rolled Dodge is " + args[0] + ' or higher, add ' + args[0] + ' to the Damage of this Attack.';
 		},
 	},
 	'Feature - Cruelty': {
@@ -1262,7 +1264,7 @@ module.exports.featureQualities = {
 		prerequisites: {},
 		args: ['ranks'],
 		method: function (args) {
-			return 'Ignore up to ' + (2 * args[0]) + ' points of the target Digimon\'s Armor.';
+			return "Ignore up to ' + (2 * args[0]) + ' points of the target Digimon's Armor.";
 		},
 	},
 	'Feature - Retreat': {
@@ -1275,18 +1277,6 @@ module.exports.featureQualities = {
 		args: ['derivedMovement'],
 		method: function (args) {
 			return '[Melee] Attack only. Move up to ' + args[0] + ' Units for free after making this Attack.';
-		},
-	},
-	'Feature - Slow Roller': {
-		type: 'feature',
-		cost: 2,
-		ranks: 1,
-		text: 'An attack with the [Slow Roller] Tag changes its Damage by the amount your Movement Stat is less than your target’s. This Damage bonus has a maximum of 6. If your Movement Stat is greater than your target’s, reduce the Damage by that amount instead.',
-		unlocks: [],
-		prerequisites: {},
-		args: ['derivedMovement'],
-		method: function (args) {
-			return 'Increase your Damage by the amount your target\'s Movement Stat is higher than ' + args[0] + ', up to a maximum of 6. If their Movement is lower than this, reduce your Damage by that amount instead.';
 		},
 	},
 	'Feature - Snatch': {
@@ -1320,7 +1310,7 @@ module.exports.modifierQualities = {
 		type: 'modifier',
 		cost: 1,
 		ranks: 1,
-		text: 'A Digimon with the Burn Health Quality may increase its Damage Stat for an Attack by 1 for each Wound Box you mark. For an Area Attack, this increase will only apply to one of the targets.',
+		text: 'A Digimon with the Burn Health Quality may increase its Damage Stat for an Attack by 1 for each Wound Box you mark.',
 		unlocks: [],
 		prerequisites: {},
 		args: [],
@@ -1420,7 +1410,7 @@ module.exports.modifierQualities = {
 	},
 	'Flying Hunter': {
 		type: 'modifier',
-		cost: 2,
+		cost: 1,
 		ranks: 1,
 		text: 'A Digimon with Flying Hunter takes double damage from falling and throwing. When attacking while spending your entire Turn 1 or higher Units in the air, this Digimon may add its RAM Value to its Accuracy.',
 		negative: 'A Digimon with Flying Hunter takes double damage from falling and throwing.',
@@ -1440,8 +1430,8 @@ module.exports.modifierQualities = {
 		prerequisites: {},
 		args: ['specRAM', 'specCPU', 'Slayer', 'specBIT'],
 		method: function (args) {
-			let slayer = args[2] ? ' If your target\'s Attribute matches your chosen Attribute for Slayer, add ' + args[3] + ' to this Attack\'s Accuracy. This can stack with the bonus for matching Family and/or Type. If Attribute, Family, and Type are all matched, and this Attack leaves the target with less than half its health remaining, the target is immediately destroyed, unless it is a Boss Stage Digimon.' : '';
-			return 'If your target\'s Family or Type matches your chosen Family and Type, add ' + args[0] + ' to this Attack\'s Accuracy. If both match, add ' + (args[0] + args[1]) + '.' + slayer;
+			let slayer = args[2] ? " If your target's Attribute matches your chosen Attribute for Slayer, add " + args[3] + " to this Attack's Accuracy. This can stack with the bonus for matching Family and/or Type. If Attribute, Family, and Type are all matched, and this Attack leaves the target with less than half its health remaining, the target is immediately destroyed, unless it is a Boss Stage Digimon." : '';
+			return "If your target's Family or Type matches your chosen Family and Type, add " + args[0] + " to this Attack's Accuracy. If both match, add " + (args[0] + args[1]) + '.' + slayer;
 		},
 	},
 	'Slayer': {
@@ -1456,7 +1446,7 @@ module.exports.modifierQualities = {
 	},
 	'Pack Tactics': {
 		type: 'modifier',
-		cost: 3,
+		cost: 2,
 		ranks: 1,
 		text: 'Whenever an ally is adjacent to an enemy, you can add your RAM Value to your Accuracy when attacking that enemy.',
 		unlocks: ['Coordinated Assault'],
@@ -1500,7 +1490,7 @@ module.exports.modifierQualities = {
 	},
 	'Reckless': {
 		type: 'modifier',
-		cost: 3,
+		cost: 2,
 		ranks: 1,
 		text: 'A Digimon with the Reckless Quality will always take a minimum of 2 Damage, and Attack Effects applied will have a minimum duration of 2, from Attacks that connect. The Digimon may add its CPU Value to its Accuracy when attacking.',
 		negative: 'A Digimon with the Reckless Quality will always take a minimum of 2 Damage, and Attack Effects applied will have a minimum duration of 2, from Attacks that connect.',
@@ -1618,7 +1608,7 @@ module.exports.qualities = {
 		type: 'passive',
 		cost: 2,
 		ranks: 1,
-		text: 'When a conjured object is dealt damage by an Attack, deal the conjurer\'s BIT (reduced by Armor) damage to the attacker. This effect does not trigger if the conjured object is destroyed.',
+		text: "When a conjured object is dealt damage by an Attack, deal the conjurer's BIT (reduced by Armor) damage to the attacker. This effect does not trigger if the conjured object is destroyed.",
 		unlocks: [],
 		prerequisites: {
 			'Conjurer': 1,
@@ -1736,7 +1726,7 @@ module.exports.qualities = {
 	},
 	'Doombringer': {
 		type: 'action',
-		cost: 3,
+		cost: 2,
 		ranks: 1,
 		text: 'Once per Short Rest, if this Digimon would be reduced to 0 Wound Boxes, immediately make a basic [Damage] Attack (Range depending on attacker) on the attacker. If this attack brings the opponent to 0 Wound Boxes, set your Wound Boxes to 1. You may apply Attack Modifiers to this Attack.',
 		unlocks: [],
@@ -1974,22 +1964,22 @@ module.exports.qualities = {
 			'Nature Territory': 1,
 		},
 	},
-	'Naturewalk - Dragon\'s Roar': {
+	"Naturewalk - Dragon's Roar": {
 		type: 'passive',
 		cost: 1,
 		ranks: 1,
 		text: 'This Digimon is not affected by difficult terrain of the Fire Elemental Terrain type.',
-		unlocks: ['Element Master - Dragon\'s Roar'],
+		unlocks: ["Element Master - Dragon's Roar"],
 		prerequisites: {},
 	},
-	'Element Master - Dragon\'s Roar': {
+	"Element Master - Dragon's Roar": {
 		type: 'action',
 		cost: 2,
 		ranks: 1,
 		text: 'As a Simple Action, convert all tiles within your [Burst][Range] dimensions [1 + half BIT (rounded down) radius around user, adjacent included] into Fire Elemental Terrain. You may decide whether these tiles (as a whole) are difficult terrain, and if they are already Fire Elemental Terrain, you may convert them to or from difficult terrain. In the same action you may also move these tiles of terrain (as a whole) up or down one Unit.',
 		unlocks: [],
 		prerequisites: {
-			'Naturewalk - Dragon\'s Roar': 1,
+			"Naturewalk - Dragon's Roar": 1,
 		},
 	},
 	'Naturewalk - Deep Savers': {

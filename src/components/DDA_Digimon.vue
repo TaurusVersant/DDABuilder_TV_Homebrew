@@ -951,10 +951,6 @@ export default {
 			},
 			deep: true,
 		},
-		'character.stats.Health': function () {
-			// If the health stat changes (a quality has been purchased), we refill currentWoundBoxes
-			this.$set(this.character, 'currentWoundBoxes', this.derivedWoundBoxes);
-		},
 		digimon_data: function () {
 			// If digimon_data is changed, we have received it from the DDA_Container parent
 			// We do not want to update the parent when we assign digimon_data to the character object
@@ -969,10 +965,6 @@ export default {
 			}
 			// Then we specify that the character is loaded
 			this.loadCharacter = false;
-		},
-		'character.modifiers.qualityWoundBoxes': function () {
-			// If the qualityWoundBoxes modifier changes (a quality has been purchased), we refill currentWoundBoxes
-			this.$set(this.character, 'currentWoundBoxes', this.derivedWoundBoxes);
 		},
 		summonPool: function () {
 			// When the summonPool total changes, we unmake and refund all existing summons
@@ -1402,6 +1394,10 @@ export default {
 				this.character.stats[stat]--;
 				this.character[pointsToUse]++;
 			}
+
+			if (stat === 'Health') {
+				this.$set(this.character, 'currentWoundBoxes', this.derivedWoundBoxes);
+			}
 		},
 		changeMod: function (value, type) {
 			// We ensure the modifier is an integer
@@ -1509,6 +1505,10 @@ export default {
 				for (let stat in qualityObject.statMods) {
 					// and add each mod to their appropriate stat
 					this.character.modifiers[stat] += qualityObject.statMods[stat];
+
+					if (stat === 'qualityWoundBoxes') {
+						this.$set(this.character, 'currentWoundBoxes', this.derivedWoundBoxes);
+					}
 				}
 			}
 

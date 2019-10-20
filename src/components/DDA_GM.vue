@@ -12,6 +12,8 @@
 						<div><u>{{torment.type}} Torment</u>: {{torment.text}}</div><br>
 					</span>
 				</div>
+				<p><u>Current Effects</u></p>
+				<dda_effects :effects='character.effects'/>
 				<p><u>Notes</u></p>
 				<dda_textarea
 					:textProperty='character.gmNotes'
@@ -25,7 +27,10 @@
 					<u>Stage</u>: {{character.type}} |&nbsp;
 					<u>Attribute</u>: {{character.attribute}} |&nbsp;
 					<u>Family</u>: {{character.family}} |&nbsp;
-					<u>Type</u>: {{character.digimonType}}</div>
+					<u>Type</u>: {{character.digimonType}}
+				</div>
+				<p><u>Current Effects</u></p>
+				<dda_effects :effects='character.effects'/>
 				<p><u>Notes</u></p>
 				<dda_textarea
 					:textProperty='character.gmNotes'
