@@ -1264,7 +1264,7 @@ module.exports.featureQualities = {
 		prerequisites: {},
 		args: ['ranks'],
 		method: function (args) {
-			return "Ignore up to ' + (2 * args[0]) + ' points of the target Digimon's Armor.";
+			return 'Ignore up to ' + (2 * args[0]) + ' points of the target Digimon\'s Armor.';
 		},
 	},
 	'Feature - Retreat': {
