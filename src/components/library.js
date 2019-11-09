@@ -1412,13 +1412,13 @@ module.exports.modifierQualities = {
 		type: 'modifier',
 		cost: 1,
 		ranks: 1,
-		text: 'A Digimon with Flying Hunter takes double damage from falling and throwing. When attacking while spending your entire Turn 1 or higher Units in the air, this Digimon may add its RAM Value to its Accuracy.',
+		text: 'A Digimon with Flying Hunter takes double damage from falling and throwing. When attacking after performing a move Action entirely using your Flying Speed, this Digimon may add its RAM Value to its Accuracy.',
 		negative: 'A Digimon with Flying Hunter takes double damage from falling and throwing.',
 		unlocks: [],
 		prerequisites: {},
 		args: ['specRAM'],
 		method: function (args) {
-			return 'While spending your entire turn 1 or higher Units in the air, this Digimon may add ' + args[0] + ' to the Accuracy of this Attack.';
+			return 'After moving entirely using your flying speed, this Digimon may add ' + args[0] + ' to the Accuracy of this Attack.';
 		},
 	},
 	'Hunter': {
